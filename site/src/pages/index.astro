@@ -10,81 +10,92 @@ const GH = "https://github.com/wookat/witness";
 <meta name="description" content="Talk, point, ship the fix. Witness records your voice, clicks, network, errors and DOM replay while you use a product — then hands your AI agent a causal evidence package it can act on.">
 <meta property="og:title" content="Witness — your voice, welded to the evidence">
 <meta property="og:description" content="Say what's wrong, point at it, keep going. One recording → a causal evidence package your AI coding agent can fix from.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23101114'/><circle cx='16' cy='14' r='6' fill='%23ff5147'/><rect x='13' y='22' width='6' height='3' rx='1.5' fill='%23fff'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23406524'/><circle cx='16' cy='14' r='6' fill='%23f9faf7'/><rect x='13' y='22' width='6' height='3' rx='1.5' fill='%23f9faf7'/></svg>">
 <style>
   :root{
-    --bg:#0b0c0f; --panel:#111318; --line:#23262e; --text:#e8eaf0; --dim:#9aa1ad;
-    --acc:#ff5147; --acc2:#4a5cc4; --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;
+    --bg:#f9faf7; --panel:#ffffff; --cream:#f2f4ec; --line:#e0e2da;
+    --text:#1f201c; --dim:#62645f; --acc:#406524; --acc-soft:#e6eed9; --acc-deep:#2c4a17;
+    --mono:"Geist Mono",ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;
+    --sans:"Inter",-apple-system,"Segoe UI","Helvetica Neue",sans-serif;
   }
   *{box-sizing:border-box;margin:0}
   html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--text);font:16px/1.7 -apple-system,"Segoe UI",Inter,"Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  body{background:var(--bg);color:var(--text);font:16px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
   a{color:inherit}
   code,pre{font-family:var(--mono)}
-  ::selection{background:#ff514733}
+  ::selection{background:#40652426}
 
-  nav{position:sticky;top:0;z-index:10;background:#0b0c0fd9;backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  nav .wrap{display:flex;align-items:center;gap:24px;height:56px}
-  .logo{display:flex;align-items:center;gap:9px;font-weight:650;font-size:15px;text-decoration:none}
-  .logo svg{width:20px;height:20px}
-  nav .links{margin-left:auto;display:flex;gap:18px;font-size:13.5px}
+  nav{position:sticky;top:0;z-index:10;background:#f9faf7d9;backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:60px}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;text-decoration:none;letter-spacing:-.01em}
+  .logo svg{width:22px;height:22px}
+  nav .links{margin-left:auto;display:flex;align-items:center;gap:22px;font-size:14px;font-weight:500}
   nav .links a{color:var(--dim);text-decoration:none}
   nav .links a:hover{color:var(--text)}
-  nav .gh{border:1px solid var(--line);border-radius:6px;padding:4px 12px;color:var(--text)!important}
+  nav .gh{background:var(--text);color:#f9faf7!important;border-radius:999px;padding:8px 18px;font-weight:600}
+  nav .gh:hover{background:#000}
 
-  header.hero{padding:96px 0 72px;text-align:center}
-  .pill{display:inline-block;font:11px var(--mono);color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:4px 14px;letter-spacing:.08em;margin-bottom:26px}
-  h1{font-size:clamp(40px,7vw,68px);line-height:1.08;font-weight:700;letter-spacing:-.02em}
-  h1 em{font-style:normal;color:var(--acc)}
-  .sub{max-width:640px;margin:22px auto 0;color:var(--dim);font-size:18px}
-  .install{display:inline-flex;align-items:center;gap:12px;margin-top:34px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px 18px;font:14px var(--mono);color:#cfd3dc}
-  .install b{color:#7ee787;font-weight:600}
-  .install button{background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:16px}
-  .cta{display:flex;gap:12px;justify-content:center;margin-top:26px}
-  .btn{display:inline-block;text-decoration:none;font-size:14px;font-weight:600;padding:10px 22px;border-radius:8px;border:1px solid var(--line);color:var(--dim)}
-  .btn:hover{border-color:#3a3f4c;color:var(--text)}
-  .btn.pri{background:var(--text);color:#0b0c0f;border-color:var(--text)}
-  .btn.pri:hover{background:#fff}
+  header.hero{padding:104px 0 88px;text-align:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;font:500 11.5px var(--mono);color:var(--acc);background:var(--acc-soft);border-radius:999px;padding:6px 16px;letter-spacing:.06em;margin-bottom:30px}
+  .pill i{width:6px;height:6px;border-radius:50%;background:var(--acc)}
+  h1{font-size:clamp(44px,7.5vw,80px);line-height:1.04;font-weight:800;letter-spacing:-.035em}
+  h1 .rot{color:var(--acc);display:inline-block;min-width:5.2ch;text-align:left;vertical-align:bottom}
+  .sub{max-width:620px;margin:26px auto 0;color:var(--dim);font-size:18px}
+  .cta{display:flex;gap:12px;justify-content:center;margin-top:36px}
+  .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-size:15px;font-weight:600;padding:13px 26px;border-radius:999px;border:1px solid var(--line);color:var(--text);background:var(--panel)}
+  .btn:hover{border-color:#c8cbc0;background:#fff}
+  .btn.pri{background:var(--text);color:#f9faf7;border-color:var(--text)}
+  .btn.pri:hover{background:#000}
+  .install{display:inline-flex;align-items:center;gap:14px;margin-top:30px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 20px;font:500 14px var(--mono);color:var(--text);box-shadow:0 1px 2px #0000000a}
+  .install b{color:var(--acc);font-weight:600}
+  .install button{background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:15px;padding:0}
+  .install button:hover{color:var(--acc)}
 
-  section{padding:64px 0;border-top:1px solid var(--line)}
-  .kicker{font:11px var(--mono);letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:14px}
-  h2{font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-bottom:14px}
-  .lede{color:var(--dim);max-width:640px;font-size:16.5px}
+  section{padding:76px 0}
+  .alt{background:var(--cream)}
+  .kicker{font:600 11.5px var(--mono);letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:16px}
+  h2{font-size:clamp(30px,4.2vw,44px);font-weight:800;letter-spacing:-.025em;line-height:1.12;margin-bottom:16px}
+  .lede{color:var(--dim);max-width:640px;font-size:17px}
+  .center{text-align:center}.center .lede{margin:0 auto}
 
-  .grid{display:grid;gap:14px;margin-top:36px}
+  .grid{display:grid;gap:16px;margin-top:44px}
   .g3{grid-template-columns:repeat(3,1fr)}
   .g2{grid-template-columns:repeat(2,1fr)}
   @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}
-  .card h3{font-size:15.5px;font-weight:650;margin-bottom:8px}
-  .card p{font-size:14px;color:var(--dim)}
-  .card .n{font:12px var(--mono);color:var(--acc)}
-  .card code{background:#0b0c0f;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:12.5px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;transition:box-shadow .2s,transform .2s}
+  .card:hover{box-shadow:0 8px 24px #1f201c0d;transform:translateY(-2px)}
+  .card h3{font-size:16.5px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
+  .card p{font-size:14.5px;color:var(--dim)}
+  .card .n{font:600 12px var(--mono);color:var(--acc)}
+  .card code{background:var(--cream);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:12.5px;color:var(--acc-deep)}
 
-  .term{background:#0d0f13;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:36px;font:13px/1.8 var(--mono)}
-  .term .th{display:flex;gap:7px;padding:11px 15px;border-bottom:1px solid var(--line);color:var(--dim);font-size:11.5px}
-  .term .th i{width:10px;height:10px;border-radius:50%;background:#2c3038;display:inline-block}
-  .term pre{padding:18px 20px;overflow-x:auto;color:#c9d0dc}
-  .c-say{color:#8fb0ff}.c-ok{color:#7ee787}.c-bad{color:#ff7b72}.c-dim{color:#5f6673}.c-acc{color:#ffd66e}
+  .term{background:#16180f;border-radius:16px;overflow:hidden;margin-top:40px;font:13px/1.85 var(--mono);border:1px solid #2a2d22;box-shadow:0 20px 50px #1f201c1f}
+  .term .th{display:flex;align-items:center;gap:7px;padding:12px 16px;border-bottom:1px solid #2a2d22;color:#8a8f7d;font-size:11.5px}
+  .term .th i{width:10px;height:10px;border-radius:50%;background:#3a3e30;display:inline-block}
+  .term pre{padding:20px 22px;overflow-x:auto;color:#d5dbc4}
+  .c-say{color:#a5c8ff}.c-ok{color:#9ee8a8}.c-bad{color:#ff9d94}.c-dim{color:#6b705e}.c-acc{color:#f4d67a}
 
-  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:44px}
   @media(max-width:760px){.split{grid-template-columns:1fr}}
-  .aud h4{font:12px var(--mono);letter-spacing:.1em;color:var(--acc2);margin-bottom:12px;text-transform:uppercase}
-  .aud.h h4{color:var(--acc)}
+  .aud h4{font:600 12px var(--mono);letter-spacing:.1em;color:var(--acc);margin-bottom:14px;text-transform:uppercase}
   .aud ul{list-style:none;padding:0}
-  .aud li{font:13.5px var(--mono);color:#c9d0dc;padding:6px 0;border-bottom:1px dashed #1c2029}
+  .aud li{font:500 13.5px var(--mono);color:var(--text);padding:9px 0;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;gap:12px}
   .aud li:last-child{border:0}
-  .aud li span{color:var(--dim);font-family:inherit;font-size:12.5px}
+  .aud li span{color:var(--dim);font-family:var(--sans);font-size:12.5px;text-align:right}
 
-  .flow{display:flex;flex-wrap:wrap;gap:0;margin-top:36px;font:13px var(--mono)}
-  .flow span{display:flex;align-items:center;gap:8px;color:#c9d0dc}
-  .flow i{color:var(--dim);font-style:normal;padding:0 10px}
-  .flow b{color:var(--acc);font-weight:500}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:40px;font:500 13px var(--mono);justify-content:center}
+  .flow span{color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 14px}
+  .flow i{color:var(--acc);font-style:normal;padding:0 6px}
+  .flow b{color:var(--acc);font-weight:600}
 
-  footer{padding:48px 0 60px;border-top:1px solid var(--line);color:var(--dim);font-size:13.5px}
+  footer{padding:52px 0 64px;border-top:1px solid var(--line);color:var(--dim);font-size:13.5px}
   footer .wrap{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
-  footer a{color:var(--dim)}
+  footer a{color:var(--dim);text-decoration:none}
+  footer a:hover{color:var(--acc)}
   footer .r{margin-left:auto}
 </style>
 </head>
@@ -92,7 +103,7 @@ const GH = "https://github.com/wookat/witness";
 
 <nav><div class="wrap">
   <a class="logo" href="/">
-    <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#ff5147"/><circle cx="16" cy="14" r="5.5" fill="#0b0c0f"/><rect x="13.5" y="21" width="5" height="3" rx="1.5" fill="#0b0c0f"/></svg>
+    <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#406524"/><circle cx="16" cy="14" r="5.5" fill="#f9faf7"/><rect x="13.5" y="21" width="5" height="3" rx="1.5" fill="#f9faf7"/></svg>
     witness
   </a>
   <div class="links">
@@ -105,17 +116,17 @@ const GH = "https://github.com/wookat/witness";
 </div></nav>
 
 <header class="hero"><div class="wrap">
-  <span class="pill">OPEN SOURCE · MIT · LOCAL-FIRST</span>
-  <h1>You say it.<br>Witness <em>proves</em> it.</h1>
-  <p class="sub">Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second: clicks, requests, errors, DOM state, full replay. Then hands the package to your AI coding agent.</p>
-  <div class="install"><b>$</b> npm i -g github:wookat/witness<button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
+  <span class="pill"><i></i>OPEN SOURCE · MIT · LOCAL-FIRST</span>
+  <h1>You say it.<br>Witness proves <span class="rot" id="rot">it.</span></h1>
+  <p class="sub">Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second, then hands the package to your AI coding agent.</p>
   <div class="cta">
     <a class="btn pri" href={GH}>View on GitHub</a>
     <a class="btn" href="#how">How it works ↓</a>
   </div>
+  <div class="install"><b>$</b> npm i -g github:wookat/witness<button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
 </div></header>
 
-<section><div class="wrap">
+<section class="alt"><div class="wrap center">
   <div class="kicker">The problem</div>
   <h2>Agents can't see what you see.</h2>
   <p class="lede">A human notices “the button fades weirdly when I scroll” in two seconds. Writing that up for an AI agent takes ten minutes of screenshots, element selectors and prompt crafting — and the result still loses the <i>why</i>. Voice is the cheapest annotation channel there is; it just never had a recorder.</p>
@@ -130,7 +141,7 @@ const GH = "https://github.com/wookat/witness";
     <div class="card"><div class="n">02</div><h3>Operations + causal bursts</h3><p>Every click captures its ~1.8s aftermath: requests, responses, console errors, DOM changes. A click with <i>no</i> aftermath is itself evidence.</p></div>
     <div class="card"><div class="n">03</div><h3>Page evolution</h3><p>rrweb full-DOM replay + event-driven screenshots + periodic DOM snapshots. Rewind the exact page state at any second.</p></div>
   </div>
-  <div class="flow" style="margin-top:30px">
+  <div class="flow">
     <span><b>wit start</b> &lt;url&gt;</span><i>→</i>
     <span>browse + talk</span><i>→</i>
     <span>Ctrl+click / M to mark</span><i>→</i>
@@ -139,7 +150,7 @@ const GH = "https://github.com/wookat/witness";
   </div>
 </div></section>
 
-<section id="evidence"><div class="wrap">
+<section id="evidence" class="alt"><div class="wrap">
   <div class="kicker">The output</div>
   <h2>Your words become evidence anchors.</h2>
   <p class="lede">Each spoken fragment becomes a block on a timeline with the causal facts of that moment attached — the “causal burst”. This is what your agent actually reads:</p>
@@ -168,22 +179,22 @@ const GH = "https://github.com/wookat/witness";
   <div class="kicker">Two audiences, one package</div>
   <h2>Humans get a replay. Agents get a structure.</h2>
   <div class="split">
-    <div class="card aud h"><h4>For humans</h4><ul>
-      <li>review.html <span>— speech cards + audio seek + screenshots</span></li>
-      <li>▶ DOM replay <span>— embedded rrweb player, real page states</span></li>
-      <li>film strip <span>— scrub the session like a video</span></li>
-      <li>audio.webm <span>— the original take</span></li>
+    <div class="card aud"><h4>For humans</h4><ul>
+      <li>review.html <span>speech cards + audio seek + screenshots</span></li>
+      <li>▶ DOM replay <span>embedded rrweb player, real page states</span></li>
+      <li>film strip <span>scrub the session like a video</span></li>
+      <li>audio.webm <span>the original take</span></li>
     </ul></div>
     <div class="card aud"><h4>For AI agents</h4><ul>
-      <li>PROMPT.md <span>— handoff instructions + page vocabulary</span></li>
-      <li>session.md <span>— the evidence timeline above</span></li>
-      <li>events.jsonl <span>— complete raw stream, crash-safe</span></li>
-      <li>dom/ · bodies/ · shots/ <span>— snapshots, payloads, frames</span></li>
+      <li>PROMPT.md <span>handoff instructions + page vocabulary</span></li>
+      <li>session.md <span>the evidence timeline above</span></li>
+      <li>events.jsonl <span>complete raw stream, crash-safe</span></li>
+      <li>dom/ · bodies/ · shots/ <span>snapshots, payloads, frames</span></li>
     </ul></div>
   </div>
 </div></section>
 
-<section id="mcp"><div class="wrap">
+<section id="mcp" class="alt"><div class="wrap">
   <div class="kicker">Pull, don't push</div>
   <h2><code>wit mcp</code> — evidence as an API.</h2>
   <p class="lede">Instead of a static dump, the session becomes a stdio MCP server. Point any MCP-capable agent at it and it queries exactly the evidence it needs:</p>
@@ -208,14 +219,14 @@ const GH = "https://github.com/wookat/witness";
   </div>
 </div></section>
 
-<section id="install"><div class="wrap">
-  <div class="kicker">Install & run</div>
+<section id="install" class="alt"><div class="wrap">
+  <div class="kicker">Install &amp; run</div>
   <h2>Two minutes to your first evidence package.</h2>
   <div class="term">
     <div class="th"><i></i><i></i><i></i>&nbsp;terminal</div>
 <pre><span class="c-dim"># needs Node 18+ and system Edge/Chrome — no downloads, no keys</span>
 npm i -g github:wookat/witness
-wit start http://localhost:5173     <span class="c-dim"># managed browser opens — talk & click</span>
+wit start http://localhost:5173     <span class="c-dim"># managed browser opens — talk &amp; click</span>
 <span class="c-dim"># stop → .witness/sessions/&lt;ts&gt;/  — feed PROMPT.md + dir to your agent</span>
 
 wit list                            <span class="c-dim"># your sessions</span>
@@ -231,6 +242,20 @@ wit mcp                             <span class="c-dim"># serve the latest as an
   <span>witness · MIT · a <a href="https://zalize.com">zalize</a> open-source project</span>
   <span class="r"><a href={GH}>GitHub</a> &nbsp;·&nbsp; <a href={GH + "/issues"}>Issues</a> &nbsp;·&nbsp; <a href={GH + "/blob/main/VISION.md"}>Vision</a></span>
 </div></footer>
+
+<script>
+  const words = ["it.", "the bug.", "the jank.", "the 500.", "the why."];
+  const el = document.getElementById("rot");
+  let wi = 0;
+  if (el && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    setInterval(() => {
+      wi = (wi + 1) % words.length;
+      el.style.opacity = "0";
+      setTimeout(() => { el.textContent = words[wi]; el.style.opacity = "1"; }, 220);
+    }, 2400);
+    el.style.transition = "opacity .22s";
+  }
+</script>
 
 </body>
 </html>
