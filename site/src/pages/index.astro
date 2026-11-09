@@ -1,0 +1,236 @@
+---
+const GH = "https://github.com/wookat/witness";
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Witness — voice-anchored evidence recorder for AI coding agents</title>
+<meta name="description" content="Talk, point, ship the fix. Witness records your voice, clicks, network, errors and DOM replay while you use a product — then hands your AI agent a causal evidence package it can act on.">
+<meta property="og:title" content="Witness — your voice, welded to the evidence">
+<meta property="og:description" content="Say what's wrong, point at it, keep going. One recording → a causal evidence package your AI coding agent can fix from.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23101114'/><circle cx='16' cy='14' r='6' fill='%23ff5147'/><rect x='13' y='22' width='6' height='3' rx='1.5' fill='%23fff'/></svg>">
+<style>
+  :root{
+    --bg:#0b0c0f; --panel:#111318; --line:#23262e; --text:#e8eaf0; --dim:#9aa1ad;
+    --acc:#ff5147; --acc2:#4a5cc4; --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font:16px/1.7 -apple-system,"Segoe UI",Inter,"Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  code,pre{font-family:var(--mono)}
+  ::selection{background:#ff514733}
+
+  nav{position:sticky;top:0;z-index:10;background:#0b0c0fd9;backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:24px;height:56px}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:650;font-size:15px;text-decoration:none}
+  .logo svg{width:20px;height:20px}
+  nav .links{margin-left:auto;display:flex;gap:18px;font-size:13.5px}
+  nav .links a{color:var(--dim);text-decoration:none}
+  nav .links a:hover{color:var(--text)}
+  nav .gh{border:1px solid var(--line);border-radius:6px;padding:4px 12px;color:var(--text)!important}
+
+  header.hero{padding:96px 0 72px;text-align:center}
+  .pill{display:inline-block;font:11px var(--mono);color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:4px 14px;letter-spacing:.08em;margin-bottom:26px}
+  h1{font-size:clamp(40px,7vw,68px);line-height:1.08;font-weight:700;letter-spacing:-.02em}
+  h1 em{font-style:normal;color:var(--acc)}
+  .sub{max-width:640px;margin:22px auto 0;color:var(--dim);font-size:18px}
+  .install{display:inline-flex;align-items:center;gap:12px;margin-top:34px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px 18px;font:14px var(--mono);color:#cfd3dc}
+  .install b{color:#7ee787;font-weight:600}
+  .install button{background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:16px}
+  .cta{display:flex;gap:12px;justify-content:center;margin-top:26px}
+  .btn{display:inline-block;text-decoration:none;font-size:14px;font-weight:600;padding:10px 22px;border-radius:8px;border:1px solid var(--line);color:var(--dim)}
+  .btn:hover{border-color:#3a3f4c;color:var(--text)}
+  .btn.pri{background:var(--text);color:#0b0c0f;border-color:var(--text)}
+  .btn.pri:hover{background:#fff}
+
+  section{padding:64px 0;border-top:1px solid var(--line)}
+  .kicker{font:11px var(--mono);letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:14px}
+  h2{font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-bottom:14px}
+  .lede{color:var(--dim);max-width:640px;font-size:16.5px}
+
+  .grid{display:grid;gap:14px;margin-top:36px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}
+  .card h3{font-size:15.5px;font-weight:650;margin-bottom:8px}
+  .card p{font-size:14px;color:var(--dim)}
+  .card .n{font:12px var(--mono);color:var(--acc)}
+  .card code{background:#0b0c0f;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:12.5px}
+
+  .term{background:#0d0f13;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:36px;font:13px/1.8 var(--mono)}
+  .term .th{display:flex;gap:7px;padding:11px 15px;border-bottom:1px solid var(--line);color:var(--dim);font-size:11.5px}
+  .term .th i{width:10px;height:10px;border-radius:50%;background:#2c3038;display:inline-block}
+  .term pre{padding:18px 20px;overflow-x:auto;color:#c9d0dc}
+  .c-say{color:#8fb0ff}.c-ok{color:#7ee787}.c-bad{color:#ff7b72}.c-dim{color:#5f6673}.c-acc{color:#ffd66e}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px}
+  @media(max-width:760px){.split{grid-template-columns:1fr}}
+  .aud h4{font:12px var(--mono);letter-spacing:.1em;color:var(--acc2);margin-bottom:12px;text-transform:uppercase}
+  .aud.h h4{color:var(--acc)}
+  .aud ul{list-style:none;padding:0}
+  .aud li{font:13.5px var(--mono);color:#c9d0dc;padding:6px 0;border-bottom:1px dashed #1c2029}
+  .aud li:last-child{border:0}
+  .aud li span{color:var(--dim);font-family:inherit;font-size:12.5px}
+
+  .flow{display:flex;flex-wrap:wrap;gap:0;margin-top:36px;font:13px var(--mono)}
+  .flow span{display:flex;align-items:center;gap:8px;color:#c9d0dc}
+  .flow i{color:var(--dim);font-style:normal;padding:0 10px}
+  .flow b{color:var(--acc);font-weight:500}
+
+  footer{padding:48px 0 60px;border-top:1px solid var(--line);color:var(--dim);font-size:13.5px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+  footer a{color:var(--dim)}
+  footer .r{margin-left:auto}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="logo" href="/">
+    <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#ff5147"/><circle cx="16" cy="14" r="5.5" fill="#0b0c0f"/><rect x="13.5" y="21" width="5" height="3" rx="1.5" fill="#0b0c0f"/></svg>
+    witness
+  </a>
+  <div class="links">
+    <a href="#how">How it works</a>
+    <a href="#evidence">Evidence</a>
+    <a href="#mcp">MCP</a>
+    <a href="#install">Install</a>
+    <a class="gh" href={GH}>GitHub ★</a>
+  </div>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="pill">OPEN SOURCE · MIT · LOCAL-FIRST</span>
+  <h1>You say it.<br>Witness <em>proves</em> it.</h1>
+  <p class="sub">Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second: clicks, requests, errors, DOM state, full replay. Then hands the package to your AI coding agent.</p>
+  <div class="install"><b>$</b> npm i -g github:wookat/witness<button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
+  <div class="cta">
+    <a class="btn pri" href={GH}>View on GitHub</a>
+    <a class="btn" href="#how">How it works ↓</a>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+  <div class="kicker">The problem</div>
+  <h2>Agents can't see what you see.</h2>
+  <p class="lede">A human notices “the button fades weirdly when I scroll” in two seconds. Writing that up for an AI agent takes ten minutes of screenshots, element selectors and prompt crafting — and the result still loses the <i>why</i>. Voice is the cheapest annotation channel there is; it just never had a recorder.</p>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <div class="kicker">How it works</div>
+  <h2>Three recording lines, one timeline.</h2>
+  <p class="lede"><code>wit start &lt;dev-url&gt;</code> opens a managed browser. From that moment, three streams run in parallel — zero manual work:</p>
+  <div class="grid g3">
+    <div class="card"><div class="n">01</div><h3>Your voice</h3><p>Continuous audio + live speech-to-text. Say everything on your mind — one take, many issues, no need to split.</p></div>
+    <div class="card"><div class="n">02</div><h3>Operations + causal bursts</h3><p>Every click captures its ~1.8s aftermath: requests, responses, console errors, DOM changes. A click with <i>no</i> aftermath is itself evidence.</p></div>
+    <div class="card"><div class="n">03</div><h3>Page evolution</h3><p>rrweb full-DOM replay + event-driven screenshots + periodic DOM snapshots. Rewind the exact page state at any second.</p></div>
+  </div>
+  <div class="flow" style="margin-top:30px">
+    <span><b>wit start</b> &lt;url&gt;</span><i>→</i>
+    <span>browse + talk</span><i>→</i>
+    <span>Ctrl+click / M to mark</span><i>→</i>
+    <span>■ stop</span><i>→</i>
+    <span><b>evidence package</b></span>
+  </div>
+</div></section>
+
+<section id="evidence"><div class="wrap">
+  <div class="kicker">The output</div>
+  <h2>Your words become evidence anchors.</h2>
+  <p class="lede">Each spoken fragment becomes a block on a timeline with the causal facts of that moment attached — the “causal burst”. This is what your agent actually reads:</p>
+  <div class="term">
+    <div class="th"><i></i><i></i><i></i>&nbsp;session.md</div>
+<pre><span class="c-say">### 00:09 · SAY</span>
+&gt; [00:15] <span class="c-say">"the button fades and shrinks when I scroll"</span>
+<span class="c-dim">- `00:08`  SCROLL y=3936</span>
+- `00:08`  <span class="c-acc">MUT</span>  `button.feedback` data-collapsed: false → true
+- `00:11`  <span class="c-acc">MUT</span>  `button.feedback` data-collapsed: true → false   <span class="c-dim">← flapping on the boundary</span>
+
+<span class="c-say">### 00:34 · SAY</span>
+&gt; [00:34] <span class="c-say">"the submit button does nothing"</span>
+- `00:33`  <span class="c-ok">CLICK</span> `button#submit` “提交” · @482,701
+  <span class="c-dim">└─ (page did nothing for 1.8s after the click — that itself is evidence)</span>
+
+<span class="c-say">### 01:02 · SAY</span>
+&gt; [01:02] <span class="c-say">"the orders API returns wrong data"</span>
+- `01:01`  <span class="c-ok">CLICK</span> `a[href="/orders"]` “订单”
+  - `01:01`  <span class="c-dim">NET →</span> GET /api/orders?page=1
+  - `01:01`  <span class="c-bad">NET ←</span> **200** /api/orders · [body](bodies/req_0041.json)   <span class="c-dim">← items: []</span></pre>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="kicker">Two audiences, one package</div>
+  <h2>Humans get a replay. Agents get a structure.</h2>
+  <div class="split">
+    <div class="card aud h"><h4>For humans</h4><ul>
+      <li>review.html <span>— speech cards + audio seek + screenshots</span></li>
+      <li>▶ DOM replay <span>— embedded rrweb player, real page states</span></li>
+      <li>film strip <span>— scrub the session like a video</span></li>
+      <li>audio.webm <span>— the original take</span></li>
+    </ul></div>
+    <div class="card aud"><h4>For AI agents</h4><ul>
+      <li>PROMPT.md <span>— handoff instructions + page vocabulary</span></li>
+      <li>session.md <span>— the evidence timeline above</span></li>
+      <li>events.jsonl <span>— complete raw stream, crash-safe</span></li>
+      <li>dom/ · bodies/ · shots/ <span>— snapshots, payloads, frames</span></li>
+    </ul></div>
+  </div>
+</div></section>
+
+<section id="mcp"><div class="wrap">
+  <div class="kicker">Pull, don't push</div>
+  <h2><code>wit mcp</code> — evidence as an API.</h2>
+  <p class="lede">Instead of a static dump, the session becomes a stdio MCP server. Point any MCP-capable agent at it and it queries exactly the evidence it needs:</p>
+  <div class="grid g3">
+    <div class="card"><h3><code>list_says</code></h3><p>Every spoken fragment with timestamps — the issue anchors.</p></div>
+    <div class="card"><h3><code>events_around</code></h3><p>Raw events in a time window, filtered by kind.</p></div>
+    <div class="card"><h3><code>get_dom_state</code></h3><p>Full DOM HTML nearest to a timestamp.</p></div>
+    <div class="card"><h3><code>get_errors</code></h3><p>Console errors, page errors, HTTP ≥ 400.</p></div>
+    <div class="card"><h3><code>get_shot / get_body</code></h3><p>Screenshot frames and response payloads on demand.</p></div>
+    <div class="card"><h3><code>session_md</code></h3><p>The rendered timeline when the agent wants it all.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="kicker">Principles</div>
+  <h2>Evidence never lies.</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Local-first, zero config</h3><p>System Edge/Chrome + Edge SpeechRecognition — free real-time transcription, no API key, works anywhere. Cloud ASR and LLM polish are optional layers, never the pipeline.</p></div>
+    <div class="card"><h3>Words are never rewritten</h3><p>Your speech lands verbatim in events.jsonl. Merging, correction and association are display-layer suggestions — the raw testimony stays auditable.</p></div>
+    <div class="card"><h3>Evidence ≠ intent</h3><p>Clicks and scrolls are facts, not complaints. Without a spoken anchor, agents are told explicitly: never infer a bug from behavior alone.</p></div>
+    <div class="card"><h3>Privacy engineered in</h3><p>Password fields masked in four channels; POST bodies redact credential fields; P freezes everything, mic included; <code>WIT_NO_BODIES</code> for sensitive apps.</p></div>
+  </div>
+</div></section>
+
+<section id="install"><div class="wrap">
+  <div class="kicker">Install & run</div>
+  <h2>Two minutes to your first evidence package.</h2>
+  <div class="term">
+    <div class="th"><i></i><i></i><i></i>&nbsp;terminal</div>
+<pre><span class="c-dim"># needs Node 18+ and system Edge/Chrome — no downloads, no keys</span>
+npm i -g github:wookat/witness
+wit start http://localhost:5173     <span class="c-dim"># managed browser opens — talk & click</span>
+<span class="c-dim"># stop → .witness/sessions/&lt;ts&gt;/  — feed PROMPT.md + dir to your agent</span>
+
+wit list                            <span class="c-dim"># your sessions</span>
+wit mcp                             <span class="c-dim"># serve the latest as an MCP server</span></pre>
+  </div>
+  <div class="cta" style="justify-content:flex-start">
+    <a class="btn pri" href={GH}>★ Star on GitHub</a>
+    <a class="btn" href={GH + "/blob/main/VISION.md"}>Read the vision ↗</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span>witness · MIT · a <a href="https://zalize.com">zalize</a> open-source project</span>
+  <span class="r"><a href={GH}>GitHub</a> &nbsp;·&nbsp; <a href={GH + "/issues"}>Issues</a> &nbsp;·&nbsp; <a href={GH + "/blob/main/VISION.md"}>Vision</a></span>
+</div></footer>
+
+</body>
+</html>

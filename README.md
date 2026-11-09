@@ -1,6 +1,6 @@
 # Witness
 
-**Voice-anchored causal evidence recorder for AI coding agents.** · 愿景与路线：[VISION.md](VISION.md)
+**Voice-anchored causal evidence recorder for AI coding agents.** · 官网：[witness.zalize.com](https://witness.zalize.com) · 愿景与路线：[VISION.md](VISION.md)
 
 你说一句，机器把那句话的证据链自动补全。你像平时一样体验网页、用嘴说哪里不对，Witness 同时把页面的每次点击、每个请求、每条报错、每个状态变化按毫秒记下，再把"你这句话"和"那一秒发生的因果事实"焊在一起——产出一份带截图、元素定位、请求链路和报错的证据包，直接喂给 AI 编码 agent 修。
 
