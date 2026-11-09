@@ -1,0 +1,35 @@
+{
+  "name": "witness-recorder",
+  "version": "0.2.0",
+  "repository": { "type": "git", "url": "https://github.com/wookat/witness" },
+  "keywords": ["qa", "evidence", "ai-agents", "playwright", "mcp", "voice", "bug-report"],
+  "description": "Voice-anchored causal evidence recorder for AI coding agents. Talk, point, get an evidence packet your agent can act on.",
+  "type": "module",
+  "bin": {
+    "wit": "dist/cli.js",
+    "rec": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js",
+    "test": "npm run build && node --test \"test/**/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "openai": "^4.77.0",
+    "playwright": "^1.48.0",
+    "rrweb": "^2.2.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3"
+  },
+  "license": "MIT"
+}
