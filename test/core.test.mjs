@@ -178,7 +178,7 @@ test("review html: audio player + blocks data + no external deps", () => {
   const html = renderReviewHtml([
     say(1000, "你好", 1000, 1500), say(1800, "在吗", 1800, 2300), click(9000),
   ], meta);
-  assert.ok(html.includes('<audio id="au" controls src="audio.webm">'));
+  assert.ok(html.includes('<audio id="au" src="audio.webm"'));
   assert.ok(html.includes('"frags"'));
   assert.ok(!html.includes("https://cdn."));
 });
