@@ -1,4 +1,5 @@
 ---
+import AppDemo from "./AppDemo.astro";
 const GH = "https://github.com/wookat/witness";
 ---
 <header class="hero"><div class="wrap">
@@ -11,6 +12,7 @@ const GH = "https://github.com/wookat/witness";
     <a class="btn" href="#how">How it works ↓</a>
   </div>
   <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
+  <AppDemo />
 </div></header>
 <style>
   .hero{position:relative;padding:110px 0 96px;text-align:center;overflow:hidden}

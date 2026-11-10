@@ -1,0 +1,123 @@
+---
+// Live product demo — a fake managed browser auto-playing one SAY → causal burst loop.
+---
+<div class="stage rv" data-d="400">
+  <div class="win">
+    <div class="chrome">
+      <i class="r"></i><i class="y"></i><i class="g"></i>
+      <div class="url"><svg width="10" height="10" viewBox="0 0 12 12"><rect x="2" y="5" width="8" height="6" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="currentColor"/></svg> localhost:5173</div>
+      <span class="rec"><b></b>REC 00:07</span>
+    </div>
+    <div class="body">
+      <!-- left: the product under test -->
+      <div class="app">
+        <div class="a-nav"><span class="a-logo"></span><span class="a-link"></span><span class="a-link s"></span><span class="a-link s"></span></div>
+        <div class="a-hero"><div class="a-title"></div><div class="a-line"></div><div class="a-line short"></div></div>
+        <div class="a-cards"><div class="a-card"></div><div class="a-card"></div><div class="a-card"></div></div>
+        <button class="a-btn" type="button" tabindex="-1">提交订单</button>
+        <!-- wit toolbar -->
+        <div class="tb"><b class="dot"></b><span>wit</span><i class="sep"></i><kbd title="mark element">M</kbd><kbd title="issue">N</kbd><kbd title="pause">P</kbd><i class="sep"></i><span class="sq"></span></div>
+        <!-- live transcript bubble -->
+        <div class="bubble"><span class="mic">●</span>“这个按钮点了没反应”</div>
+        <!-- cursor -->
+        <svg class="cur" viewBox="0 0 24 24"><path d="M5 3l14 8-6.5 1.5L9 19z" fill="#17171c" stroke="#fff" stroke-width="1.4"/></svg>
+        <div class="rip"></div>
+      </div>
+      <!-- right: live evidence panel -->
+      <div class="panel">
+        <div class="p-head">session.md</div>
+        <div class="p-say"><span class="p-ts">00:06</span><span class="p-tag">SAY</span><p>“这个按钮点了没反应”</p></div>
+        <div class="p-ev e1"><span class="k ok">CLICK</span><span class="v">button#submit · @482,701</span></div>
+        <div class="p-ev e2"><span class="k dim">NET</span><span class="v">— no requests</span></div>
+        <div class="p-ev e3"><span class="k dim">CONSOLE</span><span class="v">— clean</span></div>
+        <div class="p-ev e4"><span class="k dim">MUT</span><span class="v">— no DOM change</span></div>
+        <div class="p-note">└─ page did nothing for 1.8s —<br>&nbsp;&nbsp;&nbsp;that itself is evidence</div>
+      </div>
+    </div>
+  </div>
+  <div class="shadow"></div>
+</div>
+
+<style>
+  .stage{position:relative;max-width:920px;margin:64px auto 0;perspective:1400px}
+  .win{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 40px 90px #17171c1f,0 2px 8px #17171c0d;transform:rotateX(2.5deg);transform-origin:top center}
+  .shadow{position:absolute;inset:auto 6% -18px 6%;height:40px;background:radial-gradient(ellipse,#4f3df022,transparent 70%);filter:blur(10px);z-index:-1}
+
+  .chrome{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:#fbfaf8}
+  .chrome i{width:10px;height:10px;border-radius:50%}
+  .chrome .r{background:#ef4444}.chrome .y{background:#f4b83f}.chrome .g{background:#3fc96a}
+  .url{display:flex;align-items:center;gap:6px;margin-left:10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:4px 12px;font:500 11.5px var(--mono);color:var(--dim)}
+  .rec{margin-left:auto;display:flex;align-items:center;gap:6px;font:600 11px var(--mono);color:var(--rec)}
+  .rec b{width:7px;height:7px;border-radius:50%;background:var(--rec);animation:blink-dot 1.4s ease-in-out infinite}
+  @keyframes blink-dot{50%{opacity:.35}}
+
+  .body{display:grid;grid-template-columns:1.25fr 1fr;min-height:340px}
+  @media(max-width:760px){.body{grid-template-columns:1fr}.panel{display:none}}
+
+  /* ---- fake app ---- */
+  .app{position:relative;padding:20px 24px;border-right:1px solid var(--line);overflow:hidden}
+  .a-nav{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+  .a-logo{width:56px;height:12px;border-radius:6px;background:#d8d4f8}
+  .a-link{width:38px;height:8px;border-radius:4px;background:#e9e7e0;margin-left:auto}
+  .a-link.s{position:relative;left:-6px}
+  .a-link:first-of-type{margin-left:auto}
+  .a-hero .a-title{width:60%;height:18px;border-radius:6px;background:#e4e1ef;margin-bottom:12px}
+  .a-line{width:84%;height:9px;border-radius:4px;background:#efede7;margin-bottom:8px}
+  .a-line.short{width:58%}
+  .a-cards{display:flex;gap:10px;margin:18px 0 20px}
+  .a-card{flex:1;height:52px;border-radius:9px;background:#f4f2fa;border:1px solid #e9e6f5}
+  .a-btn{position:relative;background:linear-gradient(135deg,#6c5cf5,#4f3df0);color:#fff;border:0;border-radius:9px;padding:9px 22px;font:600 12.5px var(--sans);letter-spacing:.02em}
+
+  /* wit toolbar */
+  .tb{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:7px;background:#17171c;border-radius:9px;padding:6px 10px;box-shadow:0 6px 18px #17171c33}
+  .tb .dot{width:7px;height:7px;border-radius:50%;background:var(--rec);animation:blink-dot 1.4s ease-in-out infinite}
+  .tb span{color:#fbfaf8;font:700 11px var(--mono)}
+  .tb kbd{color:#8f8ba8;font:600 9.5px var(--mono);background:#26242f;border-radius:4px;padding:1px 5px}
+  .tb .sep{width:1px;height:12px;background:#3a3748}
+  .tb .sq{width:8px;height:8px;border-radius:2px;background:#fbfaf8}
+
+  /* speech bubble */
+  .bubble{position:absolute;left:24px;bottom:18px;display:flex;align-items:center;gap:8px;background:#17171c;color:#fbfaf8;font:500 12.5px var(--sans);border-radius:12px 12px 12px 3px;padding:9px 14px;box-shadow:0 10px 26px #17171c33;animation:bubble 9s infinite;opacity:0}
+  .bubble .mic{color:var(--rec);font-size:9px;animation:blink-dot 1.4s infinite}
+  @keyframes bubble{4%{opacity:0;transform:translateY(8px)}9%{opacity:1;transform:none}88%{opacity:1}96%,100%{opacity:0}}
+
+  /* cursor + ripple */
+  .cur{position:absolute;width:20px;height:20px;left:72%;top:78%;filter:drop-shadow(0 2px 4px #0003);animation:cur 9s infinite;opacity:0}
+  @keyframes cur{
+    0%{opacity:0;left:72%;top:78%}
+    8%{opacity:1}
+    26%,30%{left:16.5%;top:88%}
+    33%{transform:scale(.82)}
+    36%{transform:scale(1)}
+    78%{opacity:1;left:16.5%;top:88%}
+    88%{opacity:0}
+    100%{opacity:0;left:72%;top:78%}
+  }
+  .rip{position:absolute;left:16.5%;top:88%;width:26px;height:26px;margin:-13px;border-radius:50%;border:2px solid var(--acc);opacity:0;animation:rip 9s infinite}
+  @keyframes rip{31%{opacity:.8;transform:scale(.4)}46%{opacity:0;transform:scale(1.6)}100%{opacity:0}}
+
+  /* ---- evidence panel ---- */
+  .panel{background:#fbfaf8;padding:16px 18px;font-family:var(--mono);font-size:12px}
+  .p-head{color:var(--dim);font-size:11px;letter-spacing:.08em;margin-bottom:14px}
+  .p-say{display:flex;gap:9px;align-items:baseline;background:var(--acc-soft);border-radius:9px;padding:9px 12px;animation:pin 9s infinite;opacity:0}
+  .p-ts{color:var(--dim);font-size:10.5px}
+  .p-tag{font-size:9.5px;font-weight:600;letter-spacing:.1em;color:var(--acc);background:#fff;border-radius:4px;padding:1px 6px}
+  .p-say p{color:var(--ink);font:500 12px var(--sans)}
+  @keyframes pin{10%{opacity:0;transform:translateY(6px)}16%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+  .p-ev{display:flex;gap:9px;padding:5px 0 5px 14px;opacity:0;animation:ev 9s infinite}
+  .p-ev .k{width:56px;flex:none;font-size:10px;font-weight:600;padding-top:1px}
+  .k.ok{color:#1d9d4e}.k.dim{color:#9a9789}
+  .p-ev .v{color:#55524a}
+  .e1{animation-delay:0s}
+  @keyframes ev{
+    0%,36%{opacity:0;transform:translateX(8px)}
+    42%,92%{opacity:1;transform:none}
+    98%,100%{opacity:0}
+  }
+  .e2{animation-name:ev2}.e3{animation-name:ev3}.e4{animation-name:ev4}
+  @keyframes ev2{0%,46%{opacity:0;transform:translateX(8px)}52%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+  @keyframes ev3{0%,56%{opacity:0;transform:translateX(8px)}62%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+  @keyframes ev4{0%,66%{opacity:0;transform:translateX(8px)}72%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+  .p-note{margin-top:10px;padding-left:14px;color:var(--acc-ink);font-size:11px;line-height:1.6;opacity:0;animation:note 9s infinite}
+  @keyframes note{0%,74%{opacity:0;transform:translateY(6px)}82%,92%{opacity:1;transform:none}98%,100%{opacity:0}}
+</style>
