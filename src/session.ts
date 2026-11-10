@@ -5,6 +5,7 @@ import { fmt, type Ev } from "./events.js";
 import type { Transcript } from "./transcribe.js";
 import type { AssocMap } from "./associate.js";
 import { rrwebUmd } from "./rr.js";
+import { makeAudioSeekable } from "./audio.js";
 import { readFileSync, readdirSync } from "node:fs";
 
 export interface Meta {
@@ -217,9 +218,13 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
   .sp{flex:1}
   header{position:sticky;top:0;z-index:8;background:rgba(255,255,255,.8);backdrop-filter:saturate(1.5) blur(14px);-webkit-backdrop-filter:saturate(1.5) blur(14px);border-bottom:1px solid rgba(16,18,22,.07);padding:10px 22px;display:flex;gap:16px;align-items:center}
   header .brand{font-weight:800;font-size:15px;letter-spacing:-.02em}
-  header .brand i{font-style:normal;color:#ff4f00}
+  header .brand .dl{position:relative;display:inline-block}
+  header .brand .dl:after{content:"";position:absolute;top:.02em;left:50%;transform:translateX(-50%);width:.24em;height:.24em;border-radius:50%;background:#ff4f00;animation:br 2.6s ease-in-out infinite}
+  @keyframes br{0%,100%{opacity:.4}50%{opacity:1}}
   header .u{font-weight:650;font-size:13.5px;max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em}
   header .m{color:#989ea9;font-size:12px;white-space:nowrap}
+  header a.m{text-decoration:none}
+  header a.m:hover{text-decoration:underline;color:#565d6b}
   .btn{border:1px solid rgba(16,18,22,.1);background:#fff;color:#1b1e26;padding:7px 16px;border-radius:99px;cursor:pointer;font-size:13px;font-weight:550;box-shadow:0 1px 2px rgba(16,18,22,.05);transition:all .15s}
   .btn:hover{border-color:rgba(16,18,22,.22);transform:translateY(-1px);box-shadow:0 4px 12px -4px rgba(16,18,22,.18)}
   .btn:active{transform:none;box-shadow:0 1px 2px rgba(16,18,22,.05)}
@@ -242,12 +247,23 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
   .tr .pp:active{transform:scale(.97)}
   .tr .tc{font:12.5px/1 ui-monospace,"SF Mono",Consolas,monospace;color:#8b919e;font-variant-numeric:tabular-nums;letter-spacing:.02em;white-space:nowrap}
   .tr .tc b{color:#1b1e26;font-weight:600}
-  .tr select{border:1px solid rgba(16,18,22,.1);border-radius:8px;font-size:12px;padding:3px 8px;color:#565d6b;background:#fff;cursor:pointer}
-  .tr label{font-size:12px;color:#989ea9;display:flex;gap:5px;align-items:center;user-select:none;cursor:pointer}
-  .tr label input{accent-color:#ff4f00;width:13px;height:13px;margin:0}
+  .spd{display:inline-flex;background:#f1f1ef;border-radius:9px;padding:2px;gap:1px}
+  .spd b{padding:3px 10px;font-size:11.5px;font-weight:600;color:#989ea9;border-radius:7px;cursor:pointer;user-select:none;transition:all .12s}
+  .spd b:hover{color:#565d6b}
+  .spd b.on{background:#fff;color:#1b1e26;box-shadow:0 1px 3px rgba(16,18,22,.12)}
+  .sw{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;font-size:12px;color:#989ea9}
+  .sw input{display:none}
+  .sw i{width:30px;height:17px;border-radius:99px;background:#e2e4e8;position:relative;transition:background .18s;flex:none}
+  .sw i:after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(16,18,22,.3);transition:left .18s}
+  .sw input:checked+i{background:#ff4f00}
+  .sw input:checked+i:after{left:15px}
   .tr .m{color:#a4aab6;font-size:11.5px}
   /* timeline: lane separators via hairlines */
-  #tl{position:relative;height:58px;margin:2px 16px 6px;background:linear-gradient(to bottom,transparent 18px,rgba(16,18,22,.05) 18px,rgba(16,18,22,.05) 19px,transparent 19px,transparent 35px,rgba(16,18,22,.05) 35px,rgba(16,18,22,.05) 36px,transparent 36px),#f5f5f3;border:1px solid rgba(16,18,22,.05);border-radius:10px;cursor:pointer;overflow:hidden}
+  #tlw{position:relative;margin:2px 16px 6px}
+  #tlw .bubble{position:absolute;bottom:calc(100% + 7px);transform:translateX(-50%);background:#1b1e26;color:#fff;font-size:11.5px;padding:5px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;z-index:5;display:none;max-width:340px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 8px 22px -8px rgba(16,18,22,.5)}
+  #tlw .bubble b{font-family:ui-monospace,Consolas,monospace;color:#ff9c6b;margin-right:5px}
+  #tlw.scrub .bubble,#tlw:hover .bubble{display:block}
+  #tl{position:relative;height:58px;background:linear-gradient(to bottom,transparent 18px,rgba(16,18,22,.05) 18px,rgba(16,18,22,.05) 19px,transparent 19px,transparent 35px,rgba(16,18,22,.05) 35px,rgba(16,18,22,.05) 36px,transparent 36px),#f5f5f3;border:1px solid rgba(16,18,22,.05);border-radius:10px;cursor:pointer;overflow:hidden;touch-action:none}
   #tl .tk{position:absolute;width:3px;height:10px;border-radius:2px;opacity:.85}
   #tl .tk.blk{height:11px;opacity:.72;border-radius:4px}
   #tl .tk.big{width:4px}
@@ -305,9 +321,9 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
   #toast.on{opacity:1}
 </style>
 <header>
-  <span class="brand">w<i>ı</i>tness</span>
+  <span class="brand">w<span class="dl">ı</span>tness</span>
   <span class="u">${esc(meta.title ?? meta.url)}</span>
-  <span class="m">${esc(meta.url)}</span>
+  <a class="m" href="${esc(meta.url)}" target="_blank" rel="noopener">${esc(meta.url)}</a>
   <span class="m">${new Date(meta.startedAt).toLocaleString()} · ${fmt(meta.durationMs)}</span>
   <span class="sp"></span>
   <button class="btn pri" id="copyai" title="复制给 AI agent 的证据指引">⧉ Copy for AI</button>
@@ -318,12 +334,12 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
     <div class="tr">
       <button class="pp" id="pp" title="播放/暂停"><svg viewBox="0 0 12 12" width="13" height="13"><path d="M3.6 2.1v7.8c0 .62.68.99 1.2.66l6-3.9a.78.78 0 0 0 0-1.32l-6-3.9c-.52-.33-1.2.04-1.2.66z" fill="currentColor"/></svg></button>
       <span class="tc"><b id="cur">00:00</b> / ${fmt(meta.durationMs)}</span>
-      <select id="spd"><option>1</option><option>1.5</option><option>2</option><option>4</option></select>
-      <label><input type="checkbox" id="fol" checked> follow</label>
+      <span class="spd"><b data-v="1" class="on">1×</b><b data-v="1.5">1.5×</b><b data-v="2">2×</b><b data-v="4">4×</b></span>
+      <label class="sw"><input type="checkbox" id="fol" checked><i></i>follow</label>
       <span class="sp"></span>
       <span class="m">${rrEmbed ? "DOM 回放" : "截图序列"} · 音频驱动时钟</span>
     </div>
-    <div id="tl"><div class="head" id="ph"></div></div>
+    <div id="tlw"><div id="tl"><div class="head" id="ph"></div></div><div class="bubble" id="bub"></div></div>
     <div class="legend" id="lg"></div>
   </div>
   <div class="card">
@@ -343,9 +359,20 @@ ${rrEmbed}
 <script>const D=${data};</script>
 <script>
 const au=document.getElementById('au'),lb=document.getElementById('lb'),lbi=document.getElementById('lbi'),stage=document.getElementById('stage');
+/* MediaRecorder webm has no cue index: over HTTP, range-less servers can't seek.
+   Pull the whole file into a blob URL so every position is addressable.
+   (file:// fetch fails — fine, local file loading gives full-buffer access anyway) */
+fetch('audio.webm').then(r=>r.ok?r.blob():Promise.reject()).then(b=>{
+  const p=au.currentTime,live=!au.paused;
+  au.src=URL.createObjectURL(b);au.load();
+  au.addEventListener('loadedmetadata',()=>{au.currentTime=p;if(live)au.play()},{once:true});
+}).catch(()=>{});
 const fmt=ms=>{const s=Math.max(0,Math.round(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
 const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const dur=D.meta.durationMs||1;
+/* audio clock bias: session t=0 is nav; audio.webm starts when mic arm fires (~1-2s later) */
+const _mic=D.evs.find(e=>e.kind==='note'&&/mic recording|microphone/i.test(e.text||''));
+const bias=_mic?_mic.t:0;
 const KC={say:'#8b5cf6',nav:'#3b82f6',click:'#0891b2',mark:'#ec4899',note:'#f59e0b',key:'#f59e0b',input:'#64748b',scroll:'#cbd5e1',mut:'#cbd5e1',shot:'#94a3b8',req:'#a5b4fc',res:'#a5b4fc',console:'#f59e0b',error:'#ef4444',err:'#ef4444',issue:'#ff4f00',_ui:'#e2e8f0'};
 const LNAMES=[['say','语音'],['nav','跳转'],['click','点击'],['mark','标记'],['note','批注'],['console','警告'],['error','报错'],['res','失败请求']];
 const isBad=e=>e.kind==='error'||e.kind==='err'||(e.kind==='res'&&(e.status===0||e.status>=400))||(e.kind==='console'&&(e.level==='error'||e.level==='warning'));
@@ -404,20 +431,23 @@ let qEls=[];
 const syncRR=t=>{if(rp){try{rp.play(t)}catch(e){}}};
 const ICO_PLAY='<svg viewBox="0 0 12 12" width="13" height="13"><path d="M3.6 2.1v7.8c0 .62.68.99 1.2.66l6-3.9a.78.78 0 0 0 0-1.32l-6-3.9c-.52-.33-1.2.04-1.2.66z" fill="currentColor"/></svg>';
 const ICO_PAUSE='<svg viewBox="0 0 12 12" width="13" height="13"><path d="M3 2.2c0-.5.4-.9.9-.9h.8c.5 0 .9.4.9.9v7.6c0 .5-.4.9-.9.9h-.8c-.5 0-.9-.4-.9-.9zM6.4 2.2c0-.5.4-.9.9-.9h.8c.5 0 .9.4.9.9v7.6c0 .5-.4.9-.9.9h-.8c-.5 0-.9-.4-.9-.9z" fill="currentColor"/></svg>';
-au.addEventListener('play',()=>{pp.innerHTML=ICO_PAUSE;syncRR(au.currentTime*1000)});
+au.addEventListener('play',()=>{pp.innerHTML=ICO_PAUSE;syncRR(au.currentTime*1000+bias)});
 au.addEventListener('pause',()=>{pp.innerHTML=ICO_PLAY;if(rp)try{rp.pause()}catch(e){}});
-au.addEventListener('seeked',()=>{if(!au.paused)syncRR(au.currentTime*1000);else if(rp){try{rp.pause(au.currentTime*1000)}catch(e){rp.play(au.currentTime*1000);rp.pause()}}});
+au.addEventListener('seeked',()=>{if(!au.paused)syncRR(au.currentTime*1000+bias);else if(rp){try{rp.pause(au.currentTime*1000+bias)}catch(e){rp.play(au.currentTime*1000+bias);rp.pause()}}});
 au.addEventListener('timeupdate',()=>{
-  const t=au.currentTime*1000;cur.textContent=fmt(t);
+  const t=au.currentTime*1000+bias;cur.textContent=fmt(t);
   ph.style.left=(Math.min(1,t/dur)*100)+'%';
   setShot(t);
   let act=null;for(const q of qEls){if(+q.dataset.t<=t)act=q;else break}
   if(act!==window.__lq){window.__lq=act;qEls.forEach(q=>q.classList.toggle('on',q===act));
     if(act&&document.getElementById('fol').checked)act.scrollIntoView({block:'nearest'})}
 });
-const seek=t=>{au.currentTime=t/1000;if(au.paused)au.play()};
+const seek=t=>{au.currentTime=Math.max(0,(t-bias)/1000);if(au.paused)au.play()};
 pp.onclick=()=>{au.paused?au.play():au.pause()};
-document.getElementById('spd').onchange=e=>{const v=+e.target.value;au.playbackRate=v;if(rp&&rp.setSpeed)try{rp.setSpeed(v)}catch(_){}};
+document.querySelectorAll('.spd b').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.spd b').forEach(x=>x.classList.toggle('on',x===b));
+  const v=+b.dataset.v;au.playbackRate=v;if(rp&&rp.setSpeed)try{rp.setSpeed(v)}catch(_){}
+});
 /* ---------- timeline: 3 lanes — speech blocks / activity / signals ---------- */
 const tl=document.getElementById('tl');
 const laneOf=e=>{
@@ -444,7 +474,21 @@ for(const e of D.evs){
   tk.title=fmt(e.t)+' '+(e.text||e.sel||e.url||e.message||e.kind||'').toString().slice(0,60);
   tl.appendChild(tk);
 }
-tl.onclick=ev=>{const r=tl.getBoundingClientRect();seek(Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width))*dur)};
+/* draggable playhead: scrub previews frame+subtitle, release seeks */
+const tlw=document.getElementById('tlw'),bub=document.getElementById('bub');
+let dragging=false,wasPlaying=false;
+const scrub=ev=>{
+  const r=tl.getBoundingClientRect();
+  const p=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width)),t=p*dur;
+  ph.style.left=(p*100)+'%';cur.textContent=fmt(t);setShot(t);
+  let q=null;for(const x of qEls){if(+x.dataset.t<=t)q=x;else break}
+  bub.style.left=(p*100)+'%';
+  bub.innerHTML='<b>'+fmt(t)+'</b>'+(q?esc((q.querySelector('.qt').nextSibling?.textContent||'').trim().slice(0,42)):'');
+  return t;
+};
+tl.addEventListener('pointerdown',e=>{dragging=true;wasPlaying=!au.paused;if(wasPlaying)au.pause();try{tl.setPointerCapture(e.pointerId)}catch(_){};tlw.classList.add('scrub');scrub(e)});
+tl.addEventListener('pointermove',e=>{if(dragging)scrub(e)});
+tl.addEventListener('pointerup',e=>{if(!dragging)return;dragging=false;tlw.classList.remove('scrub');const t=scrub(e);au.currentTime=Math.max(0,(t-bias)/1000);if(wasPlaying)au.play()});
 const lg=document.getElementById('lg');
 for(const[k,n]of LNAMES)lg.insertAdjacentHTML('beforeend','<span><i style="background:'+KC[k]+'"></i>'+n+'</span>');
 /* ---------- transcript tab ---------- */
@@ -579,6 +623,7 @@ export function renderPrompt(sessionDir: string, events: Ev[] = []): string {
 
 export async function writeSessionFiles(dir: string, events: Ev[], meta: Meta, transcript?: Transcript, assoc?: AssocMap) {
   const md = renderMarkdown(events, meta, transcript, assoc);
+  makeAudioSeekable(join(dir, "audio.webm"), meta.durationMs);
   let rrJsonl: string | undefined;
   try { rrJsonl = readFileSync(join(dir, "rrweb.jsonl"), "utf8"); } catch {}
   if (!meta.title) {
