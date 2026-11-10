@@ -1,0 +1,25 @@
+---
+// Real session footage — recorded by Playwright's own video capture against
+// demo-app.html with the wit toolbar live. One take, no cuts.
+---
+<div class="stage rv" data-d="120">
+  <div class="win">
+    <div class="chrome">
+      <i class="r"></i><i class="y"></i><i class="g"></i>
+      <div class="url">localhost:5173/checkout</div>
+      <span class="tag">RECORDED WITH PLAYWRIGHT · ONE TAKE</span>
+    </div>
+    <video src="/demo.mp4" autoplay muted loop playsinline preload="metadata"></video>
+  </div>
+</div>
+<style>
+  .stage{max-width:940px;margin:0 auto}
+  .win{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 30px 70px #17181c17,0 2px 6px #17181c0a}
+  .chrome{display:flex;align-items:center;gap:7px;padding:10px 13px;border-bottom:1px solid var(--line);background:#fbfaf7}
+  .chrome i{width:10px;height:10px;border-radius:50%}
+  .chrome .r{background:#e5484d}.chrome .y{background:#e2a93b}.chrome .g{background:#3d9d63}
+  .url{margin-left:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font:500 11px var(--mono);color:var(--dim)}
+  .tag{margin-left:auto;font:600 9.5px var(--mono);letter-spacing:.1em;color:var(--faint)}
+  video{display:block;width:100%;height:auto;background:#f4f3ef}
+  @media(max-width:640px){.tag{display:none}}
+</style>

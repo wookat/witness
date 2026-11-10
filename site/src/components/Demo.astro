@@ -72,12 +72,12 @@ const says = [
 
   .tl{padding:8px 0}
   .say{border-left:2px solid transparent}
-  .say.open{border-left-color:var(--acc2)}
+  .say.open{border-left-color:var(--rec)}
   .head{display:flex;align-items:baseline;gap:12px;width:100%;background:none;border:0;padding:14px 20px;cursor:pointer;text-align:left;font:inherit;color:var(--term-text)}
   .head:hover{background:#ffffff08}
   .ts{color:#6f6b87;font-size:12px;flex:none}
-  .tag{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--acc2);background:#7c6cff22;border-radius:4px;padding:2px 7px;flex:none}
-  .q{font-size:13.5px;color:#e8e5fb}
+  .tag{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--rec);background:#e5484d1e;border-radius:4px;padding:2px 7px;flex:none}
+  .q{font-size:13.5px;color:#eceaf4}
   .chev{margin-left:auto;flex:none;color:#6f6b87;transition:transform .25s}
   .say.open .chev{transform:rotate(180deg)}
 
@@ -89,16 +89,16 @@ const says = [
   .rows{flex:1;min-width:0}
   .row{display:flex;gap:10px;padding:4px 0;font-size:12.5px}
   .k{flex:none;width:56px;font-weight:600;font-size:11px;padding-top:2px}
-  .k.ok{color:#86e3a2}.k.bad{color:#ff9d94}.k.dim{color:#6f6b87}.k.acc2{color:#b9a9ff}
+  .k.ok{color:#6fce97}.k.bad{color:#f28b86}.k.dim{color:#6a6a75}.k.acc2{color:#e8c476}
   .v{color:#b8b4d6;word-break:break-all}
   .note{padding:6px 0 0 66px;font-size:12px;color:#6f6b87;font-style:italic}
   @media(max-width:640px){.note{padding-left:0}}
 
   .shot{flex:none;width:170px}
-  .shot .vp{height:104px;border-radius:10px;background:linear-gradient(160deg,#232136,#191724);border:1px solid #35324a;position:relative;overflow:hidden}
+  .shot .vp{height:104px;border-radius:10px;background:linear-gradient(160deg,#1d1c24,#141319);border:1px solid #302e3d;position:relative;overflow:hidden}
   .shot span{display:block;margin-top:7px;font-size:10.5px;color:#5b5871;text-align:center}
   .ui-bar{position:absolute;top:9px;left:10px;right:10px;height:6px;border-radius:3px;background:#3d3956}
-  .ui-btn{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:74px;height:20px;border-radius:10px;background:linear-gradient(135deg,#7c6cff,#4f3df0)}
+  .ui-btn{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:74px;height:20px;border-radius:10px;background:linear-gradient(135deg,#2a2b31,#17181c)}
   .ui-btn.small{width:46px;height:13px;bottom:auto;top:70px}
   .ui-line{position:absolute;left:22px;right:22px;height:5px;border-radius:3px;background:#34314c}
   .ui-line.l1{top:34px}.ui-line.l2{top:47px;right:50px}
@@ -106,7 +106,7 @@ const says = [
   .ui-card.short{top:66px;right:60px;height:26px}
   .ui-row{position:absolute;left:10px;right:10px;height:14px;border-radius:4px;background:#2e2b44}
   .ui-row:nth-of-type(2){top:26px}.ui-row:nth-of-type(3){top:46px}.ui-row:nth-of-type(4){top:66px}.ui-row:nth-of-type(5){top:86px}
-  .ui-row.empty{background:transparent;border:1px dashed #4a4666}
+  .ui-row.empty{background:transparent;border:1px dashed #413e52}
 </style>
 <script>
   document.querySelectorAll(".demo .head").forEach(h => h.addEventListener("click", () => {

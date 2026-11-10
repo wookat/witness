@@ -5,13 +5,15 @@ import Ticker from "../components/Ticker.astro";
 import Card from "../components/Card.astro";
 import Term from "../components/Term.astro";
 import Demo from "../components/Demo.astro";
+import VideoDemo from "../components/VideoDemo.astro";
 import Flow from "../components/Flow.astro";
 import AudSplit from "../components/AudSplit.astro";
 const GH = "https://github.com/wookat/witness";
 ---
 <Base>
 <Hero />
-<Ticker />
+
+<div class="ruler"><b class="a">00:00</b><b class="b">REC</b><i style="--x:12%"></i></div>
 
 <section class="alt"><div class="wrap center">
   <div class="kicker">The problem</div>
@@ -19,32 +21,47 @@ const GH = "https://github.com/wookat/witness";
   <p class="lede rv" data-d="100">A human notices “the button fades weirdly when I scroll” in two seconds. Writing that up for an AI agent takes ten minutes of screenshots, element selectors and prompt crafting — and the result still loses the <i>why</i>. Voice is the cheapest annotation channel there is; it just never had a recorder.</p>
 </div></section>
 
-<section id="how"><div class="wrap">
+<div class="ruler"><b class="a">00:18</b><i style="--x:34%"></i></div>
+
+<section><div class="wrap">
+  <div class="kicker">Watch it happen</div>
+  <h2 class="rv">One click. Every consequence, filed.</h2>
+  <p class="lede rv" data-d="80">This is a real recorded session — speech, marking, the dead click, the save. The Pay button below produces <b>nothing</b>, and that absence is captured as fact.</p>
+  <div style="margin-top:44px"><VideoDemo /></div>
+</div></section>
+
+<div class="ruler"><b class="a">00:41</b><b class="b">MARK</b><i style="--x:58%"></i></div>
+
+<section id="how" class="alt"><div class="wrap">
   <div class="kicker">How it works</div>
   <h2 class="rv">Three recording lines, one timeline.</h2>
   <p class="lede rv" data-d="80"><code>wit start &lt;dev-url&gt;</code> opens a managed browser. From that moment, three streams run in parallel — zero manual work:</p>
   <div class="grid g3">
-    <Card n="01" title="Your voice" d="0">Continuous audio + live speech-to-text. Say everything on your mind — one take, many issues, no need to split.</Card>
-    <Card n="02" title="Operations + causal bursts" d="80">Every click captures its ~1.8s aftermath: requests, responses, console errors, DOM changes. A click with <i>no</i> aftermath is itself evidence.</Card>
-    <Card n="03" title="Page evolution" d="160">rrweb full-DOM replay + event-driven screenshots + periodic DOM snapshots. Rewind the exact page state at any second.</Card>
+    <Card n="01 / VOICE" title="Your voice" d="0">Continuous audio + live speech-to-text. Say everything on your mind — one take, many issues, no need to split.</Card>
+    <Card n="02 / OPS" title="Operations + causal bursts" d="80">Every click captures its ~1.8s aftermath: requests, responses, console errors, DOM changes. A click with <i>no</i> aftermath is itself evidence.</Card>
+    <Card n="03 / STATE" title="Page evolution" d="160">rrweb full-DOM replay + event-driven screenshots + periodic DOM snapshots. Rewind the exact page state at any second.</Card>
   </div>
   <Flow />
 </div></section>
 
-<section id="evidence" class="alt"><div class="wrap">
+<div class="ruler"><b class="a">01:12</b><i style="--x:71%"></i></div>
+
+<section id="evidence"><div class="wrap">
   <div class="kicker">The output</div>
   <h2 class="rv">Your words become evidence anchors.</h2>
-  <p class="lede rv" data-d="80">Each spoken fragment becomes a block on a timeline with the causal facts of that moment attached — the “causal burst”. This is what your agent actually reads:</p>
+  <p class="lede rv" data-d="80">Each spoken fragment becomes a block on a timeline with the causal facts of that moment attached — the “causal burst”. Click a quote:</p>
   <Demo />
 </div></section>
 
-<section><div class="wrap">
+<div class="ruler"><b class="a">01:48</b><b class="b">SAY ×3</b><i style="--x:82%"></i></div>
+
+<section class="alt"><div class="wrap">
   <div class="kicker">Two audiences, one package</div>
   <h2 class="rv">Humans get a replay. Agents get a structure.</h2>
   <AudSplit />
 </div></section>
 
-<section id="mcp" class="alt"><div class="wrap">
+<section id="mcp"><div class="wrap">
   <div class="kicker">Pull, don't push</div>
   <h2 class="rv"><code>wit mcp</code> — evidence as an API.</h2>
   <p class="lede rv" data-d="80">Instead of a static dump, the session becomes a stdio MCP server. Point any MCP-capable agent at it and it queries exactly the evidence it needs:</p>
@@ -58,7 +75,9 @@ const GH = "https://github.com/wookat/witness";
   </div>
 </div></section>
 
-<section><div class="wrap">
+<div class="ruler"><b class="a">02:31</b><b class="b">STOP ■</b><i style="--x:94%"></i></div>
+
+<section class="alt"><div class="wrap">
   <div class="kicker">Principles</div>
   <h2 class="rv">Evidence never lies.</h2>
   <div class="grid g2">
@@ -69,7 +88,7 @@ const GH = "https://github.com/wookat/witness";
   </div>
 </div></section>
 
-<section id="install" class="alt"><div class="wrap">
+<section id="install"><div class="wrap">
   <div class="kicker">Install &amp; run</div>
   <h2 class="rv">Two minutes to your first evidence package.</h2>
   <Term label="terminal" d="100"><span class="c-dim"># needs Node 18+ and system Edge/Chrome — no downloads, no keys</span>
