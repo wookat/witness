@@ -89,7 +89,8 @@ audio.webm / transcript.json
 
 - **Evidence is never rewritten** — speech lands verbatim; merging/correction/association are display-layer suggestions.
 - **Evidence ≠ intent** — behavior without a spoken anchor is never presented as a bug.
-- **Local-first** — deterministic recording + Edge SpeechRecognition by default; LLM layers are optional.
+- **Local-first** — deterministic recording + in-browser SpeechRecognition for live SAY preview; final transcript
+  falls back to bcut (bilibili editor ASR, no key needed) when no GROQ/OPENAI key is set. LLM layers are optional.
 - **Privacy engineered in** — password fields masked across four channels, credential fields redacted in POST bodies,
   `WIT_NO_BODIES=1` disables body capture, `P` freezes everything, `.witness/` is auto-gitignored.
 

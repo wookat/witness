@@ -54,13 +54,16 @@ program
     const audioPath = join(dir, "audio.webm");
     const eventsPath = join(dir, "events.jsonl");
     if (!existsSync(audioPath) || !existsSync(eventsPath)) { console.log("missing audio.webm or events.jsonl in " + dir); return; }
-    if (!hasTranscriber()) { console.log("no GROQ_API_KEY/OPENAI_API_KEY in .env"); return; }
-    console.log("transcribing…");
-    const t = await transcribe(audioPath);
+    const useWhisper = hasTranscriber();
+    console.log(`transcribing (${useWhisper ? "whisper" : "bcut"})…`);
+    const t = useWhisper ? await transcribe(audioPath) : await (await import("./bcut.js")).transcribeBcut(audioPath);
     console.log(`  ${t.segments.length} segments`);
     const s = await loadSession(dir);
-    const aligned = align(s.events, t.segments);
-    await writeSessionFiles(s.dir, aligned, s.meta, t);
+    // audio t=0 is mic-arm, not nav — shift into session time
+    const bias = (s.events.find(e => e.kind === "note" && /mic recording/i.test(e.text ?? ""))?.t ?? 0) / 1000;
+    const segs = bias ? t.segments.map(x => ({ ...x, start: x.start + bias, end: x.end + bias })) : t.segments;
+    const aligned = align(s.events, segs);
+    await writeSessionFiles(s.dir, aligned, s.meta, { ...t, segments: segs });
     console.log("✔ session.md rebuilt with SAY blocks → " + join(dir, "session.md"));
   });
 

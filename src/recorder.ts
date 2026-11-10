@@ -8,6 +8,7 @@ import { AudioSink } from "./audio.js";
 import { Shots } from "./shots.js";
 import { wireNetwork } from "./network.js";
 import { transcribe, hasTranscriber, type Transcript } from "./transcribe.js";
+import { transcribeBcut } from "./bcut.js";
 import { align } from "./align.js";
 import { correctSays, hasCorrector } from "./correct.js";
 import { associateSays } from "./associate.js";
@@ -203,16 +204,25 @@ export async function record(opts: RecOptions) {
     if (rrStream) await new Promise<void>(r => rrStream.end(() => r()));
     await store.close();
 
-    if (opts.transcribe !== false && audio.hasAudio && hasTranscriber()) {
+    if (opts.transcribe !== false && audio.hasAudio) {
       try {
-        console.log("  transcribing (whisper)…");
-        transcript = await transcribe(audio.path);
+        if (hasTranscriber()) {
+          console.log("  transcribing (whisper)…");
+          transcript = await transcribe(audio.path);
+        } else {
+          console.log("  transcribing (bcut)…");
+          transcript = await transcribeBcut(audio.path);
+        }
         console.log(`  transcript: ${transcript.segments.length} segments`);
       } catch (e) {
         console.log(`  transcription failed: ${(e as Error).message} — continuing without it`);
       }
-    } else if (audio.hasAudio && !hasTranscriber()) {
-      console.log("  (no GROQ_API_KEY/OPENAI_API_KEY — audio saved, transcript skipped)");
+    }
+
+    // audio t=0 is the mic-arm moment, not nav — shift transcript into session time
+    const micBias = (store.events.find(e => e.kind === "note" && /mic recording/i.test(e.text ?? ""))?.t ?? 0) / 1000;
+    if (transcript && micBias) {
+      transcript = { ...transcript, segments: transcript.segments.map(s => ({ ...s, start: s.start + micBias, end: s.end + micBias })) };
     }
 
     let events = align(store.events, transcript?.segments ?? []);
