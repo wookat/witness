@@ -1,0 +1,18 @@
+---
+const { size = 22 } = Astro.props;
+---
+<span class="logo">
+  <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
+    <rect width="32" height="32" rx="8" fill="#17171c"/>
+    <ellipse cx="16" cy="16" rx="9" ry="6" fill="none" stroke="#faf9f7" stroke-width="2"/>
+    <circle cx="16" cy="16" r="3.5" fill="#ef4444"/>
+  </svg>
+  <span class="wm">w<span class="idot">ı<span class="dot"></span></span>tness</span>
+</span>
+<style>
+  .logo{display:inline-flex;align-items:center;gap:9px}
+  .wm{font-weight:800;font-size:16.5px;letter-spacing:-.02em;color:var(--ink)}
+  .idot{position:relative}
+  .idot .dot{position:absolute;left:50%;top:.02em;transform:translateX(-50%);width:.24em;height:.24em;border-radius:50%;background:var(--rec);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 #ef444466}50%{opacity:.55;box-shadow:0 0 0 4px #ef444400}}
+</style>

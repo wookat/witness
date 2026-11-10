@@ -1,0 +1,56 @@
+---
+const GH = "https://github.com/wookat/witness";
+---
+<header class="hero"><div class="wrap">
+  <div class="glow g1"></div><div class="glow g2"></div><div class="grid-bg"></div>
+  <span class="pill rv"><i></i>OPEN SOURCE · MIT · LOCAL-FIRST</span>
+  <h1 class="rv" data-d="80">You say it.<br>Witness proves <span class="rot" id="rot">it.</span></h1>
+  <p class="sub rv" data-d="160">Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second, then hands the package to your AI coding agent.</p>
+  <div class="cta rv" data-d="240">
+    <a class="btn pri" href={GH}>View on GitHub</a>
+    <a class="btn" href="#how">How it works ↓</a>
+  </div>
+  <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
+</div></header>
+<style>
+  .hero{position:relative;padding:110px 0 96px;text-align:center;overflow:hidden}
+  .grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,#000 20%,transparent 75%);opacity:.5;pointer-events:none}
+  .glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.35;pointer-events:none}
+  .g1{width:520px;height:420px;background:#7c6cff66;top:-160px;left:50%;transform:translateX(-75%);animation:drift 11s ease-in-out infinite alternate}
+  .g2{width:380px;height:320px;background:#f0b8ff55;top:-80px;left:58%;animation:drift 13s ease-in-out infinite alternate-reverse}
+  @keyframes drift{from{transform:translate(-60%,0) scale(1)}to{transform:translate(-30%,40px) scale(1.15)}}
+  .pill{position:relative;display:inline-flex;align-items:center;gap:8px;font:500 11.5px var(--mono);color:var(--acc);background:var(--acc-soft);border-radius:999px;padding:6px 16px;letter-spacing:.08em;margin-bottom:30px}
+  .pill i{width:6px;height:6px;border-radius:50%;background:var(--rec);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 #ef444466}50%{opacity:.5;box-shadow:0 0 0 5px #ef444400}}
+  h1{position:relative;font-size:clamp(44px,7.5vw,82px);line-height:1.03;font-weight:900;letter-spacing:-.04em}
+  h1 .rot{display:inline-block;min-width:4.6ch;text-align:left;vertical-align:bottom;background:linear-gradient(100deg,var(--acc),var(--acc2) 60%,#c26bff);-webkit-background-clip:text;background-clip:text;color:transparent;transition:opacity .22s}
+  .sub{position:relative;max-width:620px;margin:26px auto 0;color:var(--dim);font-size:18px}
+  .cta{position:relative;display:flex;gap:12px;justify-content:center;margin-top:36px}
+  .install{position:relative;display:inline-flex;align-items:center;gap:12px;margin-top:32px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 20px;font:500 14px var(--mono);color:var(--ink);box-shadow:0 1px 2px #17171c0a,0 12px 32px #17171c08}
+  .install b{color:var(--acc);font-weight:600}
+  .install .cur{width:8px;height:1.1em;background:var(--acc);animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .install button{background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:15px;padding:0;transition:color .15s}
+  .install button:hover{color:var(--acc)}
+</style>
+<script>
+  // rotating hero word
+  const words = ["it.", "the bug.", "the jank.", "the 500.", "the why."];
+  const el = document.getElementById("rot");
+  let wi = 0;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (el && !reduced) setInterval(() => {
+    wi = (wi + 1) % words.length;
+    el.style.opacity = "0";
+    setTimeout(() => { el.textContent = words[wi]; el.style.opacity = "1"; }, 220);
+  }, 2400);
+
+  // typing install command
+  const cmd = "npm i -g github:wookat/witness";
+  const t = document.getElementById("typed");
+  if (t && !reduced) {
+    let i = 0;
+    const tick = () => { t.textContent = cmd.slice(0, ++i); if (i < cmd.length) setTimeout(tick, 34 + Math.random() * 46); };
+    setTimeout(tick, 700);
+  } else if (t) t.textContent = cmd;
+</script>

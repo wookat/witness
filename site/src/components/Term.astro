@@ -1,0 +1,7 @@
+---
+const { label = "terminal", d } = Astro.props;
+---
+<div class="term rv" data-d={d}>
+  <div class="th"><i></i><i></i><i></i><span>{label}</span></div>
+  <pre><slot /></pre>
+</div>

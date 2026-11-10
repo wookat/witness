@@ -1,0 +1,17 @@
+---
+const steps = [["wit start", "<url>", true], ["browse + talk", "", false], ["Ctrl+click / M to mark", "", false], ["■ stop", "", false], ["evidence package", "", true]];
+---
+<div class="flow rv" data-d="200">
+  {steps.map(([s, arg, hot], i) => (
+    <>{i > 0 && <i class="arr">→</i>}<span class={hot ? "hot" : ""}>{hot ? <b>{s}</b> : s}{arg && <em> {arg}</em>}</span></>
+  ))}
+</div>
+<style>
+  .flow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;margin-top:44px;font:500 13px var(--mono)}
+  .flow span{color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 16px;transition:border-color .2s,transform .2s}
+  .flow span:hover{border-color:var(--acc);transform:translateY(-2px)}
+  .flow span.hot{background:var(--acc-soft);border-color:#d8d2fb}
+  .flow b{color:var(--acc);font-weight:600}
+  .flow em{font-style:normal;color:var(--dim)}
+  .arr{color:var(--acc);font-style:normal;padding:0 4px}
+</style>

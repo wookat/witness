@@ -1,0 +1,8 @@
+---
+const { n, title, d } = Astro.props;
+---
+<div class="card rv" data-d={d}>
+  {n && <div class="n">{n}</div>}
+  <h3><slot name="title">{title}</slot></h3>
+  <p><slot /></p>
+</div>

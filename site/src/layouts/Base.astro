@@ -1,0 +1,125 @@
+---
+import Logo from "../components/Logo.astro";
+const { title = "Witness — voice-anchored evidence recorder for AI coding agents" } = Astro.props;
+const GH = "https://github.com/wookat/witness";
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<meta name="description" content="Talk, point, ship the fix. Witness records your voice, clicks, network, errors and DOM replay while you use a product — then hands your AI agent a causal evidence package it can act on.">
+<meta property="og:title" content="Witness — your voice, welded to the evidence">
+<meta property="og:description" content="Say what's wrong, point at it, keep going. One recording → a causal evidence package your AI coding agent can fix from.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2317171c'/><ellipse cx='16' cy='16' rx='9' ry='6' fill='none' stroke='%23faf9f7' stroke-width='2'/><circle cx='16' cy='16' r='3.5' fill='%23ef4444'/></svg>">
+<style is:global>
+  :root{
+    --bg:#faf9f7; --panel:#ffffff; --warm:#f3f1ec; --line:#e8e6e1;
+    --ink:#17171c; --dim:#6a6a73;
+    --acc:#4f3df0; --acc2:#7c6cff; --acc-soft:#efedfe; --acc-ink:#3b2fd1;
+    --rec:#ef4444; --rec-soft:#fdeaea;
+    --term:#14131d; --term-line:#2a2838; --term-text:#cfcaee;
+    --mono:"Geist Mono",ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;
+    --sans:"Inter",-apple-system,"Segoe UI","Helvetica Neue",sans-serif;
+    --r:16px;
+  }
+  *{box-sizing:border-box;margin:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font:16px/1.7 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  code,pre{font-family:var(--mono)}
+  ::selection{background:#4f3df026}
+
+  /* ---------- scroll reveal ---------- */
+  .rv{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.6,.2,1),transform .7s cubic-bezier(.2,.6,.2,1)}
+  .rv.on{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none} *{animation:none!important;transition:none!important}}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:50;background:#faf9f7cc;backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .3s,box-shadow .3s}
+  nav.sc{border-color:var(--line);box-shadow:0 4px 20px #17171c08}
+  nav .wrap{display:flex;align-items:center;gap:28px;height:62px}
+  nav .links{margin-left:auto;display:flex;align-items:center;gap:22px;font-size:14px;font-weight:500}
+  nav .links a{color:var(--dim);text-decoration:none;transition:color .15s}
+  nav .links a:hover{color:var(--ink)}
+  nav .gh{background:var(--ink);color:#faf9f7!important;border-radius:999px;padding:8px 18px;font-weight:600}
+  nav .gh:hover{background:#000}
+  @media(max-width:700px){nav .links a:not(.gh){display:none}}
+
+  /* ---------- shared ---------- */
+  .kicker{font:600 11.5px var(--mono);letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .kicker::before{content:"";width:18px;height:1.5px;background:var(--acc);border-radius:1px}
+  .center .kicker{justify-content:center}
+  section{padding:80px 0}
+  .alt{background:var(--warm)}
+  h2{font-size:clamp(30px,4.2vw,44px);font-weight:800;letter-spacing:-.025em;line-height:1.12;margin-bottom:16px}
+  .lede{color:var(--dim);max-width:640px;font-size:17px}
+  .center{text-align:center}.center .lede{margin:0 auto}
+  .grid{display:grid;gap:16px;margin-top:44px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-size:15px;font-weight:600;padding:13px 26px;border-radius:999px;border:1px solid var(--line);color:var(--ink);background:var(--panel);transition:all .18s}
+  .btn:hover{border-color:#cfccc4;transform:translateY(-1px);box-shadow:0 6px 16px #17171c0f}
+  .btn.pri{background:var(--ink);color:#faf9f7;border-color:var(--ink)}
+  .btn.pri:hover{background:#000}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px;transition:box-shadow .25s,transform .25s,border-color .25s;position:relative;overflow:hidden}
+  .card:hover{box-shadow:0 14px 34px #17171c10;transform:translateY(-3px);border-color:#d9d5cc}
+  .card h3{font-size:16.5px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
+  .card p{font-size:14.5px;color:var(--dim)}
+  .card .n{font:600 12px var(--mono);color:var(--acc)}
+  .card code{background:var(--acc-soft);border-radius:6px;padding:1px 7px;font-size:12.5px;color:var(--acc-ink)}
+
+  .term{background:var(--term);border-radius:var(--r);overflow:hidden;margin-top:40px;font:13px/1.85 var(--mono);border:1px solid var(--term-line);box-shadow:0 24px 60px #17171c24}
+  .term .th{display:flex;align-items:center;gap:7px;padding:12px 16px;border-bottom:1px solid var(--term-line);color:#8b87a3;font-size:11.5px}
+  .term .th i{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .term .th i:nth-child(1){background:#ef4444}.term .th i:nth-child(2){background:#f4b83f}.term .th i:nth-child(3){background:#3fc96a}
+  .term .th span{margin-left:8px}
+  .term pre{padding:20px 22px;overflow-x:auto;color:var(--term-text)}
+  .c-say{color:#a5b8ff}.c-ok{color:#86e3a2}.c-bad{color:#ff9d94}.c-dim{color:#6f6b87}.c-acc{color:#f0d07a}.c-acc2{color:#b9a9ff}
+</style>
+</head>
+<body>
+<nav id="nav"><div class="wrap">
+  <a href="/" style="text-decoration:none"><Logo /></a>
+  <div class="links">
+    <a href="#how">How it works</a>
+    <a href="#evidence">Evidence</a>
+    <a href="#mcp">MCP</a>
+    <a href="#install">Install</a>
+    <a class="gh" href={GH}>GitHub ★</a>
+  </div>
+</div></nav>
+
+<slot />
+
+<footer><div class="wrap" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center">
+  <span>witness · MIT · a <a href="https://zalize.com" style="color:var(--dim)">zalize</a> open-source project</span>
+  <span style="margin-left:auto"><a href={GH} style="color:var(--dim);text-decoration:none">GitHub</a> &nbsp;·&nbsp; <a href={GH + "/issues"} style="color:var(--dim);text-decoration:none">Issues</a> &nbsp;·&nbsp; <a href={GH + "/blob/main/VISION.md"} style="color:var(--dim);text-decoration:none">Vision</a></span>
+</div></footer>
+<style>footer{padding:52px 0 64px;border-top:1px solid var(--line);color:var(--dim);font-size:13.5px}footer a:hover{color:var(--acc)}</style>
+
+<script>
+  // nav shadow on scroll
+  const nav = document.getElementById("nav");
+  addEventListener("scroll", () => nav.classList.toggle("sc", scrollY > 8), { passive: true });
+
+  // scroll reveal
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add("on"); io.unobserve(e.target); }
+  }), { threshold: .12 });
+  document.querySelectorAll(".rv").forEach(el => {
+    const d = el.getAttribute("data-d");
+    if (d) el.style.transitionDelay = d + "ms";
+    io.observe(el);
+  });
+</script>
+</body>
+</html>

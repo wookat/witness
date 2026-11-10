@@ -1,0 +1,32 @@
+---
+const humans = [
+  ["review.html", "speech cards + audio seek + screenshots"],
+  ["▶ DOM replay", "embedded rrweb player, real page states"],
+  ["film strip", "scrub the session like a video"],
+  ["audio.webm", "the original take"],
+];
+const agents = [
+  ["PROMPT.md", "handoff instructions + page vocabulary"],
+  ["session.md", "the evidence timeline above"],
+  ["events.jsonl", "complete raw stream, crash-safe"],
+  ["dom/ · bodies/ · shots/", "snapshots, payloads, frames"],
+];
+---
+<div class="split">
+  <div class="card aud rv" data-d="0"><h4>For humans</h4><ul>
+    {humans.map(([f, d]) => <li><b>{f}</b><span>{d}</span></li>)}
+  </ul></div>
+  <div class="card aud rv" data-d="120"><h4>For AI agents</h4><ul>
+    {agents.map(([f, d]) => <li><b>{f}</b><span>{d}</span></li>)}
+  </ul></div>
+</div>
+<style>
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:44px}
+  @media(max-width:760px){.split{grid-template-columns:1fr}}
+  .aud h4{font:600 12px var(--mono);letter-spacing:.1em;color:var(--acc);margin-bottom:14px;text-transform:uppercase}
+  .aud ul{list-style:none;padding:0}
+  .aud li{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .aud li:last-child{border:0}
+  .aud b{font:600 13px var(--mono);color:var(--ink);white-space:nowrap}
+  .aud li span{color:var(--dim);font-size:12.5px;text-align:right}
+</style>
