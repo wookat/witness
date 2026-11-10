@@ -236,14 +236,15 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
   #emptymsg{color:#5b6472;font-size:13px;padding:40px}
   /* transport */
   .tr{display:flex;align-items:center;gap:14px;padding:12px 16px;border-top:1px solid rgba(16,18,22,.05);flex-wrap:wrap}
-  .tr .pp{width:36px;height:36px;border-radius:50%;border:0;background:#1b1e26;color:#fff;font-size:13px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px -2px rgba(16,18,22,.4);transition:transform .13s,background .13s;padding-left:1px}
+  .tr .pp{width:36px;height:36px;border-radius:50%;border:0;background:#1b1e26;color:#fff;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px -2px rgba(16,18,22,.4);transition:transform .13s,background .13s}
+  .tr .pp svg{display:block}
   .tr .pp:hover{transform:scale(1.07);background:#000}
   .tr .pp:active{transform:scale(.97)}
   .tr .tc{font:12.5px/1 ui-monospace,"SF Mono",Consolas,monospace;color:#8b919e;font-variant-numeric:tabular-nums;letter-spacing:.02em;white-space:nowrap}
   .tr .tc b{color:#1b1e26;font-weight:600}
   .tr select{border:1px solid rgba(16,18,22,.1);border-radius:8px;font-size:12px;padding:3px 8px;color:#565d6b;background:#fff;cursor:pointer}
   .tr label{font-size:12px;color:#989ea9;display:flex;gap:5px;align-items:center;user-select:none;cursor:pointer}
-  .tr label input{accent-color:#ff4f00}
+  .tr label input{accent-color:#ff4f00;width:13px;height:13px;margin:0}
   .tr .m{color:#a4aab6;font-size:11.5px}
   /* timeline: lane separators via hairlines */
   #tl{position:relative;height:58px;margin:2px 16px 6px;background:linear-gradient(to bottom,transparent 18px,rgba(16,18,22,.05) 18px,rgba(16,18,22,.05) 19px,transparent 19px,transparent 35px,rgba(16,18,22,.05) 35px,rgba(16,18,22,.05) 36px,transparent 36px),#f5f5f3;border:1px solid rgba(16,18,22,.05);border-radius:10px;cursor:pointer;overflow:hidden}
@@ -315,7 +316,7 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
   <div class="card">
     <div id="stage"></div>
     <div class="tr">
-      <button class="pp" id="pp" title="播放/暂停">▶</button>
+      <button class="pp" id="pp" title="播放/暂停"><svg viewBox="0 0 12 12" width="13" height="13"><path d="M3.6 2.1v7.8c0 .62.68.99 1.2.66l6-3.9a.78.78 0 0 0 0-1.32l-6-3.9c-.52-.33-1.2.04-1.2.66z" fill="currentColor"/></svg></button>
       <span class="tc"><b id="cur">00:00</b> / ${fmt(meta.durationMs)}</span>
       <select id="spd"><option>1</option><option>1.5</option><option>2</option><option>4</option></select>
       <label><input type="checkbox" id="fol" checked> follow</label>
@@ -401,8 +402,10 @@ const setShot=t=>{if(!sImg)return;const f=frameAt(t)||frames[0];if(f&&f.p!==curS
 const ph=document.getElementById('ph'),cur=document.getElementById('cur'),pp=document.getElementById('pp');
 let qEls=[];
 const syncRR=t=>{if(rp){try{rp.play(t)}catch(e){}}};
-au.addEventListener('play',()=>{pp.textContent='⏸';syncRR(au.currentTime*1000)});
-au.addEventListener('pause',()=>{pp.textContent='▶';if(rp)try{rp.pause()}catch(e){}});
+const ICO_PLAY='<svg viewBox="0 0 12 12" width="13" height="13"><path d="M3.6 2.1v7.8c0 .62.68.99 1.2.66l6-3.9a.78.78 0 0 0 0-1.32l-6-3.9c-.52-.33-1.2.04-1.2.66z" fill="currentColor"/></svg>';
+const ICO_PAUSE='<svg viewBox="0 0 12 12" width="13" height="13"><path d="M3 2.2c0-.5.4-.9.9-.9h.8c.5 0 .9.4.9.9v7.6c0 .5-.4.9-.9.9h-.8c-.5 0-.9-.4-.9-.9zM6.4 2.2c0-.5.4-.9.9-.9h.8c.5 0 .9.4.9.9v7.6c0 .5-.4.9-.9.9h-.8c-.5 0-.9-.4-.9-.9z" fill="currentColor"/></svg>';
+au.addEventListener('play',()=>{pp.innerHTML=ICO_PAUSE;syncRR(au.currentTime*1000)});
+au.addEventListener('pause',()=>{pp.innerHTML=ICO_PLAY;if(rp)try{rp.pause()}catch(e){}});
 au.addEventListener('seeked',()=>{if(!au.paused)syncRR(au.currentTime*1000);else if(rp){try{rp.pause(au.currentTime*1000)}catch(e){rp.play(au.currentTime*1000);rp.pause()}}});
 au.addEventListener('timeupdate',()=>{
   const t=au.currentTime*1000;cur.textContent=fmt(t);
