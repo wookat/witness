@@ -1,96 +1,103 @@
 # Witness
 
-**Voice-anchored causal evidence recorder for AI coding agents.** · 官网：[witness.zalize.com](https://witness.zalize.com) · 愿景与路线：[VISION.md](VISION.md)
+**Voice-anchored causal evidence recorder for AI coding agents.**
 
-你说一句，机器把那句话的证据链自动补全。你像平时一样体验网页、用嘴说哪里不对，Witness 同时把页面的每次点击、每个请求、每条报错、每个状态变化按毫秒记下，再把"你这句话"和"那一秒发生的因果事实"焊在一起——产出一份带截图、元素定位、请求链路和报错的证据包，直接喂给 AI 编码 agent 修。
+[中文](README.zh-CN.md) · [witness.zalize.com](https://witness.zalize.com) · [VISION.md](VISION.md) · MIT
 
-## 安装
+You experience the product and talk — *“this button does nothing.”*
+Witness welds every word to the causal evidence of that exact second: clicks, requests,
+console errors, DOM mutations, screenshots, full rrweb replay — then hands a structured
+evidence package to your AI coding agent.
+
+![demo](docs/demo.gif)
+
+## Why
+
+AI agents can't see what you see. Describing a visual bug costs ten minutes of
+screenshots and prompt crafting — and still loses the *why*. Voice is the cheapest
+annotation channel there is; it just never had a recorder.
+
+Three streams run in parallel the moment `wit start` opens a managed browser:
+
+1. **Your voice** — continuous audio + live transcription. One take, many issues.
+2. **Operations + causal bursts** — every click captures its ~1.8s aftermath
+   (requests, responses, console errors, DOM changes). A click with *no* aftermath
+   is itself recorded as evidence.
+3. **Page evolution** — rrweb full-DOM replay + event-driven screenshots + periodic
+   DOM snapshots.
+
+## Install
 
 ```bash
-npm install && npm run build && npm link
-# 之后任意目录可用：wit / rec
+npm i -g github:wookat/witness        # needs Node 18+ and system Edge/Chrome
+wit start http://localhost:5173       # managed browser opens — talk & click
 ```
 
-首次运行自动检测系统 Edge/Chrome（优先用，零下载）；都没有才装自带 chromium。
+No downloads, no API keys. System Edge/Chrome is preferred; bundled Chromium is the fallback.
 
-## 使用
+## During recording
 
-```bash
-wit start http://localhost:5173     # 或任何 http/https 页面，含生产站
-wit start <url> --lang en-US        # 英文站点
-wit start <url> --duration 60       # 60 秒后自动停
-wit list                            # 列 sessions
-wit open latest                     # 打开 review.html
-wit transcribe <sessionDir>         # 重跑云端转写
-wit correct <sessionDir>            # 重跑 LLM 纠错
-wit associate <sessionDir>          # LLM 给每段语音挑相关证据（需 ZHIPU_API_KEY）
-wit recover <sessionDir>            # 崩溃/中断后从 events.jsonl 重建产物
-wit mcp [sessionDir]                # stdio MCP server，agent 按需查询证据
-```
-
-浏览器打开后：
-
-| 手势 | 动作 |
+| Gesture | Effect |
 |---|---|
-| 正常浏览+说话 | 全程录音；点击/滚动/输入/导航自动记录；Edge SR 实时转写，识别文字实时显示在工具栏下方 |
-| `Ctrl+点击` | 直接标记元素（selector+outerHTML+组件链+红框截图） |
-| `M` 或工具栏 ◎ | Inspect：悬停高亮，点选标记；**拖拽圈选区域**截局部图 |
-| `N` 或工具栏 ⧉ | 显式切出 **Issue 边界**——session.md/review.html 出现 `⏺ ISSUE #n` 分隔，多问题一段录完 |
-| `P` 或工具栏 ⏸ | 暂停/继续——暂停期**所有事件与录音都冻结**（隐私，比如去接电话） |
-| `Alt+Shift+R` / ■ / 终端 Ctrl+C | 停止并生成证据包 |
+| Browse + talk | Full audio; clicks/scrolls/inputs/navigation auto-logged; live transcript preview under the toolbar |
+| `Ctrl+click` | Mark an element — selector, outerHTML, component chain, red-frame screenshot |
+| `M` | Inspect mode: hover-highlight, click to mark; **drag to crop a region** |
+| `N` | Explicit issue boundary — `⏺ ISSUE #n` divider in the output; many issues, one take |
+| `P` | Pause/resume — **all events and audio freeze** (privacy) |
+| `■` / `Ctrl+C` | Stop and finalize the evidence package |
 
-events.jsonl 边录边落盘——进程被杀也只丢最后几百毫秒，`wit recover` 随时重建全部产物。
+`events.jsonl` streams to disk as you go — kill the process and you lose only the last
+few hundred milliseconds. `wit recover` rebuilds everything.
 
-**因果爆发链**：session.md 里每次点击会把随后 ~1.8s 的请求/报错/DOM 变化缩进归组——
-点击后什么都没发生会显式记为 `（点击后页面无任何反应——这本身就是证据）`。
+## CLI
 
-## 语音管线
+```bash
+wit start <url> [--lang en-US] [--duration 60] [--no-rr] [--associate]
+wit list                          # sessions with url/duration/say count
+wit open latest                   # open review.html
+wit transcribe <dir>              # re-run cloud ASR
+wit correct <dir>                 # re-run LLM text polish
+wit associate <dir>               # LLM picks relevant evidence per SAY (ZHIPU_API_KEY)
+wit recover <dir>                 # rebuild artifacts after a crash
+wit mcp [dir]                     # stdio MCP server over the evidence
+```
 
-默认零配置：Edge SpeechRecognition 实时识别（免费、国内可用）。可选增强写进 `.env`：
+## The evidence package — `.witness/sessions/<ts>_<host>/`
 
 ```
-ZHIPU_API_KEY=...     # bigmodel.cn 免费 → GLM-4-Flash 按页面词表纠错
-OPENAI_API_KEY=sk-... # whisper-1 词级时间戳
-```
-
-## 产物 `.witness/sessions/<ts>_<host>/`
-
-```
-session.md      # 时间轴：每段 SAY 下挂该时刻的因果爆发链（喂 agent 入口）
-review.html     # 回放页：语音卡片 + 截图 + 音频跳转 + 底部胶片条伪回放
-PROMPT.md       # 可粘贴给 agent 的模板
-events.jsonl    # 全量原始事件
-rrweb.jsonl     # rrweb 全量 DOM 事件流——review.html 顶部"▶ 回放"整页回放（--no-rr 关闭）
-dom/*.html      # DOM 快照（nav/mark/每30s），MCP get_dom_state(t) 可查
-assoc.json      # （可选）LLM 挑出的"每段语音→相关事件"挂载建议
-shots/*.jpg     # 事件驱动 + 周期截图（默认 10s）
-bodies/*.json   # 响应体 ≤64KB
+session.md      # timeline: each SAY block carries its causal burst — the agent entry point
+PROMPT.md       # paste-ready handoff instructions + page vocabulary
+review.html     # human view: speech cards + audio seek + filmstrip + embedded rrweb replay
+events.jsonl    # complete raw stream, crash-safe
+rrweb.jsonl     # full DOM event stream (--no-rr to disable)
+dom/*.html      # DOM snapshots on nav/mark/30s
+assoc.json      # optional LLM evidence-association suggestions
+shots/*.jpg     # event-driven + periodic + spoken-segment frames
+bodies/*.json   # response bodies ≤64KB
 audio.webm / transcript.json
 ```
 
-## 隐私
+## MCP — evidence as an API
 
-密码输入自动打码（click/input/mut/mark 四通道）；POST 请求体的 password/token/secret 字段自动脱敏；
-`WIT_NO_BODIES=1` 可完全关闭响应体捕获；`.witness/` 自动加入 gitignore。音频/截图仍在本地 session 目录，勿外发。
+`wit mcp` serves the session over stdio. Point any MCP-capable agent
+(Claude Code, Cursor, Devin) at it and it pulls exactly what it needs:
 
-## MCP 接入（agent 拉取式查证据）
+`session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
+`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)`
+
+## Principles
+
+- **Evidence is never rewritten** — speech lands verbatim; merging/correction/association are display-layer suggestions.
+- **Evidence ≠ intent** — behavior without a spoken anchor is never presented as a bug.
+- **Local-first** — deterministic recording + Edge SpeechRecognition by default; LLM layers are optional.
+- **Privacy engineered in** — password fields masked across four channels, credential fields redacted in POST bodies,
+  `WIT_NO_BODIES=1` disables body capture, `P` freezes everything, `.witness/` is auto-gitignored.
+
+## Development
 
 ```bash
-wit mcp                       # 服务最新 session
-wit mcp <sessionDir>          # 服务指定 session
+npm install && npm run build && npm link
+npm test        # build + node:test suite (align / speech-run / bursts / prompts / review html)
 ```
-
-stdio MCP server，7 个工具：`session_overview` / `list_says` / `session_md` /
-`events_around(t_ms, radius_ms, kinds)` / `get_errors` / `get_shot` / `get_body`。
-把 `wit mcp` 配进任何支持 MCP 的 agent（Cursor/Claude/Devin）即可让它主动挖证据，而不是一次塞全文。
-
-## 当前边界
-
-确定性记录 + Edge SR 为默认。可选 LLM 层：`--correct`（文本抛光）/ `--associate`（证据挑选），
-都只动展示层、不改原始事件。未做：rrweb 完整回放、插件版（V3 路线）。
-
-## 开发
-
-`npm test` — 先编译再跑 `test/*.test.mjs`（node:test，覆盖 align / speech-run 分组 / 降噪 / PROMPT 词表）。
 
 MIT.

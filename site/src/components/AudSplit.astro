@@ -1,22 +1,15 @@
 ---
-const humans = [
-  ["review.html", "speech cards + audio seek + screenshots"],
-  ["▶ DOM replay", "embedded rrweb player, real page states"],
-  ["film strip", "scrub the session like a video"],
-  ["audio.webm", "the original take"],
-];
-const agents = [
-  ["PROMPT.md", "handoff instructions + page vocabulary"],
-  ["session.md", "the evidence timeline above"],
-  ["events.jsonl", "complete raw stream, crash-safe"],
-  ["dom/ · bodies/ · shots/", "snapshots, payloads, frames"],
-];
+const {
+  humans = [["review.html", "speech cards + audio seek + screenshots"],["▶ DOM replay", "embedded rrweb player, real page states"],["film strip", "scrub the session like a video"],["audio.webm", "the original take"]],
+  agents = [["PROMPT.md", "handoff instructions + page vocabulary"],["session.md", "the evidence timeline above"],["events.jsonl", "complete raw stream, crash-safe"],["dom/ · bodies/ · shots/", "snapshots, payloads, frames"]],
+  labels = ["For humans", "For AI agents"],
+} = Astro.props;
 ---
 <div class="split">
-  <div class="card aud rv" data-d="0"><h4>For humans</h4><ul>
+  <div class="card aud rv" data-d="0"><h4>{labels[0]}</h4><ul>
     {humans.map(([f, d]) => <li><b>{f}</b><span>{d}</span></li>)}
   </ul></div>
-  <div class="card aud rv" data-d="120"><h4>For AI agents</h4><ul>
+  <div class="card aud rv" data-d="120"><h4>{labels[1]}</h4><ul>
     {agents.map(([f, d]) => <li><b>{f}</b><span>{d}</span></li>)}
   </ul></div>
 </div>

@@ -1,5 +1,5 @@
 ---
-const steps = [["wit start", "<url>", true], ["browse + talk", "", false], ["Ctrl+click / M to mark", "", false], ["■ stop", "", false], ["evidence package", "", true]];
+const { steps = [["wit start", "<url>", true], ["browse + talk", "", false], ["Ctrl+click / M to mark", "", false], ["■ stop", "", false], ["evidence package", "", true]] } = Astro.props;
 ---
 <div class="flow rv" data-d="200">
   {steps.map(([s, arg, hot], i) => (

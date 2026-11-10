@@ -1,14 +1,26 @@
 ---
 import Tape from "./Tape.astro";
 const GH = "https://github.com/wookat/witness";
+const { lang = "en" } = Astro.props;
+const t = lang === "zh" ? {
+  pill: "开源 · MIT · 本地优先",
+  h1a: "你开口，", h1b: "Witness 补全", rot: ["证据。", "那个 bug。", "那次卡顿。", "那个 500。", "前因后果。"],
+  sub: "像平时一样体验产品、用嘴说出哪里不对——“这个按钮点了没反应”。Witness 把你说的每句话焊死在那一秒的因果证据上，然后把证据包交给你的 AI 编码 agent。",
+  cta1: "查看 GitHub", cta2: "工作原理 ↓",
+} : {
+  pill: "OPEN SOURCE · MIT · LOCAL-FIRST",
+  h1a: "You say it.", h1b: "Witness proves", rot: ["it.", "the bug.", "the jank.", "the 500.", "the why."],
+  sub: "Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second, then hands the package to your AI coding agent.",
+  cta1: "View on GitHub", cta2: "How it works ↓",
+};
 ---
 <header class="hero"><div class="wrap">
-  <span class="pill rv"><i></i>OPEN SOURCE · MIT · LOCAL-FIRST</span>
-  <h1 class="rv" data-d="80">You say it.<br>Witness proves <span class="rot" id="rot">it.</span></h1>
-  <p class="sub rv" data-d="160">Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second, then hands the package to your AI coding agent.</p>
+  <span class="pill rv"><i></i>{t.pill}</span>
+  <h1 class="rv" data-d="80">{t.h1a}<br>{t.h1b} <span class="rot" id="rot">{t.rot[0]}</span></h1>
+  <p class="sub rv" data-d="160">{t.sub}</p>
   <div class="cta rv" data-d="240">
-    <a class="btn pri" href={GH}>View on GitHub</a>
-    <a class="btn" href="#how">How it works ↓</a>
+    <a class="btn pri" href={GH}>{t.cta1}</a>
+    <a class="btn" href="#how">{t.cta2}</a>
   </div>
   <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
   <Tape />
@@ -29,8 +41,7 @@ const GH = "https://github.com/wookat/witness";
   .install button{background:none;border:0;color:#77767f;cursor:pointer;font:inherit;font-size:15px;padding:0;transition:color .15s}
   .install button:hover{color:var(--term-text)}
 </style>
-<script>
-  const words = ["it.", "the bug.", "the jank.", "the 500.", "the why."];
+<script define:vars={{ words: t.rot }}>
   const el = document.getElementById("rot");
   let wi = 0;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;

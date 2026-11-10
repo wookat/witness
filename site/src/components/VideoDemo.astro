@@ -1,13 +1,14 @@
 ---
 // Real session footage — recorded by Playwright's own video capture against
 // demo-app.html with the wit toolbar live. One take, no cuts.
+const { lang = "en" } = Astro.props;
 ---
 <div class="stage rv" data-d="120">
   <div class="win">
     <div class="chrome">
       <i class="r"></i><i class="y"></i><i class="g"></i>
       <div class="url">localhost:5173/checkout</div>
-      <span class="tag">RECORDED WITH PLAYWRIGHT · ONE TAKE</span>
+      <span class="tag">{lang === "zh" ? "PLAYWRIGHT 实录 · 一镜到底" : "RECORDED WITH PLAYWRIGHT · ONE TAKE"}</span>
     </div>
     <video src="/demo.mp4" autoplay muted loop playsinline preload="metadata"></video>
   </div>

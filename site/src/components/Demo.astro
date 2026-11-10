@@ -1,6 +1,6 @@
 ---
 // Interactive evidence-timeline demo — click a SAY to expand its causal burst.
-const says = [
+const defaultSays = [
   {
     t: "00:09",
     quote: "the button fades and shrinks when I scroll",
@@ -31,9 +31,10 @@ const says = [
     ui: "api",
   },
 ];
+const { says = defaultSays, hint = "click a quote to expand its evidence" } = Astro.props;
 ---
 <div class="demo rv" data-d="100">
-  <div class="bar"><i></i><i></i><i></i><span>session.md — interactive</span><em>click a quote to expand its evidence</em></div>
+  <div class="bar"><i></i><i></i><i></i><span>session.md — interactive</span><em>{hint}</em></div>
   <div class="tl">
     {says.map((s, i) => (
       <div class={"say" + (i === 0 ? " open" : "")} data-i={i}>

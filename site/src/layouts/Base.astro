@@ -1,10 +1,14 @@
 ---
 import Logo from "../components/Logo.astro";
-const { title = "Witness — voice-anchored evidence recorder for AI coding agents" } = Astro.props;
+const { title = "Witness — voice-anchored evidence recorder for AI coding agents", lang = "en" } = Astro.props;
 const GH = "https://github.com/wookat/witness";
+const nav = lang === "zh"
+  ? [["#how","原理"],["#evidence","证据"],["#mcp","MCP"],["#install","安装"]]
+  : [["#how","How it works"],["#evidence","Evidence"],["#mcp","MCP"],["#install","Install"]];
+const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"中"};
 ---
 <!doctype html>
-<html lang="en">
+<html lang={lang === "zh" ? "zh-CN" : "en"}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -50,6 +54,7 @@ const GH = "https://github.com/wookat/witness";
   nav .links a{color:var(--dim);text-decoration:none;transition:color .15s}
   nav .links a:hover{color:var(--ink)}
   nav .gh{background:var(--ink);color:#f7f6f3!important;border-radius:8px;padding:8px 16px;font-weight:600}
+  nav .lang{font:600 12px var(--mono);color:var(--rec)!important;border:1px solid #f0cdcd;border-radius:6px;padding:4px 10px}
   nav .gh:hover{background:#000}
   @media(max-width:700px){nav .links a:not(.gh){display:none}}
 
@@ -102,10 +107,8 @@ const GH = "https://github.com/wookat/witness";
 <nav id="nav"><div class="wrap">
   <a href="/" style="text-decoration:none"><Logo /></a>
   <div class="links">
-    <a href="#how">How it works</a>
-    <a href="#evidence">Evidence</a>
-    <a href="#mcp">MCP</a>
-    <a href="#install">Install</a>
+    {nav.map(([href,label]) => <a href={href}>{label}</a>)}
+    <a href={langToggle.href} class="lang">{langToggle.label}</a>
     <a class="gh" href={GH}>GitHub ★</a>
   </div>
 </div></nav>
