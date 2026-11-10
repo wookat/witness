@@ -1,0 +1,158 @@
+/** Doubao web VoiceGenie — true streaming ASR via the doubao.com web socket.
+ *  No device registration: api_app_key is embedded in the web bundle.
+ *  Captured from a live doubao.com session; raw PCM 16kHz mono, 20ms frames. */
+import { randomUUID } from "node:crypto";
+import dns from "node:dns";
+import tls from "node:tls";
+import { readFileSync } from "node:fs";
+import WebSocket from "ws";
+import { webmToWav } from "./webm2wav.js";
+import type { AsrSeg } from "./asr-providers.js";
+
+const HOST = "frontier-audio-web-ws.doubao.com";
+const APP_KEY = "GOqQpfo1fO7slHv8";
+const DEVICE_ID = "7706602184038204971";
+const WEB_ID = "7706602180723263017";
+const FRAME = 640; // 20ms @16kHz mono s16le
+
+const wsUrl = (tab: string) =>
+  `wss://${HOST}/api/v2/sami/voicegenie?api_app_key=${APP_KEY}&namespace=VoiceGenie` +
+  `&version_code=20800&language=zh&device_platform=web&pkg_type=release_version&pc_version=3.45.1` +
+  `&region=CN&sys_region=CN&samantha_web=1&use-olympus-account=1&doubao_device_platform=web` +
+  `&aid=497858&real_aid=497858&device_id=${DEVICE_ID}&doubao_pc_version=3.45.1` +
+  `&web_id=${WEB_ID}&tea_uuid=${WEB_ID}&web_platform=browser&web_tab_id=${tab}`;
+
+// --- minimal protobuf (same SAMI family as src/doubao.ts) ---
+function vlen(v: number): Buffer { const o: number[] = []; do { let b = v & 0x7f; v = Math.floor(v / 128); if (v) b |= 0x80; o.push(b); } while (v); return Buffer.from(o); }
+function field(f: number, d: Buffer | string): Buffer { const x = typeof d === "string" ? Buffer.from(d) : d; return Buffer.concat([vlen(f << 3 | 2), vlen(x.length), x]); }
+function marshalReq(o: { token?: string; svc?: string; method?: string; payload?: string; audio?: Buffer; rid?: string; state?: number }): Buffer {
+  const p: Buffer[] = [];
+  if (o.token) p.push(field(2, o.token));
+  if (o.svc) p.push(field(3, o.svc));
+  if (o.method) p.push(field(5, o.method));
+  if (o.payload) p.push(field(6, o.payload));
+  if (o.audio?.length) p.push(field(7, o.audio));
+  if (o.rid) p.push(field(8, o.rid));
+  if (o.state) p.push(Buffer.concat([vlen(9 << 3), vlen(o.state)]));
+  return Buffer.concat(p);
+}
+interface Resp { msgType: string; code: number; msg: string; resultJson: string }
+function unmarshalResp(data: Buffer): Resp {
+  const r: Resp = { msgType: "", code: 0, msg: "", resultJson: "" };
+  let off = 0;
+  const rv = (): number => { let v = 0, s = 0; while (true) { const c = data[off++]; v += (c & 0x7f) * 2 ** s; s += 7; if (!(c & 0x80)) return v; } };
+  while (off < data.length) {
+    const tag = rv(); const f = tag >> 3, w = tag & 7;
+    if (w === 0) { if (f === 5) r.code = rv(); else rv(); }
+    else if (w === 2) { const l = rv(); const s = data.subarray(off, off + l).toString(); off += l;
+      if (f === 4) r.msgType = s; else if (f === 6) r.msg = s; else if (f === 7) r.resultJson = s; }
+    else if (w === 1) off += 8;
+    else if (w === 5) off += 4;
+    else break;
+  }
+  return r;
+}
+
+// CDN IPs rotate and half of them never finish the WSS upgrade — pick by real open
+async function openWs(): Promise<WebSocket> {
+  const ips = await dns.promises.resolve4(HOST).catch(() => [] as string[]);
+  const cands = ips.length ? ips : [HOST];
+  let lastErr: unknown = new Error("dns failed");
+  for (const ip of cands) {
+    try {
+      return await new Promise<WebSocket>((resolve, reject) => {
+        const ws = new WebSocket(wsUrl(randomUUID()), {
+          headers: { Origin: "https://www.doubao.com", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/158" },
+          createConnection: () => tls.connect({ host: ip, servername: HOST, port: 443 }),
+          handshakeTimeout: 8000,
+        });
+        ws.on("open", () => resolve(ws));
+        ws.on("error", reject);
+        ws.on("unexpected-response", (_q: unknown, res: { statusCode: number }) => reject(new Error("http " + res.statusCode)));
+      });
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
+/**
+ * Stream a webm/wav file through the web VoiceGenie endpoint (pure-ASR session).
+ * Backend runs near-realtime VAD — audio must be paced at ≤ ~1× realtime.
+ * onPartial(cumulativeText, isFinal) fires for every interim/final result.
+ */
+export async function doubaoWebStt(file: string, onPartial?: (t: string, isFinal: boolean) => void, speed = 1): Promise<AsrSeg[]> {
+  let wav = file.endsWith(".wav") ? readFileSync(file) : await webmToWav(file);
+  wav = wav.subarray(44);
+  const ws = await openWs();
+  const rid = randomUUID();
+
+  return await new Promise<AsrSeg[]>((resolve, reject) => {
+    let last = "";
+    const sentences = new Map<number, AsrSeg>();
+    const buildSegs = (): AsrSeg[] => {
+      const sents = [...sentences.values()].filter(s => s.text);
+      if (sents.length) return sents;
+      return last ? [{ start: 0, end: wav.length / 32000, text: last }] : [];
+    };
+    const done = (err?: Error) => { clearTimeout(killer); try { ws.close(); } catch {} err ? reject(err) : resolve(buildSegs()); };
+    const killer = setTimeout(() => done(new Error("doubao-web timeout")), (wav.length / 640 / 50 / speed + 45) * 1000);
+    let stage: "task" | "session" | "audio" = "task";
+    let timer: NodeJS.Timeout | undefined;
+
+    ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "StartTask", rid }));
+
+    ws.on("message", (b: Buffer) => {
+      const resp = unmarshalResp(b);
+      if (resp.msgType === "TaskFailed" || resp.msgType === "SessionFailed") {
+        return done(new Error(`${resp.msgType} code=${resp.code} ${resp.msg || resp.resultJson}`.trim()));
+      }
+      if (resp.msgType === "TaskStarted" && stage === "task") {
+        stage = "session";
+        ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "StartSession", rid, payload: JSON.stringify({
+          business: 1, enable_audio_input: true, query_mode: 2, interrupt_type: 0, request_type: 3,
+          chat: { bot_id: "7234781073513644036", message_id: "", uid: "279691410283040", conversation_id: "local_" + Date.now(), is_conf_fetched: false, is_dora_onboarding: false, new_conversation: false, question_id: "" },
+          asr: { audio_info: { channel: 1, format: "raw", sample_rate: 16000 }, enable_punctuation: true,
+            extra: { use_vad: true, use_itn: true, use_ddc: true, strong_ddc: true, enable_asr_twopass: true, disable_user_words: true } },
+        }) }));
+        return;
+      }
+      if (resp.msgType === "SessionStarted" && stage === "session") {
+        stage = "audio";
+        const t0 = Date.now();
+        let f = 0;
+        timer = setInterval(() => {
+          const i = f * FRAME;
+          if (i >= wav.length) {
+            clearInterval(timer);
+            ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "EndASR", payload: "{}", rid }));
+            ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "FinishSession", rid }));
+            return;
+          }
+          const lastF = i + FRAME >= wav.length;
+          const payload = lastF
+            ? JSON.stringify({ extra: { finish_audio: true }, timestamp_ms: t0 + f * 20 })
+            : JSON.stringify({ extra: {}, timestamp_ms: t0 + f * 20 });
+          ws.send(marshalReq({ svc: "VoiceGenie", method: "TaskRequest", payload, audio: wav.subarray(i, i + FRAME), rid, state: lastF ? 9 : f === 0 ? 1 : 3 }));
+          f++;
+        }, 20 / speed);
+        return;
+      }
+      if (resp.resultJson) {
+        try {
+          const j = JSON.parse(resp.resultJson);
+          const results = j?.results ?? [];
+          const t = results[0]?.text;
+          const interim = results[0]?.is_interim;
+          if (t && t !== last) { last = t; onPartial?.(t, interim === false); }
+          for (const r of results.slice(1)) {
+            if ((r.stream_asr_finish || r.is_interim === false) && r.start_time != null && r.end_time != null)
+              sentences.set(r.index ?? sentences.size, { start: r.start_time, end: r.end_time, text: r.text ?? "" });
+          }
+        } catch {}
+      }
+      if (resp.msgType === "SessionFinished") done();
+    });
+    ws.on("error", () => done(new Error("doubao-web ws error")));
+    ws.on("close", () => done(last ? undefined : new Error("closed, no result")));
+  });
+}

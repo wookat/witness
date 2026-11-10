@@ -8,7 +8,8 @@ const OUT = join(process.env.TEMP ?? ".", "wit-asr-lab.webm");
 const PORT = 8393;
 
 const providers = [
-  { name: "doubao 豆包(Seed-ASR)", streaming: true, fn: "doubao" },
+  { name: "doubao-web 豆包网页(VoiceGenie)", streaming: true, fn: "doubaoWeb" },
+  { name: "doubao 豆包输入法(Seed-ASR)", streaming: true, fn: "doubao" },
   { name: "bcut 必剪(B站)", streaming: false, fn: "bcut" },
   { name: "快手", streaming: false, fn: "kuaishou" },
   { name: "剪映", streaming: false, fn: "jianying" },

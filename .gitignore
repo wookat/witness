@@ -4,3 +4,4 @@ dist/
 .witness/
 sessions/
 .astro/
+.tmp*

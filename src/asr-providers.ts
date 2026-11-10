@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { webmToWav } from "./webm2wav.js";
 import { doubaoStt } from "./doubao.js";
+import { doubaoWebStt } from "./doubao-web.js";
 
 export interface AsrSeg { start: number; end: number; text: string }
 export interface AsrResult { engine: string; streaming: boolean; ms: number; segments: AsrSeg[]; error?: string }
@@ -105,6 +106,11 @@ export async function jianying(file: string): Promise<AsrSeg[]> {
 /* ---------------- doubao (豆包输入法 Seed-ASR, true streaming) ---------------- */
 export async function doubao(file: string): Promise<AsrSeg[]> {
   return doubaoStt(file);
+}
+
+/* ---------------- doubao-web (豆包网页 VoiceGenie, true streaming) ---------------- */
+export async function doubaoWeb(file: string): Promise<AsrSeg[]> {
+  return doubaoWebStt(file, undefined, 2); // file input: 2× pacing verified lossless
 }
 
 /* ---------------- uncloseai (parakeet, OpenAI-compatible, no key) ---------------- */
