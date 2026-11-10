@@ -175,7 +175,9 @@ export async function record(opts: RecOptions) {
       pages.delete(page);
       if (pages.size === 0) void stop("page-closed");
     });
+    void shots.arm(page);
     stopFns.push(shots.every(page, opts.shotInterval ?? 10000, () => paused));
+    stopFns.push(() => void shots.disarm());
   }
 
   ctx.on("page", wirePage);
