@@ -97,8 +97,8 @@ const cx = el => el.boundingBox().then(b => ({ x: b.x + b.width / 2, y: b.y + b.
 
 const browser = await chromium.launch({ headless: true });
 const ctx = await browser.newContext({
-  viewport: { width: 1280, height: 760 },
-  recordVideo: { dir: tmpDir, size: { width: 1280, height: 760 } },
+  viewport: { width: 1920, height: 1080 },
+  recordVideo: { dir: tmpDir, size: { width: 1920, height: 1080 } },
 });
 const page = await ctx.newPage();
 await page.goto(appUrl);
@@ -153,7 +153,7 @@ let ffmpegPath = null;
 try { ffmpegPath = require("ffmpeg-static"); } catch {}
 if (ffmpegPath) {
   const out = path.join(siteDir, "public", "demo.mp4");
-  execFileSync(ffmpegPath, ["-y", "-i", src, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-crf", "23", out], { stdio: "inherit" });
+  execFileSync(ffmpegPath, ["-y", "-i", src, "-c:v", "libx264", "-preset", "slow", "-crf", "19", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out], { stdio: "inherit" });
   console.log("mp4:", out);
 } else {
   fs.copyFileSync(src, path.join(siteDir, "public", "demo.webm"));
