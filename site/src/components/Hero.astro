@@ -69,7 +69,9 @@ const t = lang === "zh" ? {
   @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 #e5484d55}50%{opacity:.5;box-shadow:0 0 0 5px #e5484d00}}
   h1{position:relative;font-size:clamp(42px,7.2vw,76px);line-height:1.05;font-weight:800;letter-spacing:-.035em;z-index:2}
   .rotw{position:relative;display:inline-block;white-space:nowrap}
-  h1 .rot{display:inline-block;min-width:3.4ch;text-align:left;vertical-align:bottom;color:var(--rec);transition:opacity .22s}
+  h1 .rot{display:inline-block;min-width:3.4ch;text-align:left;vertical-align:bottom;color:var(--rec);transition:transform .3s cubic-bezier(.3,.7,.3,1),opacity .3s}
+  h1 .rot.out{transform:translateY(-.45em);opacity:0}
+  h1 .rot.in{transition:none;transform:translateY(.45em);opacity:0}
   .mk{position:absolute;left:-2%;bottom:-.12em;width:104%;height:.22em}
   .sub{position:relative;max-width:600px;margin:24px auto 0;color:var(--dim);font-size:17.5px;z-index:2}
   .cta{position:relative;display:flex;gap:12px;justify-content:center;margin-top:34px;z-index:2}
@@ -85,10 +87,15 @@ const t = lang === "zh" ? {
   let wi = 0;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (el && !reduced) setInterval(() => {
-    wi = (wi + 1) % words.length;
-    el.style.opacity = "0";
-    setTimeout(() => { el.textContent = words[wi]; el.style.opacity = "1"; }, 220);
-  }, 2400);
+    el.classList.add("out");
+    setTimeout(() => {
+      wi = (wi + 1) % words.length;
+      el.textContent = words[wi];
+      el.classList.remove("out");
+      el.classList.add("in");
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("in")));
+    }, 320);
+  }, 2600);
   const cmd = "npm i -g github:wookat/witness";
   const tp = document.getElementById("typed");
   if (tp && !reduced) {

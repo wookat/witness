@@ -37,7 +37,12 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"�
     --acc:var(--rec); --acc2:var(--amber); --acc-soft:var(--rec-soft); --acc-ink:var(--rec-ink);
   }
   *{box-sizing:border-box;margin:0}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:#c6c4bc transparent}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#c6c4bc;border:3px solid var(--bg);border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:#a5a39b}
+  ::-webkit-scrollbar-corner{background:transparent}
   body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
   .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
   a{color:inherit}
@@ -141,11 +146,30 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"�
 
 <slot />
 
-<footer><div class="wrap" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center">
-  <span>witness · MIT · a <a href="https://zalize.com" style="color:var(--dim)">zalize</a> open-source project</span>
-  <span style="margin-left:auto"><a href={GH} style="color:var(--dim);text-decoration:none">GitHub</a> &nbsp;·&nbsp; <a href={GH + "/issues"} style="color:var(--dim);text-decoration:none">Issues</a> &nbsp;·&nbsp; <a href={GH + "/blob/main/VISION.md"} style="color:var(--dim);text-decoration:none">Vision</a></span>
+<footer><div class="wrap">
+  <div class="ftop">
+    <a href={lang === "zh" ? "/zh" : "/"} style="text-decoration:none"><Logo size={24}/></a>
+    <span class="fl">
+      <a href={GH}>GitHub</a>
+      <a href={GH + "/issues"}>Issues</a>
+      <a href={GH + "/blob/main/VISION.md"}>Vision</a>
+      <a href={GH + "/blob/main/README.md"}>Docs</a>
+    </span>
+  </div>
+  <div class="fbot">
+    <span>{lang === "zh" ? "© 2026 zalize · MIT 协议 · 本地优先——session 不出本机" : "© 2026 zalize · MIT license · local-first — sessions never leave your machine"}</span>
+    <span class="mono">wit · witness.zalize.com</span>
+  </div>
 </div></footer>
-<style>footer{padding:48px 0 60px;border-top:1px solid var(--line);color:var(--dim);font-size:13px}footer a:hover{color:var(--rec)}</style>
+<style>
+  footer{padding:52px 0 44px;border-top:1px solid var(--line)}
+  .ftop{display:flex;align-items:center;gap:20px}
+  .fl{margin-left:auto;display:flex;gap:20px;flex-wrap:wrap}
+  .fl a{color:var(--dim);text-decoration:none;font-size:13px;transition:color .15s}
+  .fl a:hover{color:var(--rec)}
+  .fbot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:24px;padding-top:18px;border-top:1px dashed var(--line);color:var(--faint);font-size:12px}
+  .fbot .mono{font-family:var(--mono)}
+</style>
 
 <script>
   const nav = document.getElementById("nav");

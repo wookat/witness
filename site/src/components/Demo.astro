@@ -49,14 +49,14 @@ const { says = defaultSays, hint = "click a quote to expand its evidence" } = As
             {s.ev.map(([k, v, c]) => <div class="row"><span class={"k " + c}>{k}</span><span class="v">{v}</span></div>)}
             <div class="note">└─ {s.note}</div>
           </div>
-          <div class={"shot " + s.ui} aria-hidden="true">
+          <button class={"shot " + s.ui} type="button" title="click to enlarge">
             <div class="vp">
               {s.ui === "btn" && <><div class="ui-bar"></div><div class="ui-btn"></div><div class="ui-line l1"></div><div class="ui-line l2"></div></>}
               {s.ui === "scroll" && <><div class="ui-bar"></div><div class="ui-card"></div><div class="ui-card short"></div><div class="ui-btn small"></div></>}
               {s.ui === "api" && <><div class="ui-bar"></div><div class="ui-row"></div><div class="ui-row"></div><div class="ui-row empty"></div><div class="ui-row empty"></div></>}
             </div>
             <span>shot_{s.t.replace(":","")}.png</span>
-          </div>
+          </button>
         </div></div>
       </div>
     ))}
@@ -82,9 +82,10 @@ const { says = defaultSays, hint = "click a quote to expand its evidence" } = As
   .chev{margin-left:auto;flex:none;color:#6f6b87;transition:transform .25s}
   .say.open .chev{transform:rotate(180deg)}
 
-  .burst{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.2,.6,.2,1)}
+  .burst{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s cubic-bezier(.2,.6,.2,1)}
   .say.open .burst{grid-template-rows:1fr}
-  .burst-in{overflow:hidden}
+  .burst-in{overflow:hidden;opacity:0;transition:opacity .22s .05s}
+  .say.open .burst-in{opacity:1}
   .burst-in{display:flex;gap:18px;padding:2px 20px 18px 84px}
   @media(max-width:640px){.burst-in{flex-direction:column;padding-left:20px}}
   .rows{flex:1;min-width:0}
@@ -95,8 +96,9 @@ const { says = defaultSays, hint = "click a quote to expand its evidence" } = As
   .note{padding:6px 0 0 66px;font-size:12px;color:#6f6b87;font-style:italic}
   @media(max-width:640px){.note{padding-left:0}}
 
-  .shot{flex:none;width:170px}
-  .shot .vp{height:104px;border-radius:10px;background:linear-gradient(160deg,#1d1c24,#141319);border:1px solid #302e3d;position:relative;overflow:hidden}
+  .shot{flex:none;width:170px;background:none;border:0;padding:0;font:inherit;text-align:center;cursor:zoom-in}
+  .shot .vp{height:104px;border-radius:10px;background:linear-gradient(160deg,#1d1c24,#141319);border:1px solid #302e3d;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+  .shot:hover .vp{border-color:#565270;transform:scale(1.03)}
   .shot span{display:block;margin-top:7px;font-size:10.5px;color:#5b5871;text-align:center}
   .ui-bar{position:absolute;top:9px;left:10px;right:10px;height:6px;border-radius:3px;background:#3d3956}
   .ui-btn{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:74px;height:20px;border-radius:10px;background:linear-gradient(135deg,#2a2b31,#17181c)}
@@ -108,7 +110,16 @@ const { says = defaultSays, hint = "click a quote to expand its evidence" } = As
   .ui-row{position:absolute;left:10px;right:10px;height:14px;border-radius:4px;background:#2e2b44}
   .ui-row:nth-of-type(2){top:26px}.ui-row:nth-of-type(3){top:46px}.ui-row:nth-of-type(4){top:66px}.ui-row:nth-of-type(5){top:86px}
   .ui-row.empty{background:transparent;border:1px dashed #413e52}
+
+  /* lightbox */
+  .lb{position:fixed;inset:0;z-index:80;background:#0d0d12cf;backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:0;pointer-events:none;transition:opacity .22s}
+  .lb.on{opacity:1;pointer-events:auto}
+  .lb .stage{width:170px;height:104px;transform:scale(2.6) translateY(-4px);transform-origin:center}
+  .lb .vp{width:170px;height:104px;border-radius:10px;background:linear-gradient(160deg,#1d1c24,#141319);border:1px solid #3a3747;position:relative;overflow:hidden}
+  .lb .cap{font:500 12px var(--mono);color:#9d99b8;margin-top:96px}
+  .lb .hint{position:absolute;bottom:26px;font:500 10.5px var(--mono);color:#5b5871;letter-spacing:.1em}
 </style>
+<div class="lb" id="wit-lb" aria-hidden="true"><div class="stage"><div class="vp" id="wit-lb-vp"></div></div><span class="cap" id="wit-lb-cap"></span><span class="hint">ESC / CLICK TO CLOSE</span></div>
 <script>
   document.querySelectorAll(".demo .head").forEach(h => h.addEventListener("click", () => {
     const s = h.parentElement;
@@ -116,4 +127,14 @@ const { says = defaultSays, hint = "click a quote to expand its evidence" } = As
     s.parentElement.querySelectorAll(".say").forEach(x => x.classList.remove("open"));
     if (!was) s.classList.add("open");
   }));
+  const lb = document.getElementById("wit-lb"), lbvp = document.getElementById("wit-lb-vp"), lbcap = document.getElementById("wit-lb-cap");
+  const closeLb = () => lb.classList.remove("on");
+  document.querySelectorAll(".demo .shot").forEach(sh => sh.addEventListener("click", e => {
+    e.stopPropagation();
+    lbvp.innerHTML = sh.querySelector(".vp").innerHTML;
+    lbcap.textContent = sh.querySelector("span").textContent + " · " + sh.closest(".say").querySelector(".ts").textContent;
+    lb.classList.add("on");
+  }));
+  lb.addEventListener("click", closeLb);
+  addEventListener("keydown", e => { if (e.key === "Escape") closeLb(); });
 </script>

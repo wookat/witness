@@ -30,7 +30,7 @@ const shots = [10,26,38,55,69,84];
   .tr .t.nav{height:22px;background:var(--amber)}
   .tr .s{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:16px;border:1.5px solid var(--ok);border-radius:3px;background:#3d9d6318}
   .ph{position:absolute;top:10px;bottom:26px;left:20%;width:2px;background:var(--rec);box-shadow:0 0 12px #e5484d88;animation:sweep 12s linear infinite}
-  .ph::before{content:"";position:absolute;top:-5px;left:-5px;width:10px;height:10px;border-radius:50%;background:var(--rec);border:2px solid var(--panel)}
+  .ph::before{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--rec);border:2px solid var(--panel)}
   @keyframes sweep{from{left:8%}to{left:98%}}
   .tc{display:flex;justify-content:space-between;padding-top:8px;font:500 10px var(--mono);color:var(--faint);letter-spacing:.08em}
   .tc b:nth-child(2){letter-spacing:.2em}
