@@ -348,10 +348,14 @@ export const PAGE_SCRIPT = (lang = "zh-CN") => `
       } else if (m.type === "characterData") {
         s = \`text → "\${clip(m.target.data, 60)}"\`;
       }
-      if (s) mutBuf.push({ sel: sel(m.target), summary: s });
+      if (s) mutBuf.push({
+        sel: sel(m.target), summary: s,
+        sig: m.type === "attributes" ? \`attr \${m.attributeName}\` : m.type,
+      });
     }
   });
   mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeOldValue: true, characterData: true, characterDataOldValue: true });
+  const mutRate = new Map(); // sel|sig -> { until, ban, last, streak } — flapping backoff
   setInterval(() => {
     if (mutBuf.length === 0) return;
     const all = mutBuf.splice(0, mutBuf.length);
@@ -361,7 +365,23 @@ export const PAGE_SCRIPT = (lang = "zh-CN") => `
       const p = seen.get(k);
       if (p) p.n++; else seen.set(k, { ...m, n: 1 });
     }
-    for (const m of [...seen.values()].slice(0, 30)) W.emit({ kind: "mut", ...m });
+    const now = Date.now(), out = [];
+    for (const m of seen.values()) {
+      const key = m.sel + "|" + m.sig;
+      const r = mutRate.get(key);
+      if (r && now < r.until) continue;
+      const streak = r && now - r.last < 2000 ? r.streak + 1 : 1;
+      if (streak >= 6) {
+        const ban = (r?.ban || 0) + 1, ms = Math.min(60000, 15000 * ban);
+        mutRate.set(key, { until: now + ms, ban, last: now, streak: 0 });
+        out.push({ sel: m.sel, summary: \`\${m.sig}: ⟳ flapping — suppressed \${ms / 1000}s\`, n: m.n, sig: "" });
+      } else {
+        mutRate.set(key, { until: 0, ban: r?.ban || 0, last: now, streak });
+        out.push(m);
+      }
+    }
+    if (mutRate.size > 500) mutRate.clear();
+    for (const m of out.slice(0, 30)) { const { sig, ...e } = m; W.emit({ kind: "mut", ...e }); }
   }, 400);
 
   // ---------- navigation ----------
