@@ -1,6 +1,7 @@
 ---
-// Real session footage — recorded by Playwright's own video capture against
-// demo-app.html with the wit toolbar live. One take, no cuts.
+// Real session footage in a layered composition — main window plus
+// tilted artifact panels floating beside it (devin.ai-style depth).
+import Icon from "./Icon.astro";
 const { lang = "en" } = Astro.props;
 ---
 <div class="stage rv" data-d="120">
@@ -12,15 +13,43 @@ const { lang = "en" } = Astro.props;
     </div>
     <video src="/demo.mp4" autoplay muted loop playsinline preload="metadata"></video>
   </div>
+
+  <div class="fp fp-md" aria-hidden="true">
+    <div class="fp-h"><Icon name="file" size={13} /><b>session.md</b></div>
+    <code><span class="k say">00:34 SAY</span> “点了没反应”<br/>
+    <span class="k ok">CLICK</span> button.pay<br/>
+    <span class="k dim">NET — · MUT —</span><br/>
+    <span class="k rec">└─ no reaction = evidence</span></code>
+  </div>
+  <div class="fp fp-pr" aria-hidden="true">
+    <div class="fp-h"><Icon name="box" size={13} /><b>PROMPT.md</b></div>
+    <code># handoff → agent<br/>vocab: 订单/提交/支付<br/>issues: 2 · events: 41</code>
+  </div>
+  <div class="fp fp-rec" aria-hidden="true"><i></i>REC</div>
 </div>
+
 <style>
-  .stage{max-width:940px;margin:0 auto}
-  .win{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 30px 70px #17181c17,0 2px 6px #17181c0a}
+  .stage{position:relative;max-width:940px;margin:0 auto}
+  .win{position:relative;z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 30px 70px #17181c1a,0 2px 6px #17181c0a}
   .chrome{display:flex;align-items:center;gap:7px;padding:10px 13px;border-bottom:1px solid var(--line);background:#fbfaf7}
   .chrome i{width:10px;height:10px;border-radius:50%}
   .chrome .r{background:#e5484d}.chrome .y{background:#e2a93b}.chrome .g{background:#3d9d63}
   .url{margin-left:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font:500 11px var(--mono);color:var(--dim)}
   .tag{margin-left:auto;font:600 9.5px var(--mono);letter-spacing:.1em;color:var(--faint)}
   video{display:block;width:100%;height:auto;background:#f4f3ef}
+
+  .fp{position:absolute;z-index:3;background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 13px;box-shadow:0 18px 44px #17181c1f;font-family:var(--mono)}
+  .fp-h{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--ink);margin-bottom:7px;letter-spacing:.04em}
+  .fp code{font-size:10px;line-height:1.8;color:var(--dim);display:block}
+  .k.say{color:#8fb0f4}.k.ok{color:var(--ok)}.k.dim{color:var(--faint)}.k.rec{color:var(--rec)}
+  .fp-md{left:-7%;bottom:9%;transform:rotate(-5deg);width:240px;animation:bobA 8s ease-in-out infinite}
+  .fp-pr{right:-6%;top:14%;transform:rotate(4.5deg);width:215px;animation:bobB 9s ease-in-out infinite}
+  .fp-rec{right:4%;top:-14px;display:flex;align-items:center;gap:6px;padding:7px 13px;font:700 10.5px var(--mono);letter-spacing:.14em;color:var(--rec);transform:rotate(2deg)}
+  .fp-rec i{width:7px;height:7px;border-radius:50%;background:var(--rec);animation:bl 1.4s infinite}
+  @keyframes bl{50%{opacity:.3}}
+  @keyframes bobA{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(-5deg) translateY(-10px)}}
+  @keyframes bobB{0%,100%{transform:rotate(4.5deg) translateY(0)}50%{transform:rotate(4.5deg) translateY(-8px)}}
+  @media(max-width:1100px){.fp-md{left:-2%}.fp-pr{right:-2%}}
+  @media(max-width:860px){.fp-md,.fp-pr{display:none}}
   @media(max-width:640px){.tag{display:none}}
 </style>

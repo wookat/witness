@@ -1,7 +1,9 @@
 ---
-const { n, title, d } = Astro.props;
+import Icon from "./Icon.astro";
+const { n, title, d, icon } = Astro.props;
 ---
 <div class="card rv" data-d={d}>
+  {icon && <span class="ic"><Icon name={icon} size={18} /></span>}
   {n && <div class="n">{n}</div>}
   <h3><slot name="title">{title}</slot></h3>
   <p><slot /></p>

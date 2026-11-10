@@ -8,6 +8,7 @@ import Demo from "../components/Demo.astro";
 import VideoDemo from "../components/VideoDemo.astro";
 import Flow from "../components/Flow.astro";
 import AudSplit from "../components/AudSplit.astro";
+import Icon from "../components/Icon.astro";
 const GH = "https://github.com/wookat/witness";
 ---
 <Base>
@@ -16,7 +17,7 @@ const GH = "https://github.com/wookat/witness";
 <div class="ruler"><b class="a">00:00</b><b class="b">REC</b><i style="--x:12%"></i></div>
 
 <section class="alt"><div class="wrap center">
-  <div class="kicker">The problem</div>
+  <div class="kicker">01 · The problem</div>
   <h2 class="rv">Agents can't see what you see.</h2>
   <p class="lede rv" data-d="100">A human notices “the button fades weirdly when I scroll” in two seconds. Writing that up for an AI agent takes ten minutes of screenshots, element selectors and prompt crafting — and the result still loses the <i>why</i>. Voice is the cheapest annotation channel there is; it just never had a recorder.</p>
 </div></section>
@@ -24,22 +25,28 @@ const GH = "https://github.com/wookat/witness";
 <div class="ruler"><b class="a">00:18</b><i style="--x:34%"></i></div>
 
 <section><div class="wrap">
-  <div class="kicker">Watch it happen</div>
+  <div class="kicker">02 · Watch it happen</div>
   <h2 class="rv">One click. Every consequence, filed.</h2>
   <p class="lede rv" data-d="80">This is a real recorded session — speech, marking, the dead click, the save. The Pay button below produces <b>nothing</b>, and that absence is captured as fact.</p>
-  <div style="margin-top:44px"><VideoDemo /></div>
+  <div style="margin-top:52px"><VideoDemo /></div>
 </div></section>
 
-<div class="ruler"><b class="a">00:41</b><b class="b">MARK</b><i style="--x:58%"></i></div>
+<div class="stats">
+  <div class="stat"><b>3</b><span>recording tracks</span></div>
+  <div class="stat"><b>8</b><span>MCP tools</span></div>
+  <div class="stat"><b>0</b><span>cloud keys needed</span></div>
+  <div class="stat"><b>17</b><span>tests green</span></div>
+  <div class="stat"><b>MIT</b><span>open source</span></div>
+</div>
 
 <section id="how" class="alt"><div class="wrap">
-  <div class="kicker">How it works</div>
+  <div class="kicker">03 · How it works</div>
   <h2 class="rv">Three recording lines, one timeline.</h2>
   <p class="lede rv" data-d="80"><code>wit start &lt;dev-url&gt;</code> opens a managed browser. From that moment, three streams run in parallel — zero manual work:</p>
   <div class="grid g3">
-    <Card n="01 / VOICE" title="Your voice" d="0">Continuous audio + live speech-to-text. Say everything on your mind — one take, many issues, no need to split.</Card>
-    <Card n="02 / OPS" title="Operations + causal bursts" d="80">Every click captures its ~1.8s aftermath: requests, responses, console errors, DOM changes. A click with <i>no</i> aftermath is itself evidence.</Card>
-    <Card n="03 / STATE" title="Page evolution" d="160">rrweb full-DOM replay + event-driven screenshots + periodic DOM snapshots. Rewind the exact page state at any second.</Card>
+    <Card icon="mic" n="01 / VOICE" title="Your voice" d="0">Continuous audio + live speech-to-text. Say everything on your mind — one take, many issues, no need to split.</Card>
+    <Card icon="zap" n="02 / OPS" title="Operations + causal bursts" d="80">Every click captures its ~1.8s aftermath: requests, responses, console errors, DOM changes. A click with <i>no</i> aftermath is itself evidence.</Card>
+    <Card icon="layers" n="03 / STATE" title="Page evolution" d="160">rrweb full-DOM replay + event-driven screenshots + periodic DOM snapshots. Rewind the exact page state at any second.</Card>
   </div>
   <Flow />
 </div></section>
@@ -47,7 +54,7 @@ const GH = "https://github.com/wookat/witness";
 <div class="ruler"><b class="a">01:12</b><i style="--x:71%"></i></div>
 
 <section id="evidence"><div class="wrap">
-  <div class="kicker">The output</div>
+  <div class="kicker">04 · The output</div>
   <h2 class="rv">Your words become evidence anchors.</h2>
   <p class="lede rv" data-d="80">Each spoken fragment becomes a block on a timeline with the causal facts of that moment attached — the “causal burst”. Click a quote:</p>
   <Demo />
@@ -56,40 +63,40 @@ const GH = "https://github.com/wookat/witness";
 <div class="ruler"><b class="a">01:48</b><b class="b">SAY ×3</b><i style="--x:82%"></i></div>
 
 <section class="alt"><div class="wrap">
-  <div class="kicker">Two audiences, one package</div>
+  <div class="kicker">05 · Two audiences</div>
   <h2 class="rv">Humans get a replay. Agents get a structure.</h2>
   <AudSplit />
 </div></section>
 
 <section id="mcp"><div class="wrap">
-  <div class="kicker">Pull, don't push</div>
+  <div class="kicker">06 · Pull, don't push</div>
   <h2 class="rv"><code>wit mcp</code> — evidence as an API.</h2>
   <p class="lede rv" data-d="80">Instead of a static dump, the session becomes a stdio MCP server. Point any MCP-capable agent at it and it queries exactly the evidence it needs:</p>
   <div class="grid g3">
-    <Card title="list_says" d="0"><span slot="title"><code>list_says</code></span>Every spoken fragment with timestamps — the issue anchors.</Card>
-    <Card title="events_around" d="40"><span slot="title"><code>events_around</code></span>Raw events in a time window, filtered by kind.</Card>
-    <Card title="get_dom_state" d="80"><span slot="title"><code>get_dom_state</code></span>Full DOM HTML nearest to a timestamp.</Card>
-    <Card title="get_errors" d="0"><span slot="title"><code>get_errors</code></span>Console errors, page errors, HTTP ≥ 400.</Card>
-    <Card title="get_shot / get_body" d="40"><span slot="title"><code>get_shot / get_body</code></span>Screenshot frames and response payloads on demand.</Card>
-    <Card title="session_md" d="80"><span slot="title"><code>session_md</code></span>The rendered timeline when the agent wants it all.</Card>
+    <Card icon="file" d="0"><span slot="title"><code>list_says</code></span>Every spoken fragment with timestamps — the issue anchors.</Card>
+    <Card icon="clock" d="40"><span slot="title"><code>events_around</code></span>Raw events in a time window, filtered by kind.</Card>
+    <Card icon="layers" d="80"><span slot="title"><code>get_dom_state</code></span>Full DOM HTML nearest to a timestamp.</Card>
+    <Card icon="zap" d="0"><span slot="title"><code>get_errors</code></span>Console errors, page errors, HTTP ≥ 400.</Card>
+    <Card icon="box" d="40"><span slot="title"><code>get_shot / get_body</code></span>Screenshot frames and response payloads on demand.</Card>
+    <Card icon="api" d="80"><span slot="title"><code>session_md</code></span>The rendered timeline when the agent wants it all.</Card>
   </div>
 </div></section>
 
 <div class="ruler"><b class="a">02:31</b><b class="b">STOP ■</b><i style="--x:94%"></i></div>
 
 <section class="alt"><div class="wrap">
-  <div class="kicker">Principles</div>
+  <div class="kicker">07 · Principles</div>
   <h2 class="rv">Evidence never lies.</h2>
   <div class="grid g2">
-    <Card title="Local-first, zero config" d="0">System Edge/Chrome + Edge SpeechRecognition — free real-time transcription, no API key, works anywhere. Cloud ASR and LLM polish are optional layers, never the pipeline.</Card>
-    <Card title="Words are never rewritten" d="80">Your speech lands verbatim in events.jsonl. Merging, correction and association are display-layer suggestions — the raw testimony stays auditable.</Card>
-    <Card title="Evidence ≠ intent" d="0">Clicks and scrolls are facts, not complaints. Without a spoken anchor, agents are told explicitly: never infer a bug from behavior alone.</Card>
-    <Card title="Privacy engineered in" d="80">Password fields masked in four channels; POST bodies redact credential fields; P freezes everything, mic included; <code>WIT_NO_BODIES</code> for sensitive apps.</Card>
+    <Card icon="terminal" title="Local-first, zero config" d="0">System Edge/Chrome + Edge SpeechRecognition — free real-time transcription, no API key, works anywhere. Cloud ASR and LLM polish are optional layers, never the pipeline.</Card>
+    <Card icon="file" title="Words are never rewritten" d="80">Your speech lands verbatim in events.jsonl. Merging, correction and association are display-layer suggestions — the raw testimony stays auditable.</Card>
+    <Card icon="eye" title="Evidence ≠ intent" d="0">Clicks and scrolls are facts, not complaints. Without a spoken anchor, agents are told explicitly: never infer a bug from behavior alone.</Card>
+    <Card icon="shield" title="Privacy engineered in" d="80">Password fields masked in four channels; POST bodies redact credential fields; P freezes everything, mic included; <code>WIT_NO_BODIES</code> for sensitive apps.</Card>
   </div>
 </div></section>
 
 <section id="install"><div class="wrap">
-  <div class="kicker">Install &amp; run</div>
+  <div class="kicker">08 · Install &amp; run</div>
   <h2 class="rv">Two minutes to your first evidence package.</h2>
   <Term label="terminal" d="100"><span class="c-dim"># needs Node 18+ and system Edge/Chrome — no downloads, no keys</span>
 npm i -g github:wookat/witness
@@ -99,7 +106,7 @@ wit start http://localhost:5173     <span class="c-dim"># managed browser opens 
 wit list                            <span class="c-dim"># your sessions</span>
 wit mcp                             <span class="c-dim"># serve the latest as an MCP server</span></Term>
   <div class="cta rv" data-d="160" style="display:flex;gap:12px;margin-top:30px">
-    <a class="btn pri" href={GH}>★ Star on GitHub</a>
+    <a class="btn pri" href={GH}>★ Star on GitHub<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     <a class="btn" href={GH + "/blob/main/VISION.md"}>Read the vision ↗</a>
   </div>
 </div></section>

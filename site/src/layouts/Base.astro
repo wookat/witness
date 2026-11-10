@@ -46,17 +46,19 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"ä¸
   .rv.on{opacity:1;transform:none}
   @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none} *{animation:none!important;transition:none!important}}
 
-  /* ---------- nav ---------- */
-  nav{position:sticky;top:0;z-index:50;background:#f7f6f3d9;backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .3s,box-shadow .3s}
-  nav.sc{border-color:var(--line);box-shadow:0 4px 18px #17181c07}
-  nav .wrap{display:flex;align-items:center;gap:28px;height:58px}
-  nav .links{margin-left:auto;display:flex;align-items:center;gap:22px;font-size:13.5px;font-weight:500}
+  /* ---------- floating pill nav ---------- */
+  nav{position:fixed;top:14px;left:0;right:0;z-index:50;pointer-events:none}
+  nav .wrap{pointer-events:auto;display:flex;align-items:center;gap:24px;height:54px;max-width:980px;
+    background:#fffffff2;backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:999px;
+    padding:0 10px 0 20px;box-shadow:0 6px 24px #17181c10;transition:box-shadow .3s}
+  nav.sc .wrap{box-shadow:0 10px 34px #17181c1e}
+  nav .links{margin-left:auto;display:flex;align-items:center;gap:20px;font-size:13px;font-weight:500}
   nav .links a{color:var(--dim);text-decoration:none;transition:color .15s}
   nav .links a:hover{color:var(--ink)}
-  nav .gh{background:var(--ink);color:#f7f6f3!important;border-radius:8px;padding:8px 16px;font-weight:600}
-  nav .lang{font:600 12px var(--mono);color:var(--rec)!important;border:1px solid #f0cdcd;border-radius:6px;padding:4px 10px}
-  nav .gh:hover{background:#000}
-  @media(max-width:700px){nav .links a:not(.gh){display:none}}
+  nav .gh{background:var(--ink);color:#f7f6f3!important;border-radius:999px;padding:9px 18px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+  nav .gh:hover{background:#2b2c33}
+  nav .lang{font:600 11.5px var(--mono);color:var(--rec)!important;border:1px solid #f0cdcd;border-radius:999px;padding:5px 11px}
+  @media(max-width:700px){nav .links a:not(.gh):not(.lang){display:none}}
 
   /* ---------- timecode ruler â€” the brand motif ---------- */
   .ruler{height:26px;border-block:1px solid var(--line);position:relative;
@@ -82,17 +84,38 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"ä¸
   .g2{grid-template-columns:repeat(2,1fr)}
   @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
 
-  .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-size:14px;font-weight:600;padding:12px 22px;border-radius:9px;border:1px solid var(--line2);color:var(--ink);background:var(--panel);transition:all .16s}
-  .btn:hover{border-color:#b9b6ac;transform:translateY(-1px);box-shadow:0 5px 14px #17181c0c}
+  .btn{display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-size:14px;font-weight:600;padding:13px 26px;border-radius:999px;border:1px solid var(--line2);color:var(--ink);background:var(--panel);transition:all .18s}
+  .btn .ar{transition:transform .18s}
+  .btn:hover{border-color:#b9b6ac;transform:translateY(-1px);box-shadow:0 8px 20px #17181c10}
+  .btn:hover .ar{transform:translateX(3px)}
   .btn.pri{background:var(--ink);color:#f7f6f3;border-color:var(--ink)}
-  .btn.pri:hover{background:#2a2b31}
+  .btn.pri:hover{background:#2b2c33}
+  .btn.acc{background:var(--rec);color:#fff;border-color:var(--rec)}
+  .btn.acc:hover{background:var(--rec-ink)}
 
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;transition:border-color .2s,box-shadow .2s}
-  .card:hover{border-color:var(--line2);box-shadow:0 10px 28px #17181c0c}
-  .card h3{font-size:15.5px;font-weight:700;margin-bottom:7px;letter-spacing:-.01em}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;transition:border-color .2s,box-shadow .2s,transform .2s}
+  .card:hover{border-color:var(--line2);box-shadow:0 12px 32px #17181c0e;transform:translateY(-2px)}
+  .card .ic{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:var(--warm);border:1px solid var(--line);color:var(--ink);margin-bottom:14px}
+  .card h3{font-size:15.5px;font-weight:700;margin-bottom:7px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
   .card p{font-size:14px;color:var(--dim)}
-  .card .n{font:600 11px var(--mono);color:var(--rec);display:block;margin-bottom:8px;letter-spacing:.08em}
+  .card .n{font:600 10.5px var(--mono);color:var(--rec);display:block;margin-bottom:10px;letter-spacing:.1em}
   .card code{background:var(--warm);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px;color:var(--rec-ink)}
+
+  /* evidence chips â€” icon+text tag system */
+  .chip{display:inline-flex;align-items:center;gap:6px;font:600 10.5px var(--mono);letter-spacing:.06em;border-radius:6px;padding:3px 9px;border:1px solid transparent}
+  .chip.rec{color:var(--rec);background:var(--rec-soft);border-color:#f2d4d4}
+  .chip.ok{color:var(--ok);background:#e9f5ee;border-color:#d2e9db}
+  .chip.amb{color:#a67c1a;background:#faf3e2;border-color:#efe0b8}
+  .chip.inf{color:var(--info);background:#ebf1f9;border-color:#d4e0f0}
+  .chip.dim{color:var(--dim);background:var(--warm);border-color:var(--line)}
+
+  /* stats band */
+  .stats{display:flex;flex-wrap:wrap;gap:0;justify-content:center;border-block:1px solid var(--line)}
+  .stat{padding:26px 40px;text-align:center;border-left:1px solid var(--line)}
+  .stat:first-child{border-left:0}
+  .stat b{display:block;font:800 26px var(--sans);letter-spacing:-.02em}
+  .stat span{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
+  @media(max-width:700px){.stat{padding:18px 22px}.stat b{font-size:20px}}
 
   .term{background:var(--term);border-radius:var(--r);overflow:hidden;margin-top:40px;font:12.5px/1.85 var(--mono);border:1px solid var(--term-line);box-shadow:0 20px 50px #17181c1c}
   .term .th{display:flex;align-items:center;gap:7px;padding:11px 15px;border-bottom:1px solid var(--term-line);color:#77767f;font-size:11px}

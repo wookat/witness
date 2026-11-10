@@ -1,40 +1,79 @@
 ---
 import Tape from "./Tape.astro";
+import Icon from "./Icon.astro";
 const GH = "https://github.com/wookat/witness";
 const { lang = "en" } = Astro.props;
 const t = lang === "zh" ? {
   pill: "开源 · MIT · 本地优先",
   h1a: "你开口，", h1b: "Witness 补全", rot: ["证据。", "那个 bug。", "那次卡顿。", "那个 500。", "前因后果。"],
   sub: "像平时一样体验产品、用嘴说出哪里不对——“这个按钮点了没反应”。Witness 把你说的每句话焊死在那一秒的因果证据上，然后把证据包交给你的 AI 编码 agent。",
-  cta1: "查看 GitHub", cta2: "工作原理 ↓",
+  cta1: "查看 GitHub", cta2: "工作原理", fsay: "“这个按钮点了没反应”",
 } : {
   pill: "OPEN SOURCE · MIT · LOCAL-FIRST",
   h1a: "You say it.", h1b: "Witness proves", rot: ["it.", "the bug.", "the jank.", "the 500.", "the why."],
   sub: "Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second, then hands the package to your AI coding agent.",
-  cta1: "View on GitHub", cta2: "How it works ↓",
+  cta1: "View on GitHub", cta2: "How it works", fsay: "“this button does nothing”",
 };
 ---
-<header class="hero"><div class="wrap">
-  <span class="pill rv"><i></i>{t.pill}</span>
-  <h1 class="rv" data-d="80">{t.h1a}<br>{t.h1b} <span class="rot" id="rot">{t.rot[0]}</span></h1>
-  <p class="sub rv" data-d="160">{t.sub}</p>
-  <div class="cta rv" data-d="240">
-    <a class="btn pri" href={GH}>{t.cta1}</a>
-    <a class="btn" href="#how">{t.cta2}</a>
+<header class="hero">
+  <div class="grid-bg"></div>
+  <!-- floating evidence cards at the edges (devin-style depth) -->
+  <div class="float fl-say" aria-hidden="true"><div class="fc">
+    <span class="chip rec">SAY</span><p>{t.fsay}</p><span class="fts">00:34</span>
+  </div></div>
+  <div class="float fl-ev" aria-hidden="true"><div class="fc mono">
+    <span class="chip ok">CLICK</span><code>button#submit</code>
+    <span class="chip dim">NET —</span><span class="chip dim">MUT —</span>
+  </div></div>
+  <div class="float fl-shot" aria-hidden="true"><div class="fc shot"><i></i><i></i><i></i><i></i></div></div>
+
+  <div class="wrap">
+    <span class="pill rv"><i></i>{t.pill}</span>
+    <h1 class="rv" data-d="80">{t.h1a}<br>{t.h1b} <span class="rotw"><span class="rot" id="rot">{t.rot[0]}</span><svg class="mk" viewBox="0 0 120 12" preserveAspectRatio="none"><path d="M3 8.5C30 4 60 3 117 7.5" fill="none" stroke="var(--rec)" stroke-width="4" stroke-linecap="round"/></svg></span></h1>
+    <p class="sub rv" data-d="160">{t.sub}</p>
+    <div class="cta rv" data-d="240">
+      <a class="btn pri" href={GH}>{t.cta1}<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="#how">{t.cta2} ↓</a>
+    </div>
+    <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
+    <Tape />
   </div>
-  <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
-  <Tape />
-</div></header>
+</header>
 <style>
-  .hero{position:relative;padding:96px 0 88px;text-align:center}
-  .pill{display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);color:var(--rec);background:var(--rec-soft);border:1px solid #f3d3d3;border-radius:999px;padding:6px 15px;letter-spacing:.09em;margin-bottom:30px}
+  .hero{position:relative;padding:150px 0 90px;text-align:center;overflow:hidden}
+  .grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:52px 52px;mask-image:radial-gradient(ellipse 75% 60% at 50% 34%,#000 15%,transparent 72%);opacity:.55;pointer-events:none}
+
+  /* floating edge cards */
+  .float{position:absolute;z-index:1;filter:drop-shadow(0 14px 30px #17181c14)}
+  .fc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left}
+  .fc p{font:500 12px var(--sans);margin:7px 0 4px}
+  .fc .fts{font:500 10px var(--mono);color:var(--faint)}
+  .fl-say{left:2%;top:24%;transform:rotate(-7deg);width:190px}
+  .fl-ev{right:1.5%;top:20%;transform:rotate(6deg)}
+  .fl-ev .fc{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+  .fl-ev code{font:500 11px var(--mono);color:var(--ink)}
+  .fl-shot{left:4%;bottom:14%;transform:rotate(5deg)}
+  .fl-shot .fc{display:flex;gap:5px}
+  .fl-shot i{width:26px;height:32px;border-radius:4px;background:linear-gradient(160deg,#efece5,#ddd8cd);border:1px solid var(--line)}
+  .fl-shot i:nth-child(2){transform:translateY(-4px)}
+  @media(max-width:900px){.float{display:none}}
+  @keyframes bob{0%,100%{transform:rotate(-7deg) translateY(0)}50%{transform:rotate(-7deg) translateY(-9px)}}
+  @keyframes bob2{0%,100%{transform:rotate(6deg) translateY(0)}50%{transform:rotate(6deg) translateY(-11px)}}
+  @keyframes bob3{0%,100%{transform:rotate(5deg) translateY(0)}50%{transform:rotate(5deg) translateY(-7px)}}
+  .fl-say{animation:bob 7s ease-in-out infinite}
+  .fl-ev{animation:bob2 8s ease-in-out infinite}
+  .fl-shot{animation:bob3 9s ease-in-out infinite}
+
+  .pill{position:relative;display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);color:var(--rec);background:var(--rec-soft);border:1px solid #f3d3d3;border-radius:999px;padding:6px 15px;letter-spacing:.09em;margin-bottom:30px}
   .pill i{width:6px;height:6px;border-radius:50%;background:var(--rec);animation:pulse 2.2s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 #e5484d55}50%{opacity:.5;box-shadow:0 0 0 5px #e5484d00}}
-  h1{font-size:clamp(42px,7.2vw,76px);line-height:1.05;font-weight:800;letter-spacing:-.035em}
-  h1 .rot{display:inline-block;min-width:4.6ch;text-align:left;vertical-align:bottom;color:var(--rec);transition:opacity .22s}
-  .sub{max-width:600px;margin:24px auto 0;color:var(--dim);font-size:17.5px}
-  .cta{display:flex;gap:12px;justify-content:center;margin-top:34px}
-  .install{display:inline-flex;align-items:center;gap:12px;margin-top:28px;background:var(--term);border:1px solid var(--term-line);border-radius:10px;padding:13px 18px;font:500 13.5px var(--mono);color:var(--term-text);box-shadow:0 10px 28px #17181c14}
+  h1{position:relative;font-size:clamp(42px,7.2vw,76px);line-height:1.05;font-weight:800;letter-spacing:-.035em;z-index:2}
+  .rotw{position:relative;display:inline-block;white-space:nowrap}
+  h1 .rot{display:inline-block;min-width:3.4ch;text-align:left;vertical-align:bottom;color:var(--rec);transition:opacity .22s}
+  .mk{position:absolute;left:-2%;bottom:-.12em;width:104%;height:.22em}
+  .sub{position:relative;max-width:600px;margin:24px auto 0;color:var(--dim);font-size:17.5px;z-index:2}
+  .cta{position:relative;display:flex;gap:12px;justify-content:center;margin-top:34px;z-index:2}
+  .install{position:relative;display:inline-flex;align-items:center;gap:12px;margin-top:28px;background:var(--term);border:1px solid var(--term-line);border-radius:10px;padding:13px 18px;font:500 13.5px var(--mono);color:var(--term-text);box-shadow:0 10px 28px #17181c14;z-index:2}
   .install b{color:var(--rec);font-weight:600}
   .install .cur{width:8px;height:1.1em;background:var(--rec);animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
@@ -51,10 +90,10 @@ const t = lang === "zh" ? {
     setTimeout(() => { el.textContent = words[wi]; el.style.opacity = "1"; }, 220);
   }, 2400);
   const cmd = "npm i -g github:wookat/witness";
-  const t = document.getElementById("typed");
-  if (t && !reduced) {
+  const tp = document.getElementById("typed");
+  if (tp && !reduced) {
     let i = 0;
-    const tick = () => { t.textContent = cmd.slice(0, ++i); if (i < cmd.length) setTimeout(tick, 34 + Math.random() * 46); };
+    const tick = () => { tp.textContent = cmd.slice(0, ++i); if (i < cmd.length) setTimeout(tick, 34 + Math.random() * 46); };
     setTimeout(tick, 700);
-  } else if (t) t.textContent = cmd;
+  } else if (tp) tp.textContent = cmd;
 </script>

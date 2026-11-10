@@ -1,0 +1,25 @@
+---
+// Minimal stroke-icon set — the site's icon system.
+const paths = {
+  mic:      '<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.5"/>',
+  zap:      '<path d="M13 2.5 4.5 14H11l-1.2 7.5L18.5 10H12l1-7.5z"/>',
+  layers:   '<path d="m12 2.5 9.5 5L12 12.5 2.5 7.5 12 2.5z"/><path d="m2.5 12 9.5 5 9.5-5"/><path d="m2.5 16.5 9.5 5 9.5-5"/>',
+  terminal: '<rect x="2.5" y="4" width="19" height="16" rx="2.5"/><path d="m7 9.5 3 3-3 3"/><path d="M12.5 15.5H17"/>',
+  shield:   '<path d="M12 2.5 20 6v6c0 5-3.4 8.2-8 9.5C7.4 20.2 4 17 4 12V6l8-3.5z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/>',
+  eye:      '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+  box:      '<path d="M21 8 12 3 3 8v8l9 5 9-5V8z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/>',
+  api:      '<circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="m8 7.5 2.7 8M16 7.5l-2.7 8M8.6 6h6.8"/>',
+  clock:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  cursor:   '<path d="M5 3.5 19 11l-6.3 1.8L9 19z"/>',
+  play:     '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8.8 5 3.2-5 3.2z" fill="currentColor" stroke="none"/>',
+  file:     '<path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5l-5-5z"/><path d="M14 2.5v5h5"/><path d="M9 13h6M9 17h6"/>',
+  mark:     '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+  film:     '<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M8 4.5v15M16 4.5v15M3 9.5h5M3 14.5h5M16 9.5h5M16 14.5h5"/>',
+  net:      '<circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="19" r="2.4"/><circle cx="19" cy="19" r="2.4"/><path d="M12 7.4 5.6 16.8M12 7.4l6.4 9.4M7.4 19h9.2"/>',
+  wave:     '<path d="M4 10v4M8 6v12M12 3v18M16 8v8M20 11v2"/>',
+  arrow:    '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  pause:    '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 9v6M14 9v6"/>',
+};
+const { name, size = 16 } = Astro.props;
+---
+<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" set:html={paths[name] || paths.box} aria-hidden="true" />
