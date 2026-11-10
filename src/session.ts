@@ -5,7 +5,7 @@ import { fmt, type Ev } from "./events.js";
 import type { Transcript } from "./transcribe.js";
 import type { AssocMap } from "./associate.js";
 import { rrwebUmd } from "./rr.js";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 export interface Meta {
   url: string;
@@ -18,7 +18,7 @@ export interface Meta {
 const esc = (s?: string) => (s ?? "").replace(/</g, "&lt;").slice(0, 400);
 
 // hide static-asset/dev-server network noise; keep docs, xhr/fetch, and failures
-const STATIC = /(\.(js|mjs|cjs|css|map|png|jpe?g|gif|svg|ico|webp|avif|woff2?|ttf|otf|mp4|webm|vue|svelte|astro|tsx?|jsx|less|s[ac]ss|styl)(\?|#|$))|node_modules|@vite|@fs|@id|__vite|favicon|plugin-vue/i;
+const STATIC = /(\.(js|mjs|cjs|css|map|png|jpe?g|gif|svg|ico|webp|avif|woff2?|ttf|otf|mp4|webm|vue|svelte|astro|tsx?|jsx|less|s[ac]ss|styl)(\?|#|\/|$))|node_modules|@vite|@fs|@id|__vite|favicon|plugin-vue/i;
 const TRACKER = /googletagmanager\.com|google-analytics\.com|analytics\.google\.com|doubleclick\.net|hotjar\.(com|io)|clarity\.ms|segment\.(com|io)|mixpanel\.com|posthog\.(com|io)|amplitude\.com|fullstory\.com|logrocket\.com|ingest\.sentry\.io|sentry\.io\/api/i;
 const noisy = (e: Ev): boolean => {
   if (e.kind === "res") return TRACKER.test(e.url) || (STATIC.test(e.url) && e.status > 0 && e.status < 400);
@@ -205,7 +205,7 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
       frags: b.frags?.map(f => ({ t: f.segStart, text: f.text })),
       evs: b.evs,
     })),
-    evs: events,
+    evs: events.map(e => (noisy(e) ? { ...e, _q: 1 } : e)),
   }).replace(/</g, "\\u003c");
   return `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>Witness · ${meta.url}</title>
@@ -261,6 +261,7 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
   .e .t{color:#9aa3b2;font:11px ui-monospace,Consolas,monospace;flex:none}
   .e i{flex:none;width:7px;height:7px;border-radius:2px;margin-top:4px}
   .e.bad{color:#c0342b;font-weight:500}
+  .e>span{min-width:0;word-break:break-all}
   .e .sel{font:11px ui-monospace,Consolas,monospace;color:#9aa3b2;word-break:break-all}
   .e .thumb{height:34px;border-radius:4px;border:1px solid #e5e7eb;margin-left:auto;flex:none;cursor:zoom-in}
   /* issues */
@@ -289,7 +290,8 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
 </style>
 <header>
   <span class="brand">w<i>ı</i>tness</span>
-  <span class="u">${esc(meta.url)}</span>
+  <span class="u">${esc(meta.title ?? meta.url)}</span>
+  <span class="m">${esc(meta.url)}</span>
   <span class="m">${new Date(meta.startedAt).toLocaleString()} · ${fmt(meta.durationMs)}</span>
   <span class="sp"></span>
   <button class="btn pri" id="copyai" title="复制给 AI agent 的证据指引">⧉ Copy for AI</button>
@@ -433,10 +435,11 @@ for(const b of D.blocks){
   }
 }
 if(!anySay)tp.innerHTML='<div class="hint" style="padding:30px 10px">本段录制没有识别到语音。</div>'+tp.innerHTML;
+else tp.insertAdjacentHTML('afterbegin','<div class="hint" style="padding:2px 10px 8px;border-bottom:1px solid #eceef2;margin-bottom:6px">'+qEls.length+' segments · 点击任意句跳转</div>');
 /* ---------- events tab ---------- */
 const ep=document.getElementById('ep');
 for(const e of D.evs){
-  if(e.kind==='shot'||e.kind==='_ui'||e.kind==='scroll'||e.kind==='mut'&&!isBad(e))continue;
+  if(e._q||e.kind==='shot'||e.kind==='_ui'||e.kind==='scroll'||e.kind==='mut'&&!isBad(e))continue;
   const d=document.createElement('div');
   d.className='e'+(isBad(e)?' bad':'');
   d.innerHTML='<span class=t>'+fmt(e.t)+'</span><i style="background:'+kcol(e)+'"></i><span>'+desc(e)+'</span>';
@@ -461,11 +464,24 @@ if(marks.length){
     c.onclick=()=>seek(m.at);ip.appendChild(c);
   });
 }else{
-  const c=document.createElement('div');c.className='is';
-  const errs=D.evs.filter(isBad).length;
-  c.innerHTML='<div class=top><span class=at>00:00</span><span class="sev'+(errs?' bug':'')+'">'+(errs?'HAS ERRORS':'REVIEW')+'</span></div>'
-    +'<div class=ti>整段反馈（未按 N 切分）</div><div class=ds>录制时按 N 键可把一段体验切成多个 issue</div>';
-  c.onclick=()=>seek(0);ip.appendChild(c);
+  // no explicit N-splits: auto-cluster into one card per contiguous speech run
+  const runs=D.blocks.filter(b=>b.frags&&b.frags.length&&b.head!=='prelude');
+  if(!runs.length){
+    ip.innerHTML='<div class="hint" style="padding:30px 10px">无语音段可归纳。</div>';
+  }
+  runs.forEach((b,i)=>{
+    const nx=D.blocks[D.blocks.indexOf(b)+1],to=nx&&nx.at!=null?nx.at:dur;
+    const at=b.frags[0].t;
+    const es=D.evs.filter(e=>e.t>=at&&e.t<to);
+    const errs=es.filter(isBad).length;
+    const marks2=es.filter(e=>e.kind==='mark');
+    const c=document.createElement('div');c.className='is';
+    c.innerHTML='<div class=top><span class=at>'+fmt(at)+'</span><span class="sev'+(errs?' bug':'')+'">'+(errs?'BUG':'QUESTION')+'</span></div>'
+      +'<div class=ti>'+esc(b.frags.map(f=>f.text).join(' ').slice(0,90))+'</div>'
+      +(marks2.length?'<div class=ds>标记：<span class=sel>'+esc(marks2.map(m=>m.sel).slice(0,3).join(' · '))+'</span></div>':'')
+      +'<div class=ds style="margin-top:4px">'+b.frags.length+' 段语音 · '+es.length+' 条事件 · '+errs+' 处异常</div>';
+    c.onclick=()=>seek(at);ip.appendChild(c);
+  });
 }
 /* ---------- agent tab ---------- */
 const ap=document.getElementById('ap');
@@ -534,6 +550,12 @@ export async function writeSessionFiles(dir: string, events: Ev[], meta: Meta, t
   const md = renderMarkdown(events, meta, transcript, assoc);
   let rrJsonl: string | undefined;
   try { rrJsonl = readFileSync(join(dir, "rrweb.jsonl"), "utf8"); } catch {}
+  if (!meta.title) {
+    try {
+      const snap = readdirSync(join(dir, "dom")).find(f => f.endsWith("-nav.html"));
+      if (snap) meta = { ...meta, title: readFileSync(join(dir, "dom", snap), "utf8").match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() || undefined };
+    } catch {}
+  }
   const prompt = renderPrompt(dir, events);
   const html = renderReviewHtml(events, meta, rrJsonl, prompt);
   await writeFile(join(dir, "session.md"), md);
