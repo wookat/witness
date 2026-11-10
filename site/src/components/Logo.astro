@@ -1,14 +1,10 @@
 ---
 const { size = 24 } = Astro.props;
-const eye = "M7 16C11.5 9 18.5 5.5 24 5.5S36.5 9 41 16c-4.5 7-11.5 10.5-17 10.5S11.5 23 7 16Z";
-const bars = [[17.5,6],[20.8,10],[24,15],[27.2,10],[30.5,6]];
 ---
 <span class="logo">
-  <svg width={size} height={size * 0.66} viewBox="0 0 48 32" aria-hidden="true">
-    <path d={eye} fill="none" stroke="currentColor" stroke-width="3"/>
-    {bars.map(([x, h], i) => (
-      <rect x={x - 1.5} y={16 - h / 2} width="3" height={h} rx="1.5" fill={i === 2 ? "#e5484d" : "currentColor"}/>
-    ))}
+  <svg width={size} height={size * 0.7} viewBox="0 0 64 44" aria-hidden="true">
+    <path d="M14 14 L21 30 L28 8 L35 30 L42 14" fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="48.5" cy="22" r="4.8" fill="#ff4f00"/>
   </svg>
   <span class="wm">w<span class="idot">ı<span class="dot"></span></span>tness</span>
 </span>
@@ -16,6 +12,6 @@ const bars = [[17.5,6],[20.8,10],[24,15],[27.2,10],[30.5,6]];
   .logo{display:inline-flex;align-items:center;gap:9px;color:var(--ink)}
   .wm{font-weight:800;font-size:16.5px;letter-spacing:-.02em;color:var(--ink)}
   .idot{position:relative}
-  .idot .dot{position:absolute;left:50%;top:.02em;transform:translateX(-50%);width:.24em;height:.24em;border-radius:50%;background:var(--rec);animation:pulse 2.2s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 #e5484d66}50%{opacity:.55;box-shadow:0 0 0 4px #e5484d00}}
+  .idot .dot{position:absolute;left:50%;top:.02em;transform:translateX(-50%);width:.24em;height:.24em;border-radius:50%;background:#ff4f00;animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 #ff4f0066}50%{opacity:.55;box-shadow:0 0 0 4px #ff4f0000}}
 </style>
