@@ -237,9 +237,10 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
   .tr select{border:1px solid #dfe3ea;border-radius:5px;font-size:12px;padding:2px 6px;color:#4b5262}
   .tr label{font-size:12px;color:#8a919e;display:flex;gap:4px;align-items:center;user-select:none}
   /* timeline */
-  #tl{position:relative;height:34px;margin:0 14px 4px;background:#f4f5f7;border-radius:6px;cursor:pointer}
-  #tl .tk{position:absolute;top:0;width:3px;height:100%;border-radius:2px;opacity:.75}
-  #tl .tk.big{height:100%;width:4px;opacity:1}
+  #tl{position:relative;height:56px;margin:0 14px 4px;background:#f4f5f7;border-radius:6px;cursor:pointer}
+  #tl .tk{position:absolute;width:3px;height:10px;border-radius:2px;opacity:.85}
+  #tl .tk.blk{height:11px;opacity:.75}
+  #tl .tk.big{width:4px}
   #tl .head{position:absolute;top:-3px;bottom:-3px;width:2px;background:#ff4f00;z-index:2;pointer-events:none}
   #tl .head:after{content:"";position:absolute;top:-4px;left:-4px;width:10px;height:10px;border-radius:50%;background:#ff4f00}
   .legend{display:flex;gap:12px;flex-wrap:wrap;padding:6px 16px 12px;font-size:11px;color:#8a919e}
@@ -400,17 +401,30 @@ au.addEventListener('timeupdate',()=>{
 const seek=t=>{au.currentTime=t/1000;if(au.paused)au.play()};
 pp.onclick=()=>{au.paused?au.play():au.pause()};
 document.getElementById('spd').onchange=e=>{const v=+e.target.value;au.playbackRate=v;if(rp&&rp.setSpeed)try{rp.setSpeed(v)}catch(_){}};
-/* ---------- timeline ticks ---------- */
+/* ---------- timeline: 3 lanes — speech blocks / activity / signals ---------- */
 const tl=document.getElementById('tl');
-const MAJOR=new Set(['say','nav','click','mark','error','err','console','issue']);
+const laneOf=e=>{
+  if(e.kind==='say')return 0;
+  if(isBad(e)||e.kind==='console')return 2;
+  return ['nav','click','mark','input','key','note','issue','paused','resumed'].includes(e.kind)?1:-1;
+};
 for(const e of D.evs){
-  if(e.t==null)continue;
-  const bad=isBad(e),k=bad?'error':e.kind;
-  if(!MAJOR.has(k)&&!bad)continue;
+  const L=laneOf(e);if(L<0||e.t==null)continue;
+  if(e.kind==='say'){
+    const b=document.createElement('div');b.className='tk blk';
+    const a=e.segStart!=null?e.segStart:e.t,z=e.segEnd!=null?e.segEnd:e.t+800;
+    b.style.left=(Math.min(1,a/dur)*100)+'%';
+    b.style.width=Math.max(0.5,(z-a)/dur*100)+'%';
+    b.style.top='6px';b.style.background='#8b5cf6';
+    b.title=fmt(a)+' 语音：'+esc(e.text||'').slice(0,60);
+    tl.appendChild(b);continue;
+  }
   const tk=document.createElement('div');
-  tk.className='tk'+(bad||k==='mark'||k==='issue'?' big':'');
+  tk.className='tk'+(isBad(e)||e.kind==='mark'||e.kind==='issue'?' big':'');
   tk.style.left=(Math.min(1,e.t/dur)*100)+'%';
-  tk.style.background=kcol(e);tk.title=fmt(e.t)+' '+e.kind;
+  tk.style.top=(L===1?'22px':'38px');
+  tk.style.background=kcol(e);
+  tk.title=fmt(e.t)+' '+(e.text||e.sel||e.url||e.message||e.kind||'').toString().slice(0,60);
   tl.appendChild(tk);
 }
 tl.onclick=ev=>{const r=tl.getBoundingClientRect();seek(Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width))*dur)};
