@@ -59,6 +59,8 @@ wit transcribe <dir>              # re-run cloud ASR
 wit correct <dir>                 # re-run LLM text polish
 wit associate <dir>               # LLM picks relevant evidence per SAY (ZHIPU_API_KEY)
 wit recover <dir>                 # rebuild artifacts after a crash
+wit segments <dir>                # regenerate speech-anchor index + bundles
+wit keyframes <dir>               # render rrweb → per-segment keyframe jpgs
 wit mcp [dir]                     # stdio MCP server over the evidence
 wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
 ```
@@ -68,6 +70,7 @@ wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
 ```
 SEGMENTS.md       # speech anchors: verbatim + suspects + shot/dom refs (agents read first)
 segments/*.md   # per-segment bundle: verbatim frags, dead clicks, errors, linked shots
+keyframes/*.jpg  # rrweb-rendered replay frames per segment (wit keyframes)
 session.md      # timeline archive: each SAY block carries its causal burst
 PROMPT.md       # paste-ready handoff instructions + page vocabulary
 review.html     # human view: speech cards + audio seek + filmstrip + embedded rrweb replay

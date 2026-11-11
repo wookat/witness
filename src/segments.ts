@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fmt, type Ev } from "./events.js";
 
@@ -20,6 +20,7 @@ export interface Segment {
   doms: string[];                                  // nearest dom snapshots (≤2)
   counts: Record<string, number>;                  // ambient event counts in window
   gaps: string[];                                  // evidence-completeness hints, e.g. speech claims an error but none was captured
+  keyframes?: string[];                            // rrweb-rendered frames for this segment (wit keyframes)
 }
 
 const RUN_BREAK = new Set(["click", "mark", "nav", "input", "key", "error", "issue"]);
@@ -45,10 +46,11 @@ const isDead = (c: Click, events: Ev[]) =>
   !events.some(e => BURST_KINDS.has(e.kind) && e.t > c.t && e.t - c.t <= BURST_MS);
 
 const near = (events: Ev[], kind: "shot" | "dom", from: number, to: number, limit: number): string[] => {
-  // mark-attached shots first (red box on the exact element the user pointed at)
+  // mark/click-attached shots first (red box / target crop on what the user pointed at)
   const attached = kind === "shot"
-    ? events.filter((e): e is Mark => e.kind === "mark" && e.t >= from - 1500 && e.t <= to + 3000)
-        .map(e => e.shot).filter((s): s is string => !!s)
+    ? [...events.filter((e): e is Mark => e.kind === "mark" && e.t >= from - 1500 && e.t <= to + 3000).map(e => e.shot),
+       ...events.filter((e): e is Click => e.kind === "click" && e.t >= from - 1500 && e.t <= to + 3000).map(e => e.shot)]
+        .filter((s): s is string => !!s)
     : [];
   const rest = events.filter(e => e.kind === kind && e.t >= from - 3000 && e.t <= to + 6000)
     .sort((a, b) => {
@@ -151,6 +153,7 @@ export function renderSegmentsIndex(segments: Segment[], meta: { url: string; du
     if (i.gaps.length)
       lines.push(`- ⚠ 证据缺口: ${i.gaps.join(" · ")}`);
     if (i.shots.length) lines.push(`- 截图: ${i.shots.join(" · ")}`);
+    if (i.keyframes?.length) lines.push(`- 关键帧(rrweb回放): ${i.keyframes.join(" · ")}`);
     if (i.doms.length) lines.push(`- DOM: ${i.doms.join(" · ")}`);
     lines.push(`- 详情: segments/${String(i.n).padStart(2, "0")}.md`, "");
   }
@@ -197,6 +200,7 @@ export function renderSegmentFile(i: Segment, meta: { url: string }): string {
     lines.push("");
   }
   lines.push("## 视觉证据（先看这些）");
+  if (i.keyframes?.length) lines.push("### 关键帧（rrweb 回放渲染）", ...i.keyframes.map(s => `- ${s}`), "");
   if (i.shots.length) lines.push(...i.shots.map(s => `- ${s}`));
   if (i.doms.length) lines.push(...i.doms.map(s => `- ${s}`));
   lines.push(
@@ -208,8 +212,18 @@ export function renderSegmentFile(i: Segment, meta: { url: string }): string {
   return lines.join("\n");
 }
 
+/** rrweb-rendered frames for a segment, if `wit keyframes` has run */
+const keyframesOf = (dir: string, n: number): string[] => {
+  try {
+    return readdirSync(join(dir, "keyframes"))
+      .filter(f => f.startsWith(`S${String(n).padStart(2, "0")}-`) && f.endsWith(".jpg"))
+      .sort().map(f => `keyframes/${f}`);
+  } catch { return []; }
+};
+
 export function writeSegments(dir: string, events: Ev[], meta: { url: string; durationMs?: number }): Segment[] {
   const segments = extractSegments(events);
+  for (const i of segments) i.keyframes = keyframesOf(dir, i.n);
   mkdirSync(join(dir, "segments"), { recursive: true });
   writeFileSync(join(dir, "SEGMENTS.md"), renderSegmentsIndex(segments, meta));
   for (const i of segments)

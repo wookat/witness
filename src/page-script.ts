@@ -292,7 +292,9 @@ export const PAGE_SCRIPT = (lang = "zh-CN", opts: { sr?: boolean; pcm?: boolean 
     }
     if (W.inspect) return;
     const el = e.target && e.target.closest ? e.target.closest("a,button,[role=button],input,select,label,summary,[onclick]") || e.target : e.target;
-    W.emit({ kind: "click", sel: sel(el), x: e.clientX, y: e.clientY, text: shortText(el), kbd: e.detail === 0 || undefined });
+    const cb = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+    W.emit({ kind: "click", sel: sel(el), x: e.clientX, y: e.clientY, text: shortText(el), kbd: e.detail === 0 || undefined,
+      box: cb && cb.width > 0 ? { x: Math.round(cb.x), y: Math.round(cb.y), w: Math.round(cb.width), h: Math.round(cb.height) } : undefined });
   }, true);
 
   document.addEventListener("input", (e) => {

@@ -90,6 +90,7 @@ wit config asr …      引擎：auto|doubao-web|ime|sr|off</pre></Card>
   <p class="lede rv" data-d="60"><b>给人</b>：可视化回放。<b>给 agent</b>：能直接修问题的结构化交接。</p>
   <Term label=".witness/sessions/&lt;时间戳&gt;/" d="80">├─ <span class="c-acc">review.html</span>      <span class="c-dim">→ 给人看 —— 时间轴回放：语音+截图+事件对齐，点哪跳哪</span>
 ├─ <span class="c-ok">SEGMENTS.md</span>        <span class="c-dim">→ 给 agent —— 语音段索引：原话+嫌疑元素+挂图（先读；段≠问题，归组归 agent）</span>
+├─ <span class="c-ok">keyframes/</span>   <span class="c-dim">→ rrweb 回放渲染的每段关键帧（wit keyframes）</span>
 ├─ <span class="c-ok">segments/NN.md</span>     <span class="c-dim">→ 给 agent —— 每段一包：逐段原话+死点击+报错+截图引用</span>
 ├─ <span class="c-ok">PROMPT.md</span>        <span class="c-dim">→ 给 agent —— 交接文档：教它怎么读这份证据</span>
 ├─ <span class="c-ok">session.md</span>       <span class="c-dim">→ 给 agent —— 全量时间轴档案（深挖时用）</span>

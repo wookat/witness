@@ -51,6 +51,8 @@ wit transcribe <dir>              # 重跑云端转写
 wit correct <dir>                 # 重跑 LLM 纠错
 wit associate <dir>               # LLM 给每段语音挑相关证据（需 ZHIPU_API_KEY）
 wit recover <dir>                 # 崩溃后从 events.jsonl 重建产物
+wit segments <dir>                # 重建语音段索引 + 每段证据包
+wit keyframes <dir>               # rrweb → 每段关键帧 jpg（agent 可读的回放）
 wit mcp [dir]                     # stdio MCP server
 wit config asr <engine>           # 实时 ASR：auto|doubao-web|doubao-ime|sr|off
 ```
@@ -59,7 +61,9 @@ wit config asr <engine>           # 实时 ASR：auto|doubao-web|doubao-ime|sr|o
 
 ```
 SEGMENTS.md       # 语音段索引：原话+嫌疑元素+截图/DOM 引用（agent 先读；段≠问题，归组归 agent）
-issues/*.md     # 每段一包：逐段原话 + 死点击 + 报错 + 挂图
+segments/*.md     # 每段一包：逐段原话 + 死点击 + 报错 + 挂图
+keyframes/*.jpg   # rrweb 回放渲染的关键帧（wit keyframes / --keyframes）
+KEYFRAMES.md      # 关键帧索引
 session.md      # 时间轴档案：每段 SAY 下挂因果爆发链
 PROMPT.md       # 可粘贴给 agent 的交接模板 + 页面词表
 review.html     # 回放页：语音卡片 + 音频跳转 + 胶片条 + 内嵌 rrweb 回放

@@ -65,7 +65,7 @@ wit start <url>                    # wit 已全局安装（npm i -g github:wooka
 
 ## 深挖路径
 
-`SEGMENTS.md` → `segments/NN.md` → `events.jsonl`（t 窗口原始事件）→ `shots/`（mark 带红框）→ `bodies/` → `transcript.json`
+`SEGMENTS.md` → `segments/NN.md` → `keyframes/`（rrweb 回放帧，`wit keyframes` 生成）→ `events.jsonl`（t 窗口原始事件）→ `shots/`（mark 带红框、click 带目标裁切）→ `bodies/` → `transcript.json`
 
 ## 汇报格式
 

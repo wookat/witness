@@ -40,7 +40,7 @@ let resOfReq: Map<Ev, Res> | undefined;
 function line(e: Ev): string | null {
   switch (e.kind) {
     case "nav": return `- \`${fmt(e.t)}\` **NAV** ${e.url}${e.title ? ` · “${esc(e.title)}”` : ""}`;
-    case "click": return `- \`${fmt(e.t)}\` **CLICK** \`${e.sel}\`${e.text ? ` “${esc(e.text)}”` : ""} · @${e.x},${e.y}`;
+    case "click": return `- \`${fmt(e.t)}\` **CLICK** \`${e.sel}\`${e.text ? ` “${esc(e.text)}”` : ""} · @${e.x},${e.y}${e.shot ? ` · [shot](${e.shot})` : ""}`;
     case "input": return `- \`${fmt(e.t)}\` **INPUT** \`${e.sel}\` · ${e.masked ? "🔒masked" : `${e.len} chars`}`;
     case "scroll": return `- \`${fmt(e.t)}\` **SCROLL** y=${e.y}`;
     case "key": return `- \`${fmt(e.t)}\` **KEY** ${e.key}${e.sel ? ` on \`${e.sel}\`` : ""}`;

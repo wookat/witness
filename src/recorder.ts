@@ -30,6 +30,7 @@ export interface RecOptions {
   associate?: boolean;       // opt-in: LLM-pick relevant evidence per SAY (needs ZHIPU_API_KEY)
   rr?: boolean;              // default true: rrweb full-DOM replay capture → rrweb.jsonl + review.html player
   asr?: AsrChoice;           // live speech engine: auto|doubao-web|doubao-ime|sr|off (default auto)
+  keyframes?: boolean;       // opt-in: render rrweb → per-segment keyframe jpgs after stop (slower finalize)
 }
 
 const slug = (s: string) => s.replace(/^https?:\/\//, "").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
@@ -130,6 +131,19 @@ export async function record(opts: RecOptions) {
       const p = await shots.at(page, "mark", clip).catch(() => null);
       if (p) e.shot = p;
       void snapDom(page, "mark");
+    }
+    // click target crop: padded element box → the frame the user actually pointed at
+    if (e?.kind === "click" && page && e.box && !paused) {
+      const vp = page.viewportSize() ?? { width: 1280, height: 800 };
+      const pad = 48;
+      const x = Math.max(0, e.box.x - pad), y = Math.max(0, e.box.y - pad);
+      const clip = {
+        x, y,
+        width: Math.max(1, Math.min(vp.width - x, e.box.w + pad * 2)),
+        height: Math.max(1, Math.min(vp.height - y, e.box.h + pad * 2)),
+      };
+      const p = await shots.at(page, "click", clip).catch(() => null);
+      if (p) e.shot = p;
     }
     // speaking = an anchor: bind the current frame to the utterance (debounced)
     if (e?.kind === "say" && page && !paused) {
@@ -277,6 +291,17 @@ export async function record(opts: RecOptions) {
       asr: liveAsr?.name ?? (asrMode === "sr" ? "edge-sr" : asrMode),
     };
     await writeSessionFiles(dir, events, meta, transcript, assoc);
+
+    if (opts.keyframes) {
+      try {
+        console.log("  rendering keyframes (rrweb)…");
+        const { extractSegments, writeSegments } = await import("./segments.js");
+        const { renderKeyframes } = await import("./keyframes.js");
+        const segs = extractSegments(events);
+        const n = await renderKeyframes(dir, meta, segs);
+        if (n) { writeSegments(dir, events, meta); console.log(`  keyframes: ${n} → keyframes/`); }
+      } catch (e) { console.log(`  keyframes failed: ${(e as Error).message}`); }
+    }
 
     // transcript.json for the in-browser SR path too (whisper path writes its own)
     if (!transcript) {

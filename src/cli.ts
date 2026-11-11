@@ -28,6 +28,7 @@ program
   .option("--correct", "LLM-polish SAY text via zhipu GLM (off by default — transcript stays verbatim)")
   .option("--associate", "LLM-pick relevant evidence per speech block (needs ZHIPU_API_KEY)", false)
   .option("--no-rr", "skip rrweb full-DOM replay capture")
+  .option("--keyframes", "after stop, render rrweb → per-segment keyframe jpgs (agent-consumable replay)")
   .option("--asr <engine>", "live speech engine: auto|doubao-web|doubao-ime|sr|off (see `wit config asr` to persist)")
   .option("--shot-interval <ms>", "periodic screenshot interval", "10000")
   .option("--width <px>", "viewport width", "1560")
@@ -46,6 +47,7 @@ program
       associate: !!o.associate,
       rr: o.rr !== false,
       asr: o.asr,
+      keyframes: !!o.keyframes,
     });
   });
 
@@ -114,6 +116,21 @@ program
     const { writeSegments } = await import("./segments.js");
     const n = writeSegments(s.dir, align(s.events, s.transcript?.segments ?? []), s.meta).length;
     console.log(`✔ ${n} speech segment(s) → ` + join(s.dir, "SEGMENTS.md"));
+  });
+
+program
+  .command("keyframes <sessionDir>")
+  .description("render rrweb.jsonl into per-segment keyframe JPEGs (keyframes/S{n}-{0|1|2}.jpg) — the agent-consumable replay; re-indexes segments after")
+  .action(async dir => {
+    const s = await loadSession(dir);
+    const { extractSegments, writeSegments } = await import("./segments.js");
+    const { align } = await import("./align.js");
+    const events = align(s.events, s.transcript?.segments ?? []);
+    const segs = extractSegments(events);
+    const { renderKeyframes } = await import("./keyframes.js");
+    const n = await renderKeyframes(s.dir, s.meta, segs);
+    writeSegments(s.dir, events, s.meta); // pick up keyframe refs in the index
+    console.log(`✔ ${n} keyframes → ` + join(s.dir, "keyframes"));
   });
 
 program

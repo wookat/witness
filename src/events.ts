@@ -4,7 +4,7 @@ import { join } from "node:path";
 export type Ev =
   | { t: number; kind: "dom"; path: string }
   | { t: number; kind: "say"; text: string; segStart: number; segEnd: number }
-  | { t: number; kind: "click"; sel: string; x: number; y: number; text?: string; kbd?: boolean }
+  | { t: number; kind: "click"; sel: string; x: number; y: number; text?: string; kbd?: boolean; box?: Box; shot?: string }
   | { t: number; kind: "input"; sel: string; masked: boolean; len: number }
   | { t: number; kind: "nav"; url: string; title?: string }
   | { t: number; kind: "scroll"; sel?: string; y: number }
