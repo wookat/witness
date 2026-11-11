@@ -50,10 +50,13 @@
 <div class="toast" id="toast"></div>
 <script>
   // intentionally buggy: #pay is dead (the thing the session catches);
-  // #apply works but its endpoint 404s.
-  document.getElementById("apply").onclick = () => {
-    fetch("/api/coupon", {method:"POST",body:"{}"}).catch(()=>{});
+  // #apply works but its endpoint 404s and it console.errors like a real bug.
+  document.getElementById("apply").onclick = async () => {
     const t = document.getElementById("toast");
+    try {
+      const r = await fetch("/api/coupon", {method:"POST",body:"{}"});
+      if (!r.ok) console.error("[seatmark] coupon apply failed:", r.status, r.statusText, "code=", document.querySelector(".coupon input").value);
+    } catch (e) { console.error("[seatmark] coupon apply failed:", e.message); }
     t.textContent = "Invalid promo code"; t.classList.add("on");
     setTimeout(()=>t.classList.remove("on"),1800);
   };

@@ -1,14 +1,12 @@
 ---
 import Base from "../layouts/Base.astro";
 import Hero from "../components/Hero.astro";
-import Ticker from "../components/Ticker.astro";
 import Card from "../components/Card.astro";
 import Term from "../components/Term.astro";
 import Demo from "../components/Demo.astro";
 import VideoDemo from "../components/VideoDemo.astro";
 import Flow from "../components/Flow.astro";
 import AudSplit from "../components/AudSplit.astro";
-import Icon from "../components/Icon.astro";
 const GH = "https://github.com/wookat/witness";
 ---
 <Base>
@@ -44,7 +42,7 @@ const GH = "https://github.com/wookat/witness";
   <h2 class="rv">Three recording lines, one timeline.</h2>
   <p class="lede rv" data-d="80"><code>wit start &lt;dev-url&gt;</code> opens a managed browser. From that moment, three streams run in parallel — zero manual work:</p>
   <div class="grid g3">
-    <Card icon="mic" n="01 / VOICE" title="Your voice" d="0">Continuous audio + live speech-to-text. Say everything on your mind — one take, many issues, no need to split.</Card>
+    <Card icon="mic" n="01 / VOICE" title="Your voice" d="0">Continuous audio + <b>true streaming ASR</b> (doubao-web → doubao-ime → browser SR, auto-fallback). Live subtitles under the toolbar as you speak — one take, many issues, no need to split.</Card>
     <Card icon="zap" n="02 / OPS" title="Operations + causal bursts" d="80">Every click captures its ~1.8s aftermath: requests, responses, console errors, DOM changes. A click with <i>no</i> aftermath is itself evidence.</Card>
     <Card icon="layers" n="03 / STATE" title="Page evolution" d="160">rrweb full-DOM replay + event-driven screenshots + periodic DOM snapshots. Rewind the exact page state at any second.</Card>
   </div>
