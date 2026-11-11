@@ -66,7 +66,9 @@ wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
 ## The evidence package — `.witness/sessions/<ts>_<host>/`
 
 ```
-session.md      # timeline: each SAY block carries its causal burst — the agent entry point
+ISSUES.md       # issue index: verbatim + suspects + shot/dom refs (agents read this first)
+issues/*.md     # per-issue bundle: verbatim frags, dead clicks, errors, linked shots
+session.md      # timeline archive: each SAY block carries its causal burst
 PROMPT.md       # paste-ready handoff instructions + page vocabulary
 review.html     # human view: speech cards + audio seek + filmstrip + embedded rrweb replay
 events.jsonl    # complete raw stream, crash-safe
@@ -83,7 +85,7 @@ audio.webm / transcript.json
 `wit mcp` serves the session over stdio. Point any MCP-capable agent
 (Claude Code, Cursor, Devin) at it and it pulls exactly what it needs:
 
-`session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
+`list_issues` · `issue_detail(n)` · `session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
 `get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_asr` · `set_asr`
 
 ## Principles

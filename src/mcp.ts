@@ -58,8 +58,34 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
         says: c("say"), clicks: c("click"), marks: c("mark"), navs: c("nav"),
         requests: c("req"), consoleErrors: s.events.filter(e => e.kind === "console" && (e as any).level === "error").length,
         pageErrors: c("error"),
-        files: ["session.md", "PROMPT.md", "events.jsonl", "transcript.json", "assoc.json", "shots/", "bodies/", "audio.webm", "review.html"],
+        files: ["ISSUES.md", "issues/", "session.md", "PROMPT.md", "events.jsonl", "transcript.json", "assoc.json", "shots/", "bodies/", "audio.webm", "review.html"],
       }, null, 1));
+    });
+
+  server.registerTool("list_issues",
+    { description: "The issue index — one screen of what the user complained about, with suspects and shot/dom refs. READ THIS FIRST." },
+    async () => {
+      const p = join(dir, "ISSUES.md");
+      if (existsSync(p)) return text(await readFile(p, "utf8"));
+      const s = await load();
+      const { extractIssues, renderIssuesIndex } = await import("./issues.js");
+      const { align } = await import("./align.js");
+      return text(renderIssuesIndex(extractIssues(align(s.events, s.transcript?.segments ?? [])), s.meta));
+    });
+
+  server.registerTool("issue_detail",
+    {
+      description: "One issue's full bundle: verbatim speech, suspect elements, dead clicks, errors, and the exact shots/dom snapshots to inspect. n = issue number (1-based)",
+      inputSchema: { n: z.number() },
+    },
+    async ({ n }) => {
+      const p = join(dir, "issues", `${String(n).padStart(2, "0")}.md`);
+      if (existsSync(p)) return text(await readFile(p, "utf8"));
+      const s = await load();
+      const { extractIssues, renderIssueFile } = await import("./issues.js");
+      const { align } = await import("./align.js");
+      const i = extractIssues(align(s.events, s.transcript?.segments ?? []))[n - 1];
+      return i ? text(renderIssueFile(i, s.meta)) : text(`(issue #${n} not found)`);
     });
 
   server.registerTool("list_says",

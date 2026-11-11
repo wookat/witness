@@ -89,8 +89,10 @@ wit config asr …       engine: auto|doubao-web|ime|sr|off</pre></Card>
   <h2 class="rv">One package, two audiences.</h2>
   <p class="lede rv" data-d="60"><b>For you:</b> a visual replay. <b>For your agent:</b> a structured handoff it can fix from.</p>
   <Term label=".witness/sessions/&lt;ts&gt;/" d="80">├─ <span class="c-acc">review.html</span>      <span class="c-dim">→ FOR HUMANS — timeline replay: audio + shots + events, click anything to seek</span>
+├─ <span class="c-ok">ISSUES.md</span>        <span class="c-dim">→ FOR AGENTS — issue index: verbatim + suspects + shot refs (read first)</span>
+├─ <span class="c-ok">issues/NN.md</span>     <span class="c-dim">→ FOR AGENTS — per-issue bundle: frags + dead clicks + errors + shots</span>
 ├─ <span class="c-ok">PROMPT.md</span>        <span class="c-dim">→ FOR AGENTS — handoff doc: how to read this evidence</span>
-├─ <span class="c-ok">session.md</span>       <span class="c-dim">→ FOR AGENTS — the timeline: every SAY + its causal burst</span>
+├─ <span class="c-ok">session.md</span>       <span class="c-dim">→ FOR AGENTS — full timeline archive (drill-down)</span>
 ├─ events.jsonl     <span class="c-dim">→ raw event stream (1189 events in a real run)</span>
 ├─ transcript.json  <span class="c-dim">→ final speech transcript, segment timestamps</span>
 ├─ audio.webm       <span class="c-dim">→ the recording, seekable</span>
@@ -102,7 +104,7 @@ wit config asr …       engine: auto|doubao-web|ime|sr|off</pre></Card>
   <div class="grid g3" style="margin-top:30px">
     <Card icon="file" title="PROMPT.md" d="0">The paste-this-to-your-agent doc. Teaches it the format: causal-burst indentation, "no aftermath = evidence", component chains, never infer intent without a SAY.</Card>
     <Card icon="clock" title="session.md" d="40">The evidence timeline. Each <code>SAY</code> block carries your verbatim words plus what the page did at that second.</Card>
-    <Card icon="api" title="wit mcp" d="80">Serves the session over stdio MCP: <code>session_overview</code> · <code>list_says</code> · <code>session_md</code> · <code>events_around</code> · <code>get_errors</code> · <code>get_shot</code> · <code>get_dom_state</code> · <code>get_body</code> · <code>get_asr</code> · <code>set_asr</code>.</Card>
+    <Card icon="api" title="wit mcp" d="80">Serves the session over stdio MCP — 12 tools: <code>list_issues</code> · <code>issue_detail</code> · <code>session_overview</code> · <code>list_says</code> · <code>session_md</code> · <code>events_around</code> · <code>get_errors</code> · <code>get_shot</code> · <code>get_dom_state</code> · <code>get_body</code> · <code>get_asr</code> · <code>set_asr</code>.</Card>
   </div>
 </div></section>
 

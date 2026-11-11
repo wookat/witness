@@ -58,7 +58,9 @@ wit config asr <engine>           # 实时 ASR：auto|doubao-web|doubao-ime|sr|o
 ## 证据包 `.witness/sessions/<ts>_<host>/`
 
 ```
-session.md      # 时间轴：每段 SAY 下挂因果爆发链（喂 agent 入口）
+ISSUES.md       # 问题索引：SAY 原文+嫌疑元素+截图/DOM 引用（agent 先读这个）
+issues/*.md     # 每问一包：逐段原话 + 死点击 + 报错 + 挂图
+session.md      # 时间轴档案：每段 SAY 下挂因果爆发链
 PROMPT.md       # 可粘贴给 agent 的交接模板 + 页面词表
 review.html     # 回放页：语音卡片 + 音频跳转 + 胶片条 + 内嵌 rrweb 回放
 events.jsonl    # 全量原始事件，崩溃安全
@@ -75,7 +77,7 @@ audio.webm / transcript.json
 `wit mcp` 把 session 变成 stdio MCP server。配进任何 MCP agent（Claude Code/Cursor/Devin），
 它按需查询而不是吞全文：
 
-`session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
+`list_issues` · `issue_detail(n)` · `session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
 `get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_asr` · `set_asr`
 
 ## 原则

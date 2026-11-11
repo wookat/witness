@@ -30,35 +30,43 @@ wit start <url>                    # wit 已全局安装（npm i -g github:wooka
 - `wit transcribe <sessionDir>` / `wit correct <sessionDir>`：对已录 session 重跑转写/纠错
 - `wit associate <sessionDir>`（需 ZHIPU_API_KEY）：LLM 给每段 SAY 挑相关证据→`assoc.json`，session.md 只显示命中事件、其余折叠；`wit start --associate` 录制停止时自动跑
 - `wit recover <sessionDir>`：崩溃/中断后从 events.jsonl 重建 session.md/review.html/PROMPT.md
-- `wit mcp [sessionDir]`：stdio MCP server——agent 可配进 MCP 客户端按需查证据，共 10 个工具：`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_asr`/`set_asr`
+- `wit mcp [sessionDir]`：stdio MCP server——agent 可配进 MCP 客户端按需查证据，共 12 个工具：`list_issues`/`issue_detail`/`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_asr`/`set_asr`
 - `WIT_CDP=<port>`（env）：给托管浏览器开 CDP 口——agent 可连上录制中的页面亲自当测试者（驱动点击/标记，全程被录）
 
-## 消费证据（修问题）
+## 消费证据（修问题）——按算法执行
 
-用户说"录完了/看一下录制/按录的修"时，**先复述问题清单让用户确认，再动手修**——不要直接开修：
+用户说"录完了/按录的修"时：
 
-1. `ls .witness/sessions/` 找最新（或用户指定）目录
-2. 主读 `session.md`：时间轴 = 每段 SAY（语音原文）+ 该时刻证据。**点击行下面缩进的条目是它的因果后果**（请求/报错/DOM 变）；点击行下写"无任何反应"表示点击真没触发任何事——这本身是证据
-3. **输出确认清单**，格式：
+**步骤 1 · 读索引**：`ls .witness/sessions/` 找目录 → 先读 **`ISSUES.md`**（一屏内的问题索引：SAY 原文、嫌疑元素、截图/DOM 引用）。逐问题细节在 `issues/NN.md`；`session.md` 是全量档案，只在 issues 之外要更多上下文时读。没有 ISSUES.md 的老 session 跑 `wit issues <dir>` 生成。
 
-   | # | 时间 | 用户原话 | 你的理解 | 关联证据 |
-   |---|------|----------|----------|----------|
-   | 1 | 00:56 | "顶部栏图标没居中" | nav .logo 组偏高 ~2px | shot-003 · dom/snap-001 |
+**步骤 2 · 回显确认清单**（不要直接开修）：
 
-   - 每段 SAY 至少归进一个问题；一句话含多个问题拆成 1a/1b
-   - 理解有歧义的标 ❓ 让用户澄清，别自己猜
-   - 末尾问：共 N 条，有漏的或理解偏的吗？
+| # | 时间 | 用户原话 | 你的理解 | 关联证据 |
+|---|------|----------|----------|----------|
+| 1 | 00:56 | "顶部栏图标没居中" | nav .logo 组偏高 ~2px | shots/003.jpg · suspects |
 
-4. 用户确认（或纠正）后逐条修：定位源码优先 `MARK` 行的组件链（`Comp: OrderForm › SubmitButton`，React/Vue 都有）grep；其次 `selector`、元素文本、路由路径
-5. 深挖：`events.jsonl` 全量事件；`bodies/` 请求响应体；`transcript.json` 转写详情；`shots/` 截图（标记元素带红框、圈选区域是裁切图）
-6. 转写是口语化语音原文，可能有错字——按意图理解，不要逐字抠
+- 每个 issue 至少归进一条；相邻 issue 可能是同一段话被点击打断（如 #4#5#6 连续），可按意思合并
+- 理解有歧义的标 ❓ 让用户澄清，别自己猜
+- 末尾问：共 N 条，有漏的或理解偏的吗？
+
+**步骤 3 · 用户确认后逐条修，按类型路由证据**：
+
+| 问题类型 | 第一证据 | 补充 |
+|---|---|---|
+| 视觉/位置/样式 | **先开 issues 里挂的 shot 图**（你是多模态，必须看） | dom/snap + suspects.sel |
+| 死按钮/点了没反应 | issues 的"点击无反应"清单 | shot 确认视觉 |
+| 报错/网络 | console/error/res≥400 行 | `bodies/` 响应体 |
+| 行为/逻辑 | click→req/res 爆发链 | dom snap 前后态 |
+| 定位源码 | suspects `Comp:` 链 > `sel` > 元素文本 | grep 源码 |
+
+**步骤 4 · 汇报**：`#n fixed/blocked · 引用的证据点 · 改了什么`；修不了标注缺什么证据，让用户重录那一段。
+
+**铁律**：视觉描述不先看 shot 不下结论 · 无 SAY 段不从点击/滚动推断意图 · 转写是口语原文，按意图理解不逐字抠 · `.witness/` 不入 git · 音频截图含隐私不外传
+
+## 深挖路径
+
+`ISSUES.md` → `issues/NN.md` → `events.jsonl`（t 窗口原始事件）→ `shots/`（mark 带红框）→ `bodies/` → `transcript.json`
 
 ## 汇报格式
 
 每个问题回指证据点：`[00:12] SAY "..." · button#submit → POST /api/x 500`，说明修复对应哪条证据；修不了的标注缺什么证据，让用户重录那一段。
-
-## 注意
-
-- `.witness/` 已在 gitignore，不提交证据包
-- 音频/截图可能含用户隐私（密码已自动打码，但音频本体在），不要外发或上传
-- 没有 SAY 段时**不要**从点击/滚动推断用户意图——那些只是操作证据，直接问用户

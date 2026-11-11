@@ -6,6 +6,7 @@ import type { Transcript } from "./transcribe.js";
 import type { AssocMap } from "./associate.js";
 import { rrwebUmd } from "./rr.js";
 import { makeAudioSeekable } from "./audio.js";
+import { writeIssues } from "./issues.js";
 import { readFileSync, readdirSync } from "node:fs";
 
 export interface Meta {
@@ -599,7 +600,7 @@ setShot(0);
 </script>`;
 }
 
-export function renderPrompt(sessionDir: string, events: Ev[] = []): string {
+export function renderPrompt(sessionDir: string, events: Ev[] = [], issueCount = 0): string {
   const vocab = [...new Set(
     events.flatMap(e => (e.kind === "mark" || e.kind === "click") && e.text ? [e.text] : [])
   )].slice(0, 30);
@@ -609,7 +610,8 @@ export function renderPrompt(sessionDir: string, events: Ev[] = []): string {
     `证据目录: ${sessionDir}`,
     "",
     "请按以下顺序处理：",
-    "1. 读 `session.md` —— 时间轴：每段语音（SAY）下方挂该时刻的 click/mark/net/console/mut 证据",
+    `1. 读 \`ISSUES.md\` —— ${issueCount} 个问题的索引；每个问题的语音原文/嫌疑元素/截图/DOM 快照打包在 \`issues/NN.md\``,
+    "   （`session.md` 是全量时间轴档案，只在 issues 文件之外需要更多上下文时读）",
     "2. 先把用户指出的问题复述成清单，请用户确认后再动手——不要直接开修：",
     "   | # | 时间 | 用户原话 | 你的理解 | 关联证据 |",
     "   每段 SAY 至少归进一个问题；一句话含多个问题拆成 1a/1b；理解有歧义的标 ❓ 让用户澄清，别自己猜。",
@@ -627,6 +629,7 @@ export function renderPrompt(sessionDir: string, events: Ev[] = []): string {
 
 export async function writeSessionFiles(dir: string, events: Ev[], meta: Meta, transcript?: Transcript, assoc?: AssocMap) {
   const md = renderMarkdown(events, meta, transcript, assoc);
+  const issues = writeIssues(dir, events, { url: meta.url, durationMs: meta.durationMs });
   makeAudioSeekable(join(dir, "audio.webm"), meta.durationMs);
   let rrJsonl: string | undefined;
   try { rrJsonl = readFileSync(join(dir, "rrweb.jsonl"), "utf8"); } catch {}
@@ -636,7 +639,7 @@ export async function writeSessionFiles(dir: string, events: Ev[], meta: Meta, t
       if (snap) meta = { ...meta, title: readFileSync(join(dir, "dom", snap), "utf8").match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() || undefined };
     } catch {}
   }
-  const prompt = renderPrompt(dir, events);
+  const prompt = renderPrompt(dir, events, issues.length);
   const html = renderReviewHtml(events, meta, rrJsonl, prompt);
   await writeFile(join(dir, "session.md"), md);
   await writeFile(join(dir, "review.html"), html);
@@ -648,7 +651,8 @@ export async function writeSessionFiles(dir: string, events: Ev[], meta: Meta, t
     "    语音 + 截图 + 操作对齐的视觉时间轴，点击语音片段可跳到录音对应位置。",
     "",
     "【给 AI agent】把 PROMPT.md 的内容连同本目录交给 agent",
-    "    session.md 证据时间轴 · events.jsonl 原始事件 · shots/ 截图 · audio.webm 录音",
+    "    ISSUES.md 问题索引（先读）· issues/NN.md 每问一包 · session.md 证据时间轴",
+    "    events.jsonl 原始事件 · shots/ 截图 · audio.webm 录音",
     "",
     "其余：session.json 元数据 · transcript.json 识别结果 · bodies/ 网络响应体",
   ].join("\n"));

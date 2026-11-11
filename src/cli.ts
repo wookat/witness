@@ -107,6 +107,16 @@ program
   });
 
 program
+  .command("issues <sessionDir>")
+  .description("(re)generate ISSUES.md + issues/NN.md + issues.json — the per-issue evidence bundles agents read first")
+  .action(async dir => {
+    const s = await loadSession(dir);
+    const { writeIssues } = await import("./issues.js");
+    const n = writeIssues(s.dir, align(s.events, s.transcript?.segments ?? []), s.meta).length;
+    console.log(`✔ ${n} issue bundle(s) → ` + join(s.dir, "ISSUES.md"));
+  });
+
+program
   .command("config [key] [value]")
   .description("show or set recorder config (.witness/config.json) — keys: asr = auto|doubao-web|doubao-ime|sr|off")
   .action(async (key, value) => {
