@@ -36,6 +36,7 @@ const t = lang === "zh" ? {
       <a class="btn" href="#how">{t.cta2} ↓</a>
     </div>
     <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
+    <div class="insthint rv" data-d="380">{lang === "zh" ? "↑ 丢给你的 AI agent——它装完就能帮你录" : "↑ hand this to your AI agent — it installs and records for you"}</div>
     <Tape />
   </div>
 </header>
@@ -81,6 +82,7 @@ const t = lang === "zh" ? {
   @keyframes blink{50%{opacity:0}}
   .install button{background:none;border:0;color:#77767f;cursor:pointer;font:inherit;font-size:15px;padding:0;transition:color .15s}
   .install button:hover{color:var(--term-text)}
+  .insthint{position:relative;margin-top:12px;font:500 12px var(--mono);color:var(--faint);z-index:2}
 </style>
 <script define:vars={{ words: t.rot }}>
   const el = document.getElementById("rot");

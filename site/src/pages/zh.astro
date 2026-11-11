@@ -111,18 +111,19 @@ const zhSays = [
 </div></section>
 
 <section id="install"><div class="wrap">
-  <div class="kicker">08 · 安装与运行</div>
-  <h2 class="rv">两分钟拿到第一份证据包。</h2>
-  <p class="lede rv" data-d="60">Witness 是一个 <b>CLI</b>，不是浏览器插件：<code>wit start</code> 打开托管浏览器开始录；停止后产出本地证据包——人看 <code>review.html</code>，agent 看 <code>session.md</code>/<code>PROMPT.md</code>；<code>wit mcp</code> 把证据挂给任意支持 MCP 的 agent。不上云、不要 key。</p>
-  <Term label="terminal" d="100"><span class="c-dim"># 需要 Node 18+ 和系统 Edge/Chrome——零下载零 key</span>
-npm i -g github:wookat/witness
-wit start http://localhost:5173     <span class="c-dim"># 托管浏览器打开——说话 + 点击</span>
-<span class="c-dim"># 停止 → .witness/sessions/&lt;ts&gt;/  把 PROMPT.md + 目录喂给 agent</span>
-
-wit list                            <span class="c-dim"># 你的 sessions</span>
-wit mcp                             <span class="c-dim"># 把最新 session 挂成 MCP server</span></Term>
+  <div class="kicker">08 · 上手</div>
+  <h2 class="rv">三句话，跑通整个闭环。</h2>
+  <p class="lede rv" data-d="60">你下指令，<b>agent 敲命令</b>。Witness 本体是 CLI（<code>wit</code>）——agent 驱动它开托管浏览器录制，结束后产出本地证据包：人看 <code>review.html</code>，agent 走 <code>session.md</code>/<code>PROMPT.md</code>/<code>wit mcp</code>。Node 18+、系统 Edge/Chrome、不上云、不要 key。</p>
+  <Term label="你 → 你的 agent" d="100"><span class="c-say">你</span>    → "安装 witness"
+<span class="c-ok">agent</span> → <span class="c-dim">npm i -g github:wookat/witness  ✓</span>
+<span class="c-say">你</span>    → "帮我录一段 http://localhost:5173"
+<span class="c-ok">agent</span> → <span class="c-dim">wit start  ✓ 受管浏览器弹出</span>
+<span class="c-say">你</span>    → <span class="c-dim">正常使用产品，看到什么说什么，标记问题 —— 点 ■</span>
+<span class="c-say">你</span>    → "按刚才录的把问题修了"
+<span class="c-ok">agent</span> → <span class="c-dim">读 session.md → 修复 → 引用证据点汇报</span></Term>
   <div class="cta rv" data-d="160" style="display:flex;gap:12px;margin-top:30px">
     <a class="btn pri" href={GH}>★ 去 GitHub 点 Star<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <a class="btn" href="/zh/docs">读使用文档 ↗</a>
     <a class="btn" href={GH + "/blob/main/VISION.md"}>读愿景文档 ↗</a>
   </div>
 </div></section>

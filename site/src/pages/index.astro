@@ -97,18 +97,19 @@ const GH = "https://github.com/wookat/witness";
 </div></section>
 
 <section id="install"><div class="wrap">
-  <div class="kicker">08 · Install &amp; run</div>
-  <h2 class="rv">Two minutes to your first evidence package.</h2>
-  <p class="lede rv" data-d="60">Witness is a <b>CLI</b>, not a browser extension: <code>wit start</code> opens a managed browser and records; stopping produces a local evidence package — <code>review.html</code> for you, <code>session.md</code>/<code>PROMPT.md</code> for agents; <code>wit mcp</code> serves it to any MCP-capable agent. No cloud, no keys.</p>
-  <Term label="terminal" d="100"><span class="c-dim"># needs Node 18+ and system Edge/Chrome — no downloads, no keys</span>
-npm i -g github:wookat/witness
-wit start http://localhost:5173     <span class="c-dim"># managed browser opens — talk &amp; click</span>
-<span class="c-dim"># stop → .witness/sessions/&lt;ts&gt;/  — feed PROMPT.md + dir to your agent</span>
-
-wit list                            <span class="c-dim"># your sessions</span>
-wit mcp                             <span class="c-dim"># serve the latest as an MCP server</span></Term>
+  <div class="kicker">08 · Get started</div>
+  <h2 class="rv">Three sentences. That's the whole loop.</h2>
+  <p class="lede rv" data-d="60">You give instructions; <b>your agent runs the commands</b>. Witness is a CLI (<code>wit</code>) that agents drive — it opens a managed browser, records, and hands back a local evidence package: <code>review.html</code> for you, <code>session.md</code>/<code>PROMPT.md</code>/<code>wit mcp</code> for the agent. Node 18+, system Edge/Chrome, no cloud, no keys.</p>
+  <Term label="you → your agent" d="100"><span class="c-say">you</span>   → "install witness"
+<span class="c-ok">agent</span> → <span class="c-dim">npm i -g github:wookat/witness  ✓</span>
+<span class="c-say">you</span>   → "record http://localhost:5173 for me"
+<span class="c-ok">agent</span> → <span class="c-dim">wit start  ✓ managed browser opens</span>
+<span class="c-say">you</span>   → <span class="c-dim">use the product, talk out loud, mark problems — press ■</span>
+<span class="c-say">you</span>   → "fix the issues from that recording"
+<span class="c-ok">agent</span> → <span class="c-dim">reads session.md → fixes → cites evidence</span></Term>
   <div class="cta rv" data-d="160" style="display:flex;gap:12px;margin-top:30px">
     <a class="btn pri" href={GH}>★ Star on GitHub<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <a class="btn" href="/docs">Read the docs ↗</a>
     <a class="btn" href={GH + "/blob/main/VISION.md"}>Read the vision ↗</a>
   </div>
 </div></section>
