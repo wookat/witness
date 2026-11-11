@@ -11,7 +11,7 @@ const chapters = [
 ---
 <Base lang="zh" title="Witness 文档 — 安装、录制、把证据交给 agent">
 <DocsHead lang="zh" title="你动嘴，命令让 agent 去敲。"
-  lede="它是什么、怎么让 agent 帮你装和用、以及证据包里到底有什么。"
+  lede="操作手册——故事在首页。这里只管：怎么装、怎么配、怎么用、证据包里有什么。"
   chapters={chapters} />
 
 <div class="ruler"><b class="a">docs</b><i style="--x:4%"></i></div>
@@ -138,3 +138,9 @@ wit config asr …      引擎：auto|doubao-web|ime|sr|off</pre></Card>
   </div>
 </div></section>
 </Base>
+<style>
+  /* docs = 手册页，不是第二个 landing：更紧凑的节奏、更小的标题 */
+  section{padding:52px 0}
+  h2{font-size:clamp(22px,3vw,30px);margin-bottom:12px}
+  .lede{font-size:15px;max-width:600px}
+</style>

@@ -1,0 +1,43 @@
+---
+// The conversation script rendered as a real chat UI — agent bubbles left,
+// user bubbles right. Not a terminal: this is what talking to your agent looks like.
+const { lang = "en", d = "0" } = Astro.props;
+const msgs = lang === "zh" ? [
+  { w: "y", t: "安装 witness" },
+  { w: "a", t: "npm i -g github:wookat/witness", k: "ok" },
+  { w: "y", t: "帮我录一段 http://localhost:5173" },
+  { w: "a", t: "wit start ✓ · 托管浏览器弹出，等你说问题", k: "ok" },
+  { w: "n", t: "你正常使用产品——看到什么说什么，标记问题，点 ■" },
+  { w: "y", t: "按刚才录的把问题修了" },
+  { w: "a", t: "读 session.md → 复述问题清单 → 你确认 → 修复", k: "ok" },
+] : [
+  { w: "y", t: "install witness" },
+  { w: "a", t: "npm i -g github:wookat/witness", k: "ok" },
+  { w: "y", t: "record http://localhost:5173 for me" },
+  { w: "a", t: "wit start ✓ · managed browser opens, waiting on you", k: "ok" },
+  { w: "n", t: "you use the product — say what you see, mark problems, press ■" },
+  { w: "y", t: "fix the issues from that recording" },
+  { w: "a", t: "reads session.md → echoes the issue list → you confirm → fixes", k: "ok" },
+];
+---
+<div class="convo rv" data-d={d}>
+  <div class="chd"><span class="cw y">{lang === "zh" ? "你" : "you"}</span><span class="cd">{lang === "zh" ? "vs" : "×"}</span><span class="cw a">agent</span></div>
+  {msgs.map(m => m.w === "n"
+    ? <div class="act">{m.t}</div>
+    : <div class={"m " + m.w}><div class={"b" + (m.k === "ok" ? " k" : "")}>{m.t}</div></div>)}
+</div>
+<style>
+  .convo{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 22px 14px;box-shadow:0 16px 44px #17181c0e}
+  .chd{display:flex;align-items:center;gap:8px;margin-bottom:18px;font:600 11px var(--mono);letter-spacing:.1em}
+  .chd .y{color:var(--rec)}
+  .chd .a{color:var(--ok)}
+  .chd .cd{color:var(--faint)}
+  .m{display:flex;margin-bottom:12px}
+  .m.y{justify-content:flex-end}
+  .b{max-width:78%;border-radius:14px;padding:10px 15px;font-size:14px;line-height:1.55;box-shadow:0 3px 12px #17181c0a}
+  .m.y .b{background:var(--ink);color:#f7f6f3;border-bottom-right-radius:4px}
+  .m.a .b{background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:4px;font-family:var(--mono);font-size:12.5px}
+  .b.k{border-left:3px solid var(--ok)}
+  .act{text-align:center;font:500 12px var(--mono);color:var(--faint);margin:6px 0 12px}
+  .act::before,.act::after{content:"———";color:var(--line);letter-spacing:2px;margin:0 10px}
+</style>

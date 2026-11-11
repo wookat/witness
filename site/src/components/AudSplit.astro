@@ -1,25 +1,96 @@
 ---
+// Every item opens a REAL artifact example — the output isn't a promise, it's clickable.
+const promptEx = `这是 Witness 录制的一段产品体验反馈（voice + click + 页面实况证据链）。
+
+请按以下顺序处理：
+1. 读 session.md —— 时间轴：每段语音（SAY）下方挂该时刻的 click/mark/net/console/mut 证据
+2. 先把用户指出的问题复述成清单，请用户确认后再动手——不要直接开修：
+   | # | 时间 | 用户原话 | 你的理解 | 关联证据 |
+   每段 SAY 至少归进一个问题；一句话含多个问题拆成 1a/1b；理解有歧义的标 ❓
+3. 用户确认后逐条修复：用 selector/React 组件名在代码里定位
+4. 修不了的在汇报里标注原因和需要的补充证据`;
+
+const mdEx = `### 00:17 · SAY
+> [00:17] "就比如说这个淋巴的话"
+> [00:19] "这个交互啊"
+> [00:21] "AI 硬件的交互我觉得有问题"
+- 00:24 CLICK #install > div.term > pre "你 → "安装 witness"…"
+  - 00:24 MUT #rot attr class: rot → rot out`;
+
+const evEx = `{"kind":"req","id":1,"url":"https://witness.zalize.com/zh/","method":"GET","resType":"document","t":605}
+{"kind":"nav","url":"https://witness.zalize.com/zh/","t":1413}
+{"kind":"click","selector":"#install > div.term > pre","text":"你 → 安装 witness","x":1106,"y":595,"t":24483}`;
+
 const {
-  humans = [["review.html", "speech cards + audio seek + screenshots"],["▶ DOM replay", "embedded rrweb player, real page states"],["film strip", "scrub the session like a video"],["audio.webm", "the original take"]],
-  agents = [["PROMPT.md", "handoff instructions + page vocabulary"],["session.md", "the evidence timeline above"],["events.jsonl", "complete raw stream, crash-safe"],["dom/ · bodies/ · shots/", "snapshots, payloads, frames"]],
+  humans = [
+    ["review.html", "语音卡片 + 音频跳转 + 截图", { img: "/sample/review.png", cap: "真实的 review.html —— 就是录这个官网产出的那次" }],
+    ["▶ DOM 回放", "内嵌 rrweb 播放器，真实页面状态", { img: "/sample/review.png", cap: "review.html 内置的 rrweb 回放区" }],
+    ["film strip", "像拖视频一样刷整场录制", { img: "/sample/review.png", cap: "底部胶片条 scrubber" }],
+    ["audio.webm", "原始录音", { img: "/sample/review.png", cap: "语音卡片点哪句播哪句" }],
+  ],
+  agents = [
+    ["PROMPT.md", "交接说明 + 页面词表", { pre: promptEx, cap: "真实 PROMPT.md 节选——要求 agent 先复述清单再修" }],
+    ["session.md", "因果证据时间轴", { pre: mdEx, cap: "真实 session.md 节选——SAY 下挂该时刻的证据" }],
+    ["events.jsonl", "全量原始事件流，崩了也保住", { pre: evEx, cap: "events.jsonl 逐行流式落盘" }],
+    ["dom/ · bodies/ · shots/", "快照、响应体、截图帧", { img: "/sample/shot.jpg", cap: "shots/ 里的真实截图帧（录制中自动截取）" }],
+  ],
   labels = ["For humans", "For AI agents"],
 } = Astro.props;
 ---
 <div class="split">
   <div class="card aud rv" data-d="0"><h4>{labels[0]}</h4><ul>
-    {humans.map(([f, d]) => <li><b>{f}</b><span>{d}</span></li>)}
+    {humans.map(([f, d, ex]) => ex
+      ? <li><button class="li" data-ex={JSON.stringify(ex)}><b>{f}</b><span>{d}</span></button></li>
+      : <li><b>{f}</b><span>{d}</span></li>)}
   </ul></div>
   <div class="card aud rv" data-d="120"><h4>{labels[1]}</h4><ul>
-    {agents.map(([f, d]) => <li><b>{f}</b><span>{d}</span></li>)}
+    {agents.map(([f, d, ex]) => ex
+      ? <li><button class="li" data-ex={JSON.stringify(ex)}><b>{f}</b><span>{d}</span></button></li>
+      : <li><b>{f}</b><span>{d}</span></li>)}
   </ul></div>
 </div>
+<div class="ax" id="ax" aria-hidden="true"><div class="axc">
+  <button class="axx" aria-label="close">×</button>
+  <div class="axbody"></div>
+  <div class="axcap"></div>
+</div></div>
 <style>
   .split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:44px}
   @media(max-width:760px){.split{grid-template-columns:1fr}}
   .aud h4{font:600 12px var(--mono);letter-spacing:.1em;color:var(--acc);margin-bottom:14px;text-transform:uppercase}
   .aud ul{list-style:none;padding:0}
-  .aud li{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .aud li{border-bottom:1px dashed var(--line)}
   .aud li:last-child{border:0}
-  .aud b{font:600 13px var(--mono);color:var(--ink);white-space:nowrap}
-  .aud li span{color:var(--dim);font-size:12.5px;text-align:right}
+  .aud>li,.aud .li{display:flex;justify-content:space-between;align-items:baseline;gap:14px;width:100%;padding:10px 0;text-align:left}
+  .aud>li{padding:10px 0}
+  .li{background:none;border:0;font:inherit;cursor:pointer;border-radius:8px;margin:0 -8px;padding:10px 8px!important;transition:background .15s}
+  .li:hover{background:var(--rec-soft)}
+  .li b{font:600 13px var(--mono);color:var(--ink);white-space:nowrap}
+  .li b::after{content:"↗";margin-left:7px;color:var(--rec);font-size:11px}
+  .li span{color:var(--dim);font-size:12.5px;text-align:right}
+  .aud>li>b{font:600 13px var(--mono);color:var(--ink);white-space:nowrap}
+  .aud>li>span{color:var(--dim);font-size:12.5px;text-align:right}
+  .ax{position:fixed;inset:0;z-index:90;background:#17181cd9;display:none;align-items:center;justify-content:center;padding:30px;backdrop-filter:blur(4px)}
+  .ax.on{display:flex}
+  .axc{position:relative;max-width:min(960px,94vw);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 30px 90px #0005}
+  .axbody img{display:block;max-width:100%;border-radius:8px;border:1px solid var(--line)}
+  .axbody pre{font:12.5px/1.7 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap;margin:0}
+  .axcap{font:500 12px var(--mono);color:var(--faint);margin-top:12px}
+  .axx{position:absolute;top:10px;right:12px;background:none;border:0;font-size:20px;color:var(--faint);cursor:pointer;z-index:1}
+  .axx:hover{color:var(--ink)}
 </style>
+<script>
+  const ax = document.getElementById("ax");
+  const body = ax?.querySelector(".axbody"), cap = ax?.querySelector(".axcap");
+  document.querySelectorAll(".li[data-ex]").forEach(b => b.addEventListener("click", () => {
+    const ex = JSON.parse(b.dataset.ex);
+    body.innerHTML = ex.img ? `<img src="${ex.img}" alt="example">` : `<pre></pre>`;
+    if (ex.pre) body.querySelector("pre").textContent = ex.pre;
+    cap.textContent = ex.cap || "";
+    ax.classList.add("on"); ax.setAttribute("aria-hidden", "false");
+  }));
+  const close = () => { ax?.classList.remove("on"); ax?.setAttribute("aria-hidden", "true"); };
+  ax?.addEventListener("click", e => { if (!(e.target as HTMLElement).closest(".axbody")) close(); });
+  ax?.querySelector(".axx")?.addEventListener("click", close);
+  addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+</script>

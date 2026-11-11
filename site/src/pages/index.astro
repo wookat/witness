@@ -7,6 +7,7 @@ import Demo from "../components/Demo.astro";
 import VideoDemo from "../components/VideoDemo.astro";
 import Flow from "../components/Flow.astro";
 import AudSplit from "../components/AudSplit.astro";
+import Convo from "../components/Convo.astro";
 const GH = "https://github.com/wookat/witness";
 ---
 <Base>
@@ -63,7 +64,30 @@ const GH = "https://github.com/wookat/witness";
 <section class="alt"><div class="wrap">
   <div class="kicker">05 · Two audiences</div>
   <h2 class="rv">Humans get a replay. Agents get a structure.</h2>
-  <AudSplit />
+  <AudSplit
+    humans={[
+      ["review.html","speech cards + audio seek + shots",{img:"/sample/review.png",cap:"a real review.html — captured while recording this very site"}],
+      ["▶ DOM replay","embedded rrweb player, real page states",{img:"/sample/review.png",cap:"the rrweb replay area inside review.html"}],
+      ["film strip","scrub the session like a video",{img:"/sample/review.png",cap:"the film-strip scrubber"}],
+      ["audio.webm","the original take",{img:"/sample/review.png",cap:"click any speech card to play that moment"}],
+    ]}
+    agents={[
+      ["PROMPT.md","handoff instructions + page vocabulary",{pre:`这是 Witness 录制的一段产品体验反馈（voice + click + 页面实况证据链）。
+
+请按以下顺序处理：
+1. 读 session.md —— 时间轴：每段语音（SAY）下方挂该时刻的证据
+2. 先把用户指出的问题复述成清单，请用户确认后再动手
+3. 用户确认后逐条修复`,cap:"real PROMPT.md excerpt — the agent must echo the issue list before fixing"}],
+      ["session.md","the causal evidence timeline",{pre:`### 00:17 · SAY
+> [00:17] "就比如说这个淋巴的话"
+> [00:21] "AI 硬件的交互我觉得有问题"
+- 00:24 CLICK #install > div.term > pre
+  - 00:24 MUT #rot attr class: rot → rot out`,cap:"real session.md excerpt — evidence hangs under each SAY"}],
+      ["events.jsonl","complete raw stream, crash-safe",{pre:`{"kind":"req","id":1,"url":"https://witness.zalize.com/zh/","method":"GET","t":605}
+{"kind":"nav","url":"https://witness.zalize.com/zh/","t":1413}
+{"kind":"click","selector":"#install > div.term > pre","x":1106,"y":595,"t":24483}`,cap:"events.jsonl streams to disk line by line"}],
+      ["dom/ · bodies/ · shots/","snapshots, payloads, frames",{img:"/sample/shot.jpg",cap:"a real frame from shots/"}],
+    ]} />
 </div></section>
 
 <section id="mcp"><div class="wrap">
@@ -98,13 +122,7 @@ const GH = "https://github.com/wookat/witness";
   <div class="kicker">08 · Get started</div>
   <h2 class="rv">Three sentences. That's the whole loop.</h2>
   <p class="lede rv" data-d="60">You give instructions; <b>your agent runs the commands</b>. Witness is a CLI (<code>wit</code>) that agents drive — it opens a managed browser, records, and hands back a local evidence package: <code>review.html</code> for you, <code>session.md</code>/<code>PROMPT.md</code>/<code>wit mcp</code> for the agent. Node 18+, system Edge/Chrome, no cloud, no keys.</p>
-  <Term label="you → your agent" d="100"><span class="c-say">you</span>   → "install witness"
-<span class="c-ok">agent</span> → <span class="c-dim">npm i -g github:wookat/witness  ✓</span>
-<span class="c-say">you</span>   → "record http://localhost:5173 for me"
-<span class="c-ok">agent</span> → <span class="c-dim">wit start  ✓ managed browser opens</span>
-<span class="c-say">you</span>   → <span class="c-dim">use the product, talk out loud, mark problems — press ■</span>
-<span class="c-say">you</span>   → "fix the issues from that recording"
-<span class="c-ok">agent</span> → <span class="c-dim">reads session.md → fixes → cites evidence</span></Term>
+  <Convo d="100" />
   <div class="cta rv" data-d="160" style="display:flex;gap:12px;margin-top:30px">
     <a class="btn pri" href={GH}>★ Star on GitHub<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     <a class="btn" href="/docs">Read the docs ↗</a>

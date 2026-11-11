@@ -37,6 +37,7 @@ const t = lang === "zh" ? {
     </div>
     <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
     <div class="insthint rv" data-d="380">{lang === "zh" ? "↑ 丢给你的 AI agent——它装完就能帮你录" : "↑ hand this to your AI agent — it installs and records for you"}</div>
+    <div class="instmeta rv" data-d="420">{lang === "zh" ? "装的是 wit CLI——录制·渲染·MCP 一体 · Node 18+ · 系统 Edge/Chrome · 免 key" : "installs the wit CLI — recorder · renderer · MCP in one · Node 18+ · system Edge/Chrome · no keys"}</div>
     <Tape />
   </div>
 </header>
@@ -83,6 +84,7 @@ const t = lang === "zh" ? {
   .install button{background:none;border:0;color:#77767f;cursor:pointer;font:inherit;font-size:15px;padding:0;transition:color .15s}
   .install button:hover{color:var(--term-text)}
   .insthint{position:relative;margin-top:12px;font:500 12px var(--mono);color:var(--faint);z-index:2}
+  .instmeta{position:relative;margin-top:7px;font:500 11px var(--mono);color:var(--faint);letter-spacing:.04em;z-index:2;opacity:.85}
 </style>
 <script define:vars={{ words: t.rot }}>
   const el = document.getElementById("rot");

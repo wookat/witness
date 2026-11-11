@@ -7,6 +7,7 @@ import Demo from "../components/Demo.astro";
 import VideoDemo from "../components/VideoDemo.astro";
 import Flow from "../components/Flow.astro";
 import AudSplit from "../components/AudSplit.astro";
+import Convo from "../components/Convo.astro";
 const GH = "https://github.com/wookat/witness";
 
 const zhSays = [
@@ -75,10 +76,7 @@ const zhSays = [
 <section class="alt"><div class="wrap">
   <div class="kicker">05 · 两种受众</div>
   <h2 class="rv">人看回放，Agent 读结构。</h2>
-  <AudSplit
-    labels={["给人看","给 AI agent"]}
-    humans={[["review.html","语音卡片 + 音频跳转 + 截图"],["▶ DOM 回放","内嵌 rrweb 播放器，真实页面状态"],["胶片条","像视频一样拖扫整段会话"],["audio.webm","原始录音"]]}
-    agents={[["PROMPT.md","交接说明 + 页面词表"],["session.md","上面的证据时间轴"],["events.jsonl","全量原始事件流，崩溃安全"],["dom/ · bodies/ · shots/","DOM 快照、请求体、截图帧"]]} />
+  <AudSplit labels={["给人看","给 AI agent"]} />
 </div></section>
 
 <section id="mcp"><div class="wrap">
@@ -113,13 +111,7 @@ const zhSays = [
   <div class="kicker">08 · 上手</div>
   <h2 class="rv">三句话，跑通整个闭环。</h2>
   <p class="lede rv" data-d="60">你下指令，<b>agent 敲命令</b>。Witness 本体是 CLI（<code>wit</code>）——agent 驱动它开托管浏览器录制，结束后产出本地证据包：人看 <code>review.html</code>，agent 走 <code>session.md</code>/<code>PROMPT.md</code>/<code>wit mcp</code>。Node 18+、系统 Edge/Chrome、不上云、不要 key。</p>
-  <Term label="你 → 你的 agent" d="100"><span class="c-say">你</span>    → "安装 witness"
-<span class="c-ok">agent</span> → <span class="c-dim">npm i -g github:wookat/witness  ✓</span>
-<span class="c-say">你</span>    → "帮我录一段 http://localhost:5173"
-<span class="c-ok">agent</span> → <span class="c-dim">wit start  ✓ 托管浏览器弹出</span>
-<span class="c-say">你</span>    → <span class="c-dim">正常使用产品，看到什么说什么，标记问题 —— 点 ■</span>
-<span class="c-say">你</span>    → "按刚才录的把问题修了"
-<span class="c-ok">agent</span> → <span class="c-dim">读 session.md → 修复 → 引用证据点汇报</span></Term>
+  <Convo lang="zh" d="100" />
   <div class="cta rv" data-d="160" style="display:flex;gap:12px;margin-top:30px">
     <a class="btn pri" href={GH}>★ 去 GitHub 点 Star<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     <a class="btn" href="/zh/docs">读使用文档 ↗</a>
