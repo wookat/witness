@@ -2,7 +2,7 @@
 // Self-contained IIFE — no imports, runs in page context.
 // Communicates with node via __witEmit (events) and __witAudio (base64 chunks).
 
-export const PAGE_SCRIPT = (lang = "zh-CN") => `
+export const PAGE_SCRIPT = (lang = "zh-CN", opts: { sr?: boolean; pcm?: boolean } = {}) => `
 (function () {
   if (window.__wit) return;
   if (location.href === "about:blank") return;
@@ -412,6 +412,48 @@ export const PAGE_SCRIPT = (lang = "zh-CN") => `
       rec.start(800);
       W.recorder = rec;
       W.emit({ kind: "note", text: "mic recording" });
+      // ---------- raw PCM tap for node-side cloud ASR ----------
+      if (${opts.pcm ? "true" : "false"}) (function startPcmTap() {
+        try {
+          const ac2 = new AudioContext();
+          const src2 = ac2.createMediaStreamSource(stream);
+          const R = ac2.sampleRate / 16000;
+          let carry = new Float32Array(0), phase = 0, out = [];
+          const WORKLET = 'class P extends AudioWorkletProcessor{process(i){const c=i[0][0];if(c)this.port.postMessage(c.slice(0));return true}}registerProcessor("cap",P)';
+          const flush = () => {
+            if (!out.length) return;
+            const b = new Int16Array(out); out = [];
+            let bin = ""; const u8 = new Uint8Array(b.buffer);
+            for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode(...u8.subarray(i, i + 0x8000));
+            try { window.__witPcm && window.__witPcm(btoa(bin)); } catch {}
+          };
+          const onChunk = (f32) => {
+            const all = new Float32Array(carry.length + f32.length);
+            all.set(carry); all.set(f32, carry.length);
+            for (; phase < all.length - 1; phase += R) {
+              const i = Math.floor(phase), s = all[i] + (all[i + 1] - all[i]) * (phase - i);
+              out.push(Math.max(-32768, Math.min(32767, Math.round(s * 32768))));
+            }
+            carry = all.slice(Math.floor(phase)); phase -= Math.floor(phase);
+          };
+          setInterval(flush, 400);
+          const mute = ac2.createGain(); mute.gain.value = 0;
+          (async () => {
+            try {
+              await ac2.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: "text/javascript" })));
+              const node = new AudioWorkletNode(ac2, "cap");
+              node.port.onmessage = e => onChunk(e.data);
+              src2.connect(node); node.connect(mute); mute.connect(ac2.destination);
+              W.emit({ kind: "note", text: "pcm tap: worklet" });
+            } catch (we) {
+              const sp = ac2.createScriptProcessor(4096, 1, 1);
+              sp.onaudioprocess = e => onChunk(e.inputBuffer.getChannelData(0));
+              src2.connect(sp); sp.connect(mute); mute.connect(ac2.destination);
+              W.emit({ kind: "note", text: "pcm tap: scriptprocessor" });
+            }
+          })().catch(() => {});
+        } catch (e) { W.emit({ kind: "note", text: "pcm tap failed: " + clip(e && e.message, 60) }); }
+      })();
       // meter
       const ac = new AudioContext(), src = ac.createMediaStreamSource(stream), an = ac.createAnalyser();
       an.fftSize = 256; src.connect(an);
@@ -433,7 +475,9 @@ export const PAGE_SCRIPT = (lang = "zh-CN") => `
   if (!W.muted) startMic();
 
   // ---------- in-browser speech recognition (free, real-time) ----------
-  (function startSR() {
+  W.setCap = setCap;
+  W.startSR = function () {
+    if (W.sr) return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
     const r = new SR();
@@ -462,10 +506,12 @@ export const PAGE_SCRIPT = (lang = "zh-CN") => `
     r.onend = () => { if (W.recorder && !W.stopped && !W.paused) try { r.start(); } catch {} };
     try { r.start(); W.emit({ kind: "note", text: "speech recognition on" }); } catch {}
     W.sr = r;
-  })();
+  };
+  if (${opts.sr ? "true" : "false"}) W.startSR();
 
   // node → page commands
   window.__witCmd = (cmd) => {
+    if (cmd === "sr-on") { try { W.startSR(); } catch {} return true; }
     if (cmd === "stop") {
       W.stopped = true;
       try { W.sr && W.sr.stop(); } catch {}

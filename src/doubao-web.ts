@@ -75,6 +75,118 @@ async function openWs(): Promise<WebSocket> {
   throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }
 
+/** Live push-mode session for the ASR lab: feed PCM as the mic produces it. */
+export interface LiveVg {
+  push(pcm: Buffer): void;
+  end(): Promise<AsrSeg[]>;
+  onPartial(cb: (t: string, fin: boolean) => void): void;
+  /** fires when the backend commits a sentence (is_interim=false) with vad timing */
+  onSentence(cb: (s: { text: string; start: number; end: number }) => void): void;
+}
+
+/** Open a VoiceGenie session and stream whatever PCM you push, at realtime pace. */
+export async function openLiveVg(): Promise<LiveVg> {
+  const ws = await openWs();
+  const rid = randomUUID();
+  const q: Buffer[] = [];
+  let carry = Buffer.alloc(0);
+  let ended = false, finSent = false, stage: "task" | "session" | "audio" = "task";
+  let cb: ((t: string, fin: boolean) => void) | undefined;
+  let scb: ((s: { text: string; start: number; end: number }) => void) | undefined;
+  let last = "", committed = "", lastEnd = 0, f = 0;
+  const sentences = new Map<number, AsrSeg>();
+
+  const done = new Promise<AsrSeg[]>((resolve, reject) => {
+    const finish = (err?: Error) => { clearInterval(tick); try { ws.close(); } catch {} err ? reject(err) : resolve(buildSegs()); };
+    const buildSegs = (): AsrSeg[] => {
+      const sents = [...sentences.values()].filter(s => s.text);
+      if (sents.length) return sents;
+      return last ? [{ start: 0, end: 0, text: last }] : [];
+    };
+    const killer = setTimeout(() => finish(new Error("doubao-web live timeout")), 600_000);
+
+    const tick = setInterval(() => {
+      if (stage !== "audio" || finSent) return;
+      if (q.length) {
+        const isLast = ended && q.length === 1;
+        ws.send(marshalReq({ svc: "VoiceGenie", method: "TaskRequest",
+          payload: JSON.stringify({ extra: isLast ? { finish_audio: true } : {}, timestamp_ms: Date.now() }),
+          audio: q.shift()!, rid, state: isLast ? 9 : f === 0 ? 1 : 3 }));
+        f++;
+        return;
+      }
+      if (ended) {
+        finSent = true;
+        ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "EndASR", payload: "{}", rid }));
+        ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "FinishSession", rid }));
+      }
+    }, 20);
+
+    ws.on("message", (b: Buffer) => {
+      const resp = unmarshalResp(b);
+      if (resp.msgType === "TaskFailed" || resp.msgType === "SessionFailed") { clearTimeout(killer); return finish(new Error(`${resp.msgType} code=${resp.code} ${resp.msg || resp.resultJson}`.trim())); }
+      if (resp.msgType === "TaskStarted" && stage === "task") {
+        stage = "session";
+        ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "StartSession", rid, payload: JSON.stringify({
+          business: 1, enable_audio_input: true, query_mode: 2, interrupt_type: 0, request_type: 3,
+          chat: { bot_id: "7234781073513644036", message_id: "", uid: "279691410283040", conversation_id: "local_" + Date.now(), is_conf_fetched: false, is_dora_onboarding: false, new_conversation: false, question_id: "" },
+          asr: { audio_info: { channel: 1, format: "raw", sample_rate: 16000 }, enable_punctuation: true,
+            extra: { use_vad: true, use_itn: true, use_ddc: true, strong_ddc: true, enable_asr_twopass: true, disable_user_words: true } },
+        }) }));
+        return;
+      }
+      if (resp.msgType === "SessionStarted" && stage === "session") { stage = "audio"; return; }
+      if (resp.resultJson) {
+        try {
+          const j = JSON.parse(resp.resultJson);
+          const results = j?.results ?? [];
+          const t = results[0]?.text;
+          const interim = results[0]?.is_interim;
+          if (t && t !== last) { last = t; cb?.(t, interim === false); }
+          if (t && interim === false) {
+            // cumulative text — sentence is the newly-committed delta
+            const delta = t.startsWith(committed) ? t.slice(committed.length).trim() : t;
+            committed = t;
+            const vad = j?.extra?.vad_result?.[0];
+            const end = vad?.[1] != null ? vad[1] / 1000 : f * 0.02;
+            if (delta) {
+              const seg = { text: delta, start: vad?.[0] != null ? vad[0] / 1000 : lastEnd, end };
+              sentences.set(sentences.size, seg);
+              lastEnd = end;
+              scb?.(seg);
+            }
+          }
+          for (const r of results.slice(1)) {
+            if ((r.stream_asr_finish || r.is_interim === false) && r.start_time != null && r.end_time != null)
+              sentences.set(r.index ?? sentences.size, { start: r.start_time, end: r.end_time, text: r.text ?? "" });
+          }
+        } catch {}
+      }
+      if (resp.msgType === "SessionFinished") { clearTimeout(killer); finish(); }
+    });
+    ws.on("error", () => { clearTimeout(killer); finish(new Error("doubao-web ws error")); });
+    ws.on("close", () => { clearTimeout(killer); finish(last ? undefined : new Error("closed, no result")); });
+  });
+  void done.catch(() => {}); // suppress unhandled rejection until end() attaches
+
+  ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "StartTask", rid }));
+
+  let endPromise: Promise<AsrSeg[]> | null = null;
+  return {
+    push(pcm) {
+      carry = Buffer.concat([carry, pcm]);
+      while (carry.length >= FRAME) { q.push(carry.subarray(0, FRAME)); carry = carry.subarray(FRAME); }
+    },
+    end() {
+      if (carry.length) { q.push(Buffer.concat([carry, Buffer.alloc(FRAME - carry.length)])); carry = Buffer.alloc(0); }
+      ended = true;
+      return (endPromise ??= done);
+    },
+    onPartial(c) { cb = c; },
+    onSentence(c) { scb = c; },
+  };
+}
+
 /**
  * Stream a webm/wav file through the web VoiceGenie endpoint (pure-ASR session).
  * Backend runs near-realtime VAD — audio must be paced at ≤ ~1× realtime.

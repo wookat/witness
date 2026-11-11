@@ -9,6 +9,8 @@ import { Shots } from "./shots.js";
 import { wireNetwork } from "./network.js";
 import { transcribe, hasTranscriber, type Transcript } from "./transcribe.js";
 import { transcribeBcut } from "./bcut.js";
+import { openLiveAsr, type LiveAsrSession, type AsrChoice } from "./live-asr.js";
+import { resolveAsr } from "./config.js";
 import { align } from "./align.js";
 import { correctSays, hasCorrector } from "./correct.js";
 import { associateSays } from "./associate.js";
@@ -27,6 +29,7 @@ export interface RecOptions {
   correct?: boolean;         // opt-in: LLM-polish SAY text (default off — keep verbatim)
   associate?: boolean;       // opt-in: LLM-pick relevant evidence per SAY (needs ZHIPU_API_KEY)
   rr?: boolean;              // default true: rrweb full-DOM replay capture → rrweb.jsonl + review.html player
+  asr?: AsrChoice;           // live speech engine: auto|doubao-web|doubao-ime|sr|off (default auto)
 }
 
 const slug = (s: string) => s.replace(/^https?:\/\//, "").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
@@ -111,6 +114,11 @@ export async function record(opts: RecOptions) {
   const stopFns: (() => void)[] = [];
   const pages = new Set<Page>();
   let lastPage: Page | undefined;
+  const asrMode = resolveAsr(opts.asr);
+  let liveAsr: LiveAsrSession | null = null;
+  let srFallback = false; // cloud asr failed → lazily start browser SR on each nav
+  const engineSays = new Set<string>(); // emitted sentence texts, for dedupe at end()
+  const micBiasMs = () => (store.events.find(e => e.kind === "note" && /mic recording/i.test(e.text ?? ""))?.t ?? 0);
 
   await ctx.exposeBinding("__witEmit", async (src, e: any) => {
     const page = src.page ?? lastPage; // the page that emitted — never the wrong tab
@@ -130,6 +138,9 @@ export async function record(opts: RecOptions) {
     if (e?.kind === "_ui" && e.action === "stop") void stop("ui");
   });
   await ctx.exposeBinding("__witAudio", (_src, b64: string) => audio.chunk(b64));
+  await ctx.exposeBinding("__witPcm", (src, b64: string) => {
+    if (liveAsr && !paused && src.page === lastPage) liveAsr.push(Buffer.from(b64, "base64"));
+  });
   let lastSayShot = 0;
   const rrSrc = rrEnabled ? rrwebUmd() : null;
   if (rrSrc) {
@@ -149,7 +160,7 @@ export async function record(opts: RecOptions) {
       slimDOMOptions: { script: true, comment: true },
     });`);
   }
-  await ctx.addInitScript(PAGE_SCRIPT(opts.lang ?? "zh-CN"));
+  await ctx.addInitScript(PAGE_SCRIPT(opts.lang ?? "zh-CN", { sr: asrMode === "sr", pcm: asrMode !== "sr" && asrMode !== "off" }));
 
   function wirePage(page: Page) {
     if (pages.has(page)) return;
@@ -166,6 +177,7 @@ export async function record(opts: RecOptions) {
       if (f === page.mainFrame()) {
         const url = page.url();
         store.push({ kind: "nav", url, title: undefined });
+        if (srFallback) setTimeout(() => void page.evaluate(() => (window as any).__witCmd?.("sr-on")).catch(() => {}), 1200);
         if (url === lastNav) return;
         lastNav = url;
         setTimeout(() => shots.at(page, "nav").catch(() => {}), 800);
@@ -201,6 +213,24 @@ export async function record(opts: RecOptions) {
     process.off("SIGHUP", onSigint);
     await browser.close().catch(() => {});
     await audio.close();
+
+    // drain live ASR: EndASR → finals → SessionFinished (few seconds)
+    let engineSegs: { start: number; end: number; text: string }[] = [];
+    if (liveAsr) {
+      try {
+        engineSegs = await Promise.race([
+          liveAsr.end(),
+          new Promise<typeof engineSegs>((_, rej) => setTimeout(() => rej(new Error("live asr end timeout")), 15_000)),
+        ]);
+        const b = micBiasMs();
+        for (const s of engineSegs) {
+          if (!s.text || engineSays.has(s.text)) continue;
+          engineSays.add(s.text);
+          store.push({ kind: "say", text: s.text, segStart: b + s.start * 1000, segEnd: b + s.end * 1000 });
+        }
+      } catch (e) { console.log(`  live asr end failed: ${(e as Error).message}`); }
+    }
+
     if (rrStream) await new Promise<void>(r => rrStream.end(() => r()));
     await store.close();
 
@@ -215,7 +245,9 @@ export async function record(opts: RecOptions) {
         }
         console.log(`  transcript: ${transcript.segments.length} segments`);
       } catch (e) {
-        console.log(`  transcription failed: ${(e as Error).message} — continuing without it`);
+        console.log(`  transcription failed: ${(e as Error).message}${engineSegs.length ? " — using live-asr segments" : ""}`);
+        if (engineSegs.length)
+          transcript = { model: liveAsr?.name ?? "live-asr", segments: engineSegs, words: [], text: engineSegs.map(s => s.text).join(" ") };
       }
     }
 
@@ -241,6 +273,7 @@ export async function record(opts: RecOptions) {
       startedAt: store.startTime,
       durationMs: store.now(),
       viewport: { width: opts.width ?? 1560, height: opts.height ?? 960 },
+      asr: liveAsr?.name ?? (asrMode === "sr" ? "edge-sr" : asrMode),
     };
     await writeSessionFiles(dir, events, meta, transcript, assoc);
 
@@ -266,6 +299,37 @@ export async function record(opts: RecOptions) {
   }
 
   if (opts.duration) setTimeout(() => void stop("duration"), opts.duration * 1000);
+
+  // live cloud ASR — streams mic PCM to a real engine, replaces browser SR
+  if (asrMode !== "sr" && asrMode !== "off") {
+    void (async () => {
+      try {
+        const s = await openLiveAsr(asrMode === "auto" ? "auto" : asrMode);
+        if (stopping) { void s.end().catch(() => {}); return; }
+        liveAsr = s;
+        store.push({ kind: "note", text: `live asr: ${s.name}` });
+        console.log(`  live asr: ${s.name}`);
+        let capT = 0;
+        s.onPartial(t => {
+          const now = Date.now();
+          if (paused || now - capT < 450) return; capT = now;
+          void lastPage?.evaluate(x => (window as any).__wit?.setCap?.(x, true), t.slice(-110)).catch(() => {});
+        });
+        s.onSentence(seg => {
+          if (!seg.text || paused) return;
+          engineSays.add(seg.text);
+          const b = micBiasMs();
+          store.push({ kind: "say", text: seg.text, segStart: b + seg.start * 1000, segEnd: b + seg.end * 1000 });
+          if (lastPage && Date.now() - lastSayShot >= 2500) { lastSayShot = Date.now(); void shots.at(lastPage, "say").catch(() => {}); }
+        });
+      } catch (e) {
+        console.log(`  live asr failed: ${(e as Error).message} — browser SR fallback`);
+        store.push({ kind: "note", text: `live asr failed (${(e as Error).message}) — sr fallback` });
+        srFallback = true;
+        for (const p of pages) await p.evaluate(() => (window as any).__witCmd?.("sr-on")).catch(() => {});
+      }
+    })();
+  }
 
   // open first page (ctx 'page' listener wires it)
   const first = await ctx.newPage();

@@ -101,13 +101,13 @@ function unmarshalResp(data: Buffer): Resp {
   return r;
 }
 
-/** Stream WAV/PCM through Doubao Seed-ASR. onPartial(cumulativeText). */
-export async function doubaoStt(file: string, onPartial?: (t: string) => void): Promise<AsrSeg[]> {
+/** Stream WAV/PCM through Doubao Seed-ASR. onPartial(cumulativeText). speed>1 paces file input faster than realtime. */
+export async function doubaoStt(file: string, onPartial?: (t: string) => void, speed = 2): Promise<AsrSeg[]> {
   let wav = file.endsWith(".wav") ? readFileSync(file) : await webmToWav(file);
   wav = wav.subarray(44);
   let lastErr: Error = new Error("doubao failed");
   for (let attempt = 0; attempt < 3; attempt++) {
-    try { return await doubaoSession(wav, onPartial); }
+    try { return await doubaoSession(wav, onPartial, speed); }
     catch (e) { lastErr = e as Error; if (!text0) continue; break; }
   }
   throw lastErr;
@@ -115,7 +115,111 @@ export async function doubaoStt(file: string, onPartial?: (t: string) => void): 
 
 let text0 = false; // set when any partial arrived (don't retry a session that produced text)
 
-async function doubaoSession(wav: Buffer, onPartial?: (t: string) => void): Promise<AsrSeg[]> {
+/** Live push-mode IME session (ASR lab): feed PCM as the mic produces it. */
+export interface LiveIme {
+  push(pcm: Buffer): void;
+  end(): Promise<AsrSeg[]>;
+  onPartial(cb: (t: string) => void): void;
+  /** fires on each stream_asr_finish sentence with real start/end times */
+  onSentence(cb: (s: { text: string; start: number; end: number }) => void): void;
+}
+
+export async function openLiveIme(): Promise<LiveIme> {
+  const creds = await credentials();
+  const rid = randomUUID().replace(/-/g, "");
+  const { WebSocket } = await import("undici" as any).catch(() => ({ WebSocket: globalThis.WebSocket } as any)) as any;
+  const ws = new WebSocket(`${WS_URL}?aid=${AID}&device_id=${creds.deviceId}`, {
+    headers: { "User-Agent": UA, "proto-version": "v2", "x-custom-keepalive": "true" },
+  });
+  const q: Buffer[] = []; let carry = Buffer.alloc(0);
+  let ended = false, finSent = false, stage: "task" | "session" | "audio" = "task";
+  let cb: ((t: string) => void) | undefined, last = "", lastShown = "", f = 0;
+  let scb: ((s: { text: string; start: number; end: number }) => void) | undefined;
+  const sentences = new Map<number, AsrSeg>();
+  const t0 = Date.now();
+
+  const done = new Promise<AsrSeg[]>((resolve, reject) => {
+    const build = (): AsrSeg[] => {
+      const sents = [...sentences.values()].filter(s => s.text);
+      const joined = sents.map(s => s.text).join("");
+      // trailing sentence still in results[0] never got stream_asr_finish — keep it
+      if (sents.length) {
+        if (last && !joined.endsWith(last)) sents.push({ start: sents.at(-1)!.end, end: 0, text: last });
+        return sents;
+      }
+      return last ? [{ start: 0, end: 0, text: last }] : [];
+    };
+    const finish = (err?: Error) => { clearInterval(tick); try { ws.close(); } catch {} err ? reject(err) : resolve(build()); };
+    const killer = setTimeout(() => finish(new Error("ime live timeout")), 600_000);
+    const tick = setInterval(() => {
+      if (stage !== "audio" || finSent) return;
+      if (q.length) {
+        const isLast = ended && q.length === 1;
+        ws.send(marshalReq({ svc: "ASR", method: "TaskRequest",
+          payload: JSON.stringify({ extra: isLast ? { finish_audio: true, force_asr_twopass: true } : {}, timestamp_ms: t0 + f * 20 }),
+          audio: q.shift()!, rid, state: isLast ? 9 : f === 0 ? 1 : 3 }));
+        f++;
+        return;
+      }
+      if (ended) { finSent = true; ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "FinishSession", rid })); }
+    }, 20);
+    ws.addEventListener("open", () => ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "StartTask", rid })));
+    ws.addEventListener("message", async (ev: any) => {
+      const raw: Buffer = typeof ev.data === "string" ? Buffer.from(ev.data)
+        : ev.data instanceof ArrayBuffer ? Buffer.from(ev.data)
+        : Buffer.from(await (ev.data as Blob).arrayBuffer());
+      const resp = unmarshalResp(raw);
+      if (resp.msgType === "TaskFailed" || resp.msgType === "SessionFailed") { clearTimeout(killer); return finish(new Error(`${resp.msgType} code=${resp.code} ${resp.msg || resp.resultJson}`.trim())); }
+      if (resp.msgType === "TaskStarted" && stage === "task") {
+        stage = "session";
+        const ctx = Buffer.from(JSON.stringify({ chat: [], ime_info: { app_apk_name: "com.android.chrome", input_type: "" } })).toString("base64");
+        ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "StartSession", rid, payload: JSON.stringify({
+          audio_info: { channel: 1, format: "raw", sample_rate: 16000 },
+          enable_punctuation: true, enable_speech_rejection: false,
+          extra: { app_name: "com.android.chrome", cell_compress_rate: 8, did: creds.deviceId, input_mode: "tool",
+            enable_asr_threepass: true, enable_asr_twopass: true, use_twopass_retry: true, strong_ddc: true,
+            remove_space_between_han_num: true, remove_space_between_han_eng: true, enable_print_chinese: false,
+            disable_user_words: false, context: ctx },
+        }) }));
+        return;
+      }
+      if (resp.msgType === "SessionStarted" && stage === "session") { stage = "audio"; return; }
+      if (resp.resultJson) {
+        try {
+          const j = JSON.parse(resp.resultJson);
+          const results = j?.results ?? [];
+          for (const r of results.slice(1)) {
+            if (r.stream_asr_finish && r.start_time != null && r.end_time != null) {
+              const seg = { start: r.start_time, end: r.end_time, text: r.text ?? "" };
+              const k = r.index ?? sentences.size;
+              if (!sentences.has(k) && seg.text) scb?.(seg);
+              sentences.set(k, seg);
+            }
+          }
+          // results[0] is only the CURRENT sentence — finished ones reset it.
+          // Reassemble so the live view is continuous like the web channel's.
+          const cur = results[0]?.text ?? "";
+          if (cur) last = cur;
+          const shown = [...sentences.values()].map(s => s.text).join("") + cur;
+          if (shown && shown !== lastShown) { lastShown = shown; cb?.(shown); }
+        } catch {}
+      }
+      if (resp.msgType === "SessionFinished") { clearTimeout(killer); finish(); }
+    });
+    ws.addEventListener("error", () => { clearTimeout(killer); finish(new Error("ime ws error")); });
+    ws.addEventListener("close", () => { clearTimeout(killer); finish(last ? undefined : new Error("closed, no result")); });
+  });
+  void done.catch(() => {});
+  let endPromise: Promise<AsrSeg[]> | null = null;
+  return {
+    push(pcm) { carry = Buffer.concat([carry, pcm]); while (carry.length >= FRAME) { q.push(carry.subarray(0, FRAME)); carry = carry.subarray(FRAME); } },
+    end() { if (carry.length) { q.push(Buffer.concat([carry, Buffer.alloc(FRAME - carry.length)])); carry = Buffer.alloc(0); } ended = true; return (endPromise ??= done); },
+    onPartial(c) { cb = c; },
+    onSentence(c) { scb = c; },
+  };
+}
+
+async function doubaoSession(wav: Buffer, onPartial: ((t: string) => void) | undefined, SPEED: number): Promise<AsrSeg[]> {
   const creds = await credentials();
   const rid = randomUUID().replace(/-/g, "");
 
@@ -125,15 +229,19 @@ async function doubaoSession(wav: Buffer, onPartial?: (t: string) => void): Prom
   });
 
   return await new Promise<AsrSeg[]>((resolve, reject) => {
-    let text = "";
+    let text = "", lastShown = "";
     const sentences = new Map<number, AsrSeg>(); // index → finished sentence with own timestamps
     const buildSegs = (): AsrSeg[] => {
       const sents = [...sentences.values()].filter(s => s.text);
-      if (sents.length) return sents;
+      const joined = sents.map(s => s.text).join("");
+      if (sents.length) {
+        if (text && !joined.endsWith(text)) sents.push({ start: sents.at(-1)!.end, end: wav.length / 32000, text });
+        return sents;
+      }
       return text ? [{ start: 0, end: wav.length / 32000, text }] : [];
     };
     const done = (err?: Error) => { try { ws.close(); } catch {} err ? reject(err) : resolve(buildSegs()); };
-    const killer = setTimeout(() => done(new Error("doubao timeout")), 90_000);
+    const killer = setTimeout(() => done(new Error("doubao timeout")), (wav.length / FRAME / 50 / SPEED + 45) * 1000);
     let stage: "task" | "session" | "audio" = "task";
 
     ws.addEventListener("open", () => {
@@ -161,27 +269,35 @@ async function doubaoSession(wav: Buffer, onPartial?: (t: string) => void): Prom
       if (resp.msgType === "SessionStarted" && stage === "session") {
         stage = "audio";
         const t0 = Date.now();
-        for (let i = 0, f = 0; i < wav.length; i += FRAME, f++) {
+        let f = 0;
+        const tick = setInterval(() => {
+          const i = f * FRAME;
+          if (i >= wav.length) {
+            clearInterval(tick);
+            ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "FinishSession", rid }));
+            return;
+          }
           const last = i + FRAME >= wav.length;
           const payload = last
             ? JSON.stringify({ extra: { finish_audio: true, force_asr_twopass: true }, timestamp_ms: t0 + f * 20 })
             : JSON.stringify({ extra: {}, timestamp_ms: t0 + f * 20 });
           ws.send(marshalReq({ svc: "ASR", method: "TaskRequest", payload, audio: wav.subarray(i, i + FRAME), rid, state: last ? 9 : f === 0 ? 1 : 3 }));
-        }
-        ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "FinishSession", rid }));
+          f++;
+        }, 20 / SPEED);
         return;
       }
       if (resp.resultJson) {
         try {
           const j = JSON.parse(resp.resultJson);
           const results = j?.results ?? [];
-          const t = results[0]?.text;
-          if (t && t !== text) { text = t; text0 = true; onPartial?.(t); }
-          // results[1..n]: sentence breakdown — finished sentences carry own start/end
           for (const r of results.slice(1)) {
             if (r.stream_asr_finish && r.start_time != null && r.end_time != null)
               sentences.set(r.index ?? sentences.size, { start: r.start_time, end: r.end_time, text: r.text ?? "" });
           }
+          const cur = results[0]?.text ?? "";
+          if (cur) { text = cur; text0 = true; }
+          const shown = [...sentences.values()].map(s => s.text).join("") + cur;
+          if (shown && shown !== lastShown) { lastShown = shown; onPartial?.(shown); }
         } catch {}
       }
       if (resp.msgType === "SessionFinished") { clearTimeout(killer); done(); }

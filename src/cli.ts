@@ -28,6 +28,7 @@ program
   .option("--correct", "LLM-polish SAY text via zhipu GLM (off by default — transcript stays verbatim)")
   .option("--associate", "LLM-pick relevant evidence per speech block (needs ZHIPU_API_KEY)", false)
   .option("--no-rr", "skip rrweb full-DOM replay capture")
+  .option("--asr <engine>", "live speech engine: auto|doubao-web|doubao-ime|sr|off (see `wit config asr` to persist)")
   .option("--shot-interval <ms>", "periodic screenshot interval", "10000")
   .option("--width <px>", "viewport width", "1560")
   .option("--height <px>", "viewport height", "960")
@@ -44,6 +45,7 @@ program
       correct: !!o.correct,
       associate: !!o.associate,
       rr: o.rr !== false,
+      asr: o.asr,
     });
   });
 
@@ -102,6 +104,28 @@ program
     const assoc = await associateSays(events);
     await writeSessionFiles(s.dir, events, s.meta, s.transcript, assoc);
     console.log(`✔ ${assoc.size} SAY block(s) annotated → ` + join(s.dir, "session.md"));
+  });
+
+program
+  .command("config [key] [value]")
+  .description("show or set recorder config (.witness/config.json) — keys: asr = auto|doubao-web|doubao-ime|sr|off")
+  .action(async (key, value) => {
+    const { readConfig, setConfig } = await import("./config.js");
+    const { ASR_ENGINES } = await import("./live-asr.js");
+    if (!key) {
+      const c = readConfig();
+      console.log("asr =", c.asr ?? "auto", " (default)");
+      console.log("engines:", ASR_ENGINES.join(" | "));
+      console.log("set: wit config asr <engine>  ·  one-off: wit start --asr <engine>  ·  env: WIT_ASR");
+      return;
+    }
+    if (key === "asr") {
+      if (!ASR_ENGINES.includes(value)) { console.log(`asr must be one of: ${ASR_ENGINES.join(" | ")}`); return; }
+      setConfig("asr", value);
+      console.log(`✔ asr = ${value} (persisted to .witness/config.json)`);
+      return;
+    }
+    console.log(`unknown key "${key}" — supported: asr`);
   });
 
 program

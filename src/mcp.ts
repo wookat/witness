@@ -129,5 +129,23 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
     },
     async ({ path }) => text(await readFile(safe(path), "utf8")));
 
+  server.registerTool("get_asr",
+    { description: "Current live speech-recognition engine for future recordings (auto|doubao-web|doubao-ime|sr|off)" },
+    async () => {
+      const { readConfig } = await import("./config.js");
+      return text(JSON.stringify({ asr: readConfig().asr ?? "auto", engines: ["auto", "doubao-web", "doubao-ime", "sr", "off"] }));
+    });
+
+  server.registerTool("set_asr",
+    {
+      description: "Switch the live ASR engine for FUTURE recordings (persists to .witness/config.json). doubao-web = best quality streaming; doubao-ime = sentence timestamps; sr = browser builtin; off = none.",
+      inputSchema: { engine: z.enum(["auto", "doubao-web", "doubao-ime", "sr", "off"]) },
+    },
+    async ({ engine }) => {
+      const { setConfig } = await import("./config.js");
+      setConfig("asr", engine);
+      return text(`asr = ${engine} (persisted — applies to the next wit start)`);
+    });
+
   await server.connect(new StdioServerTransport());
 }
