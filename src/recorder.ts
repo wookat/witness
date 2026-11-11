@@ -100,6 +100,7 @@ export async function record(opts: RecOptions) {
       "--use-fake-ui-for-media-stream",
       "--autoplay-policy=no-user-gesture-required",
       `--window-size=${opts.width ?? 1560},${(opts.height ?? 960) + 120}`,
+      ...(process.env.WIT_CDP ? [`--remote-debugging-port=${process.env.WIT_CDP}`] : []),
     ],
   });
 

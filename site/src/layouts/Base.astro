@@ -3,8 +3,8 @@ import Logo from "../components/Logo.astro";
 const { title = "Witness — voice-anchored evidence recorder for AI coding agents", lang = "en" } = Astro.props;
 const GH = "https://github.com/wookat/witness";
 const nav = lang === "zh"
-  ? [["#how","原理"],["#evidence","证据"],["#mcp","MCP"],["#install","安装"]]
-  : [["#how","How it works"],["#evidence","Evidence"],["#mcp","MCP"],["#install","Install"]];
+  ? [["/zh#how","原理"],["/zh#evidence","证据"],["/zh#mcp","MCP"],["/zh#install","安装"],["/zh/docs","文档"]]
+  : [["/#how","How it works"],["/#evidence","Evidence"],["/#mcp","MCP"],["/#install","Install"],["/docs","Docs"]];
 const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"中"};
 ---
 <!doctype html>
