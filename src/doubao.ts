@@ -138,6 +138,7 @@ export async function openLiveIme(): Promise<LiveIme> {
   const sentences = new Map<number, AsrSeg>();
   const t0 = Date.now();
 
+  let finish!: (err?: Error) => void;
   const done = new Promise<AsrSeg[]>((resolve, reject) => {
     const build = (): AsrSeg[] => {
       const sents = [...sentences.values()].filter(s => s.text);
@@ -149,7 +150,7 @@ export async function openLiveIme(): Promise<LiveIme> {
       }
       return last ? [{ start: 0, end: 0, text: last }] : [];
     };
-    const finish = (err?: Error) => { clearInterval(tick); try { ws.close(); } catch {} err ? reject(err) : resolve(build()); };
+    finish = (err?: Error) => { clearInterval(tick); try { ws.close(); } catch {} err ? reject(err) : resolve(build()); };
     const killer = setTimeout(() => finish(new Error("ime live timeout")), 600_000);
     const tick = setInterval(() => {
       if (stage !== "audio" || finSent) return;
@@ -161,7 +162,12 @@ export async function openLiveIme(): Promise<LiveIme> {
         f++;
         return;
       }
-      if (ended) { finSent = true; ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "FinishSession", rid })); }
+      if (ended) {
+        finSent = true;
+        try { ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "FinishSession", rid })); }
+        catch { return finish(); }
+        setTimeout(() => finish(), 8000).unref(); // server may never answer SessionFinished
+      }
     }, 20);
     ws.addEventListener("open", () => ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "StartTask", rid })));
     ws.addEventListener("message", async (ev: any) => {
@@ -213,7 +219,7 @@ export async function openLiveIme(): Promise<LiveIme> {
   let endPromise: Promise<AsrSeg[]> | null = null;
   return {
     push(pcm) { carry = Buffer.concat([carry, pcm]); while (carry.length >= FRAME) { q.push(carry.subarray(0, FRAME)); carry = carry.subarray(FRAME); } },
-    end() { if (carry.length) { q.push(Buffer.concat([carry, Buffer.alloc(FRAME - carry.length)])); carry = Buffer.alloc(0); } ended = true; return (endPromise ??= done); },
+    end() { if (carry.length) { q.push(Buffer.concat([carry, Buffer.alloc(FRAME - carry.length)])); carry = Buffer.alloc(0); } ended = true; if (stage !== "audio") queueMicrotask(() => finish()); return (endPromise ??= done); },
     onPartial(c) { cb = c; },
     onSentence(c) { scb = c; },
   };

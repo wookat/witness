@@ -96,8 +96,9 @@ export async function openLiveVg(): Promise<LiveVg> {
   let last = "", committed = "", lastEnd = 0, f = 0;
   const sentences = new Map<number, AsrSeg>();
 
+  let finish!: (err?: Error) => void;
   const done = new Promise<AsrSeg[]>((resolve, reject) => {
-    const finish = (err?: Error) => { clearInterval(tick); try { ws.close(); } catch {} err ? reject(err) : resolve(buildSegs()); };
+    finish = (err?: Error) => { clearInterval(tick); try { ws.close(); } catch {} err ? reject(err) : resolve(buildSegs()); };
     const buildSegs = (): AsrSeg[] => {
       const sents = [...sentences.values()].filter(s => s.text);
       if (sents.length) return sents;
@@ -117,8 +118,12 @@ export async function openLiveVg(): Promise<LiveVg> {
       }
       if (ended) {
         finSent = true;
-        ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "EndASR", payload: "{}", rid }));
-        ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "FinishSession", rid }));
+        try {
+          ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "EndASR", payload: "{}", rid }));
+          ws.send(marshalReq({ token: APP_KEY, svc: "VoiceGenie", method: "FinishSession", rid }));
+        } catch { return finish(); }
+        // server sometimes never answers SessionFinished — settle with the segs we already have
+        setTimeout(() => finish(), 8000).unref();
       }
     }, 20);
 
@@ -180,6 +185,8 @@ export async function openLiveVg(): Promise<LiveVg> {
     end() {
       if (carry.length) { q.push(Buffer.concat([carry, Buffer.alloc(FRAME - carry.length)])); carry = Buffer.alloc(0); }
       ended = true;
+      // stream never reached the audio stage (or socket already dead): no SessionFinished will come
+      if (stage !== "audio") queueMicrotask(() => finish());
       return (endPromise ??= done);
     },
     onPartial(c) { cb = c; },

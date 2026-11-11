@@ -33,6 +33,10 @@ const noisy = (e: Ev): boolean => {
   return false;
 };
 
+type Res = Extract<Ev, { kind: "res" }>;
+// req→res pairing, filled per-render so a merged line shows the round trip
+let resOfReq: Map<Ev, Res> | undefined;
+
 function line(e: Ev): string | null {
   switch (e.kind) {
     case "nav": return `- \`${fmt(e.t)}\` **NAV** ${e.url}${e.title ? ` · “${esc(e.title)}”` : ""}`;
@@ -42,7 +46,12 @@ function line(e: Ev): string | null {
     case "key": return `- \`${fmt(e.t)}\` **KEY** ${e.key}${e.sel ? ` on \`${e.sel}\`` : ""}`;
     case "console": return `- \`${fmt(e.t)}\` **CONSOLE ${e.level.toUpperCase()}** ${esc(e.text)}${e.stack ? `\n  \`\`\`\n  ${e.stack.slice(0, 600)}\n  \`\`\`` : ""}`;
     case "error": return `- \`${fmt(e.t)}\` **ERROR** ${esc(e.message)}${e.stack ? `\n  \`\`\`\n  ${e.stack.slice(0, 600)}\n  \`\`\`` : ""}`;
-    case "req": return `- \`${fmt(e.t)}\` **NET →** ${e.method} ${e.url} (${e.resType})`;
+    case "req": {
+      const r = resOfReq?.get(e);
+      if (!r) return `- \`${fmt(e.t)}\` **NET →** ${e.method} ${e.url} (${e.resType})`;
+      const bad = r.status === 0 || r.status >= 400;
+      return `- \`${fmt(e.t)}\` **NET** ${e.method} ${e.url} → ${r.status === 0 ? "FAILED" : `**${r.status}**`}${r.timing != null ? ` · ${r.timing}ms` : ""}${r.bodyPath ? ` · [body](${r.bodyPath})` : ""}${bad ? " ⚠️" : ""}`;
+    }
     case "res": {
       const bad = e.status === 0 || e.status >= 400;
       return `- \`${fmt(e.t)}\` **NET ←** ${e.status === 0 ? "FAILED" : `**${e.status}**`} ${e.url}${e.timing != null ? ` · ${e.timing}ms` : ""}${e.bodyPath ? ` · [body](${e.bodyPath})` : ""}${bad ? " ⚠️" : ""}`;
@@ -138,6 +147,36 @@ function burstRows(evs: Ev[]): Row[] {
 export function renderMarkdown(events: Ev[], meta: Meta, transcript?: Transcript, assoc?: AssocMap): string {
   const blocks = groupBlocks(events);
 
+  // collapse scroll runs: scrolls separated only by ambient events within 2.5s → one line
+  const SCROLL_RUN_KILL = new Set(["click", "key", "input", "nav", "mark", "issue"]);
+  const scrollDrop = new Set<Ev>();
+  const scrollRun = new Map<Ev, { y0: number; yN: number; n: number }>();
+  {
+    let cur: { first: Ev; y0: number; yN: number; n: number; lastT: number } | null = null;
+    for (const e of events) {
+      if (e.kind === "scroll") {
+        const y = (e as { y: number }).y;
+        if (cur && e.t - cur.lastT <= 2500) { cur.yN = y; cur.n++; cur.lastT = e.t; scrollDrop.add(e); }
+        else { cur = { first: e, y0: y, yN: y, n: 1, lastT: e.t }; scrollRun.set(e, cur); }
+      } else if (SCROLL_RUN_KILL.has(e.kind)) cur = null;
+    }
+  }
+
+  // pair each res with the nearest earlier unmatched req on the same url → one NET line
+  const pairedRes = new Set<Ev>();
+  resOfReq = new Map();
+  {
+    const open: Ev[] = [];
+    for (const e of events) {
+      if (e.kind === "req") open.push(e);
+      else if (e.kind === "res") {
+        for (let i = open.length - 1; i >= 0; i--) {
+          if ((open[i] as { url: string }).url === e.url) { resOfReq.set(open[i], e); open.splice(i, 1); pairedRes.add(e); break; }
+        }
+      }
+    }
+  }
+
   const parts: string[] = [
     `# Witness Session — ${new Date(meta.startedAt).toISOString().replace("T", " ").slice(0, 19)}`,
     `- **App:** ${meta.url}${meta.title ? ` · ${meta.title}` : ""}`,
@@ -166,23 +205,46 @@ export function renderMarkdown(events: Ev[], meta: Meta, transcript?: Transcript
     const useAssoc = assoc != null && saysIn.some(s => assoc.has(s));
     const uniqTitles = [...new Set(titles)];
     if (uniqTitles.length) parts.push(`**→ ${uniqTitles.join(" · ")}**`);
-    const vis = b.evs.filter(e => !noisy(e))
+    const vis = b.evs.filter(e => !noisy(e) && !pairedRes.has(e) && !scrollDrop.has(e) && e.kind !== "shot" && e.kind !== "_ui")
       .filter((e, i, a) => !(e.kind === "nav" && a[i - 1]?.kind === "nav" && (a[i - 1] as any).url === e.url))
       .filter(e => !useAssoc || e.kind === "say" || hits.has(e));
     const hidden = b.evs.length - vis.length;
     const lines: string[] = [];
-    for (const r of burstRows(vis)) {
+    const rows = burstRows(vis);
+    for (let ri = 0; ri < rows.length; ri++) {
+      const r = rows[ri];
+      // scroll lead of a run → y=a→b ×n (run info computed above)
+      if (r.lead.kind === "scroll" && scrollRun.has(r.lead)) {
+        const s = scrollRun.get(r.lead)!;
+        lines.push(s.n > 1
+          ? `- \`${fmt(r.lead.t)}\` **SCROLL** y=${s.y0}→${s.yN} ×${s.n}`
+          : line(r.lead)!);
+        continue;
+      }
+      // collapse consecutive identical mutations on the same element
+      if (r.lead.kind === "mut") {
+        const key = `${(r.lead as { sel: string }).sel}|${(r.lead as { summary?: string }).summary}`;
+        let n = ((r.lead as { n?: number }).n ?? 1);
+        while (ri + 1 < rows.length && rows[ri + 1].lead.kind === "mut" &&
+               `${(rows[ri + 1].lead as { sel: string }).sel}|${(rows[ri + 1].lead as { summary?: string }).summary}` === key) {
+          n += ((rows[++ri].lead as { n?: number }).n ?? 1);
+        }
+        const l = line(r.lead);
+        if (l) lines.push(l.replace(/ ×\d+$/, "") + (n > 1 ? ` ×${n}` : ""));
+        continue;
+      }
       const l = line(r.lead);
       if (l) lines.push(l);
       if (!r.burst.length && isTrigger(r.lead))
         lines.push(`  - _（点击后 ${BURST_MS / 1000}s 内页面无任何反应——这本身就是证据）_`);
       for (const be of r.burst.slice(0, 8)) {
+        if (pairedRes.has(be)) continue;
         const bl = line(be);
         if (bl) lines.push("  " + bl.replace(/\n/g, "\n  "));
       }
       if (r.burst.length > 8) lines.push(`  - _… +${r.burst.length - 8} more in burst — see events.jsonl_`);
     }
-    if (hidden > 0) lines.push(`- _… ${hidden} ${useAssoc ? "other" : "static-asset/dev"} events hidden — see events.jsonl_`);
+    if (hidden > 0) lines.push(`- _… ${hidden} ${useAssoc ? "other" : "paired/noise/collapsed"} events hidden — see events.jsonl_`);
     parts.push(...(lines.length ? lines : ["- _(no recorded activity)_"]));
   }
 

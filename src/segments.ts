@@ -19,6 +19,7 @@ export interface Segment {
   shots: string[];                                 // nearest screenshot files (≤3)
   doms: string[];                                  // nearest dom snapshots (≤2)
   counts: Record<string, number>;                  // ambient event counts in window
+  gaps: string[];                                  // evidence-completeness hints, e.g. speech claims an error but none was captured
 }
 
 const RUN_BREAK = new Set(["click", "mark", "nav", "input", "key", "error", "issue"]);
@@ -43,14 +44,30 @@ export function sayRuns(events: Ev[]): Say[][] {
 const isDead = (c: Click, events: Ev[]) =>
   !events.some(e => BURST_KINDS.has(e.kind) && e.t > c.t && e.t - c.t <= BURST_MS);
 
-const near = (events: Ev[], kind: "shot" | "dom", from: number, to: number, limit: number): string[] =>
-  events.filter(e => e.kind === kind && e.t >= from - 3000 && e.t <= to + 6000)
+const near = (events: Ev[], kind: "shot" | "dom", from: number, to: number, limit: number): string[] => {
+  // mark-attached shots first (red box on the exact element the user pointed at)
+  const attached = kind === "shot"
+    ? events.filter((e): e is Mark => e.kind === "mark" && e.t >= from - 1500 && e.t <= to + 3000)
+        .map(e => e.shot).filter((s): s is string => !!s)
+    : [];
+  const rest = events.filter(e => e.kind === kind && e.t >= from - 3000 && e.t <= to + 6000)
     .sort((a, b) => {
       const mid = (from + to) / 2;
       return Math.abs(a.t - mid) - Math.abs(b.t - mid);
     })
-    .slice(0, limit)
     .map(e => (e as { path: string }).path);
+  return [...new Set([...attached, ...rest])].slice(0, limit);
+};
+
+/** speech claims something the event window doesn't show → flag the gap instead of letting the agent miss it */
+const gapHints = (text: string, clicks: number, errors: number): string[] => {
+  const gaps: string[] = [];
+  if (/报错|错误|异常|崩溃|崩了|白屏/.test(text) && !errors)
+    gaps.push("语音提到报错/异常，但窗口内无 console/error/4xx–5xx 事件——证据可能没录到或转写有误");
+  if (/没反应|点不动|不响应|失灵/.test(text) && !clicks)
+    gaps.push("语音说点击无反应，但窗口内无点击事件——点击可能在窗外或未被录到");
+  return gaps;
+};
 
 /** collect 2+-char CJK / 4+-char latin tokens the user spoke, for text matching */
 const tokensOf = (s: string) =>
@@ -102,6 +119,7 @@ export function extractSegments(events: Ev[]): Segment[] {
       shots: near(events, "shot", from, to, 3),
       doms: near(events, "dom", from, to, 2),
       counts,
+      gaps: gapHints(r.map(s => s.text).join(" "), clicks.length, errors.length),
     };
   });
 }
@@ -130,6 +148,8 @@ export function renderSegmentsIndex(segments: Segment[], meta: { url: string; du
       lines.push(`- **${i.deadClicks.length} 次点击无任何反应** —— 死 UI 硬证据`);
     if (i.errors.length)
       lines.push(`- 错误: ${i.errors.map(e => e.kind === "res" ? `${(e as { status: number }).status} ${(e as { url: string }).url.slice(0, 50)}` : e.kind).join(" · ")}`);
+    if (i.gaps.length)
+      lines.push(`- ⚠ 证据缺口: ${i.gaps.join(" · ")}`);
     if (i.shots.length) lines.push(`- 截图: ${i.shots.join(" · ")}`);
     if (i.doms.length) lines.push(`- DOM: ${i.doms.join(" · ")}`);
     lines.push(`- 详情: segments/${String(i.n).padStart(2, "0")}.md`, "");
@@ -169,6 +189,11 @@ export function renderSegmentFile(i: Segment, meta: { url: string }): string {
     lines.push("## 错误");
     for (const e of i.errors)
       lines.push(`- [${fmt(e.t)}] ${e.kind.toUpperCase()} ${e.kind === "res" ? `${(e as { status: number }).status} ${(e as { url: string }).url}` : e.kind === "console" ? (e as { text: string }).text : (e as { message?: string }).message ?? ""}`);
+    lines.push("");
+  }
+  if (i.gaps.length) {
+    lines.push("## 证据缺口（可能录不到证据）");
+    for (const g of i.gaps) lines.push(`- ⚠ ${g}`);
     lines.push("");
   }
   lines.push("## 视觉证据（先看这些）");
