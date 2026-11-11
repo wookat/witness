@@ -2,17 +2,17 @@
 import Base from "../layouts/Base.astro";
 import Term from "../components/Term.astro";
 import Card from "../components/Card.astro";
+import DocsHead from "../components/DocsHead.astro";
 const GH = "https://github.com/wookat/witness";
+const chapters = [
+  ["01","what it is","#what"],["02","install","#install2"],["03","configure","#config"],
+  ["04","use it","#use"],["05","the package","#output"],["06","tell your agent","#agent"],["07","try it","#try"],
+];
 ---
 <Base title="Witness Docs — install, record, hand evidence to your agent">
-<section style="padding:120px 0 40px"><div class="wrap">
-  <div class="kicker">Docs</div>
-  <h2 style="margin-bottom:10px">You talk. Your agent runs the commands.</h2>
-  <p class="lede">What Witness is, how your agent installs and drives it for you, and exactly what lands in the evidence package.</p>
-  <p style="margin-top:18px;font:500 12.5px var(--mono);color:var(--faint)">
-    <a href="#what">01 what</a> · <a href="#install2">02 install</a> · <a href="#config">03 configure</a> · <a href="#use">04 use</a> · <a href="#output">05 the package</a> · <a href="#agent">06 tell your agent</a> · <a href="#try">07 try it</a>
-  </p>
-</div></section>
+<DocsHead title="You talk. Your agent runs the commands."
+  lede="What Witness is, how your agent installs and drives it for you, and exactly what lands in the evidence package."
+  chapters={chapters} />
 
 <div class="ruler"><b class="a">docs</b><i style="--x:4%"></i></div>
 
@@ -34,8 +34,8 @@ const GH = "https://github.com/wookat/witness";
   <div class="kicker">02 · Install</div>
   <h2 class="rv">You don't install it. Your agent does.</h2>
   <p class="lede rv" data-d="60">The intended flow: <b>you give the instruction, the agent types the commands.</b> Witness is a CLI (<code>wit</code>) that drives your system Edge/Chrome — no browser download, no cloud account, no keys.</p>
-  <Card icon="terminal" title="Say this to your agent" d="80"><pre style="margin-top:4px;font:13px/1.8 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap">Install witness: `npm i -g github:wookat/witness`,
-verify with `wit --version`. Requires Node 18+.</pre></Card>
+  <Term label="say this to your agent" d="80">Install witness: `npm i -g github:wookat/witness`,
+verify with `wit --version`. Requires Node 18+.</Term>
   <div class="grid g2" style="margin-top:24px">
     <Card icon="box" title="What lands on your machine" d="0"><b>the <code>wit</code> CLI</b> — recorder, session renderer, transcriber, MCP server in one binary. Config at <code>~/.witness/config.json</code>, ASR creds at <code>~/.witness/doubao-creds.json</code>. Evidence always lands in the <b>current project's</b> <code>.witness/sessions/</code>.</Card>
     <Card icon="file" title="Teach an agent that doesn't know it" d="60">The repo ships <code>skills/witness/SKILL.md</code> — a ready-made skill file. Drop it into <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code> and phrases like "帮我录一段" trigger the whole workflow. <a href={GH + "/blob/main/skills/witness/SKILL.md"}>View it ↗</a></Card>
@@ -70,14 +70,14 @@ WIT_CDP=&lt;port&gt;   expose CDP so an agent can drive
 <section id="use" class="alt"><div class="wrap">
   <div class="kicker">04 · Use it</div>
   <h2 class="rv">Three sentences. That's the whole loop.</h2>
-  <Card icon="terminal" title="The conversation" d="60"><pre style="margin-top:4px;font:13px/1.9 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap">you   → "record http://localhost:5173 for me"
-agent → runs `wit start`, managed browser opens
+  <Term label="the conversation" d="60"><span class="c-say">you</span>   → "record http://localhost:5173 for me"
+<span class="c-ok">agent</span> → <span class="c-dim">runs `wit start`, managed browser opens</span>
 
-you   → use the product, talk out loud, mark problems
-you   → press ■ (or tell the agent "stop")
+<span class="c-say">you</span>   → <span class="c-dim">use the product, talk out loud, mark problems</span>
+<span class="c-say">you</span>   → <span class="c-dim">press ■ (or tell the agent "stop")</span>
 
-you   → "fix the issues from that recording"
-agent → reads session.md, fixes from the evidence</pre></Card>
+<span class="c-say">you</span>   → "fix the issues from that recording"
+<span class="c-ok">agent</span> → <span class="c-dim">reads session.md, fixes from the evidence</span></Term>
   <div class="grid g2" style="margin-top:30px">
     <Card icon="eye" n="YOUR PART — inside the browser" title="Talk &amp; point" d="0"><pre style="font:12.5px/2 var(--mono)">speak        every observation → timestamped SAY
 Ctrl+Click   mark an element (selector + shot + DOM)

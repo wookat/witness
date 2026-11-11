@@ -6,5 +6,8 @@ const { n, title, d, icon } = Astro.props;
   {icon && <span class="ic"><Icon name={icon} size={18} /></span>}
   {n && <div class="n">{n}</div>}
   <h3><slot name="title">{title}</slot></h3>
-  <p><slot /></p>
+  <div class="bd"><slot /></div>
 </div>
+<style>
+  .card .bd{font-size:14px;color:var(--dim)}
+</style>

@@ -1,0 +1,31 @@
+---
+// Docs masthead — pill + display title + chapter-nav strip.
+// Shares the landing's flight-recorder vocabulary (kicker dot, mono, hover lift).
+const { lang = "en", title, lede, chapters = [] } = Astro.props;
+---
+<header class="dhead">
+  <div class="wrap">
+    <span class="dpill rv"><i></i>{lang === "zh" ? "使用文档" : "DOCS"}</span>
+    <h1 class="dt rv" data-d="80">{title}</h1>
+    <p class="lede rv" data-d="160">{lede}</p>
+    <nav class="chaps rv" data-d="240" aria-label="chapters">
+      {chapters.map(([n, label, href]) => (
+        <a class="ch" href={href}><b>{n}</b><span>{label}</span><i class="ar">→</i></a>
+      ))}
+    </nav>
+  </div>
+</header>
+<style>
+  .dhead{padding:132px 0 34px}
+  .dpill{display:inline-flex;align-items:center;gap:8px;font:600 11px var(--mono);letter-spacing:.16em;color:var(--rec);background:var(--rec-soft);border:1px solid #f3d3d3;border-radius:999px;padding:6px 15px;margin-bottom:26px}
+  .dpill i{width:6px;height:6px;border-radius:50%;background:var(--rec)}
+  .dt{font-size:clamp(34px,5.4vw,56px);font-weight:800;letter-spacing:-.03em;line-height:1.08;margin-bottom:16px}
+  .dhead .lede{max-width:660px}
+  .chaps{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-top:40px}
+  .ch{display:flex;align-items:baseline;gap:9px;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px;transition:border-color .18s,transform .18s,box-shadow .18s}
+  .ch b{font:600 11px var(--mono);color:var(--rec)}
+  .ch span{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+  .ch .ar{margin-left:auto;font:500 11px var(--mono);color:var(--faint);font-style:normal;transition:transform .18s,color .18s}
+  .ch:hover{border-color:#c9c6bc;transform:translateY(-2px);box-shadow:0 10px 26px #17181c0f}
+  .ch:hover .ar{transform:translateX(2px);color:var(--rec)}
+</style>

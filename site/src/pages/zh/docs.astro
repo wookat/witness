@@ -2,17 +2,17 @@
 import Base from "../../layouts/Base.astro";
 import Term from "../../components/Term.astro";
 import Card from "../../components/Card.astro";
+import DocsHead from "../../components/DocsHead.astro";
 const GH = "https://github.com/wookat/witness";
+const chapters = [
+  ["01","是什么","#what"],["02","安装","#install2"],["03","配置","#config"],
+  ["04","使用","#use"],["05","证据包","#output"],["06","交给 AI","#agent"],["07","演示","#try"],
+];
 ---
 <Base lang="zh" title="Witness 文档 — 安装、录制、把证据交给 agent">
-<section style="padding:120px 0 40px"><div class="wrap">
-  <div class="kicker">文档</div>
-  <h2 style="margin-bottom:10px">你动嘴，命令让 agent 去敲。</h2>
-  <p class="lede">它是什么、怎么让 agent 帮你装和用、以及证据包里到底有什么。</p>
-  <p style="margin-top:18px;font:500 12.5px var(--mono);color:var(--faint)">
-    <a href="#what">01 是什么</a> · <a href="#install2">02 安装</a> · <a href="#config">03 配置</a> · <a href="#use">04 使用</a> · <a href="#output">05 证据包</a> · <a href="#agent">06 交给 AI</a> · <a href="#try">07 演示</a>
-  </p>
-</div></section>
+<DocsHead lang="zh" title="你动嘴，命令让 agent 去敲。"
+  lede="它是什么、怎么让 agent 帮你装和用、以及证据包里到底有什么。"
+  chapters={chapters} />
 
 <div class="ruler"><b class="a">docs</b><i style="--x:4%"></i></div>
 
@@ -34,8 +34,8 @@ const GH = "https://github.com/wookat/witness";
   <div class="kicker">02 · 安装</div>
   <h2 class="rv">不用你装，让 agent 装。</h2>
   <p class="lede rv" data-d="60">正确姿势是<b>你下指令，agent 敲命令</b>。Witness 本体是 CLI（<code>wit</code>），驱动你系统里的 Edge/Chrome——不下载浏览器、不需要云账号、不要 key。</p>
-  <Card icon="terminal" title="对你的 agent 说一句" d="80"><pre style="margin-top:4px;font:13px/1.8 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap">安装 witness：执行 `npm i -g github:wookat/witness`，
-用 `wit --version` 验证一下。需要 Node 18+。</pre></Card>
+  <Term label="对你的 agent 说一句" d="80">安装 witness：执行 `npm i -g github:wookat/witness`，
+用 `wit --version` 验证一下。需要 Node 18+。</Term>
   <div class="grid g2" style="margin-top:24px">
     <Card icon="box" title="装到你机器上的是什么" d="0"><b><code>wit</code> 命令行</b>——录制器、session 渲染器、转写器、MCP server 四合一。配置在 <code>~/.witness/config.json</code>，ASR 凭证缓存 <code>~/.witness/doubao-creds.json</code>。证据永远落在<b>当前项目</b>的 <code>.witness/sessions/</code>。</Card>
     <Card icon="file" title="教不认识它的 agent" d="60">仓库自带 <code>skills/witness/SKILL.md</code>——现成的技能文件，放进 <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code>，之后说"帮我录一段"就能触发整套流程。<a href={GH + "/blob/main/skills/witness/SKILL.md"}>查看 ↗</a></Card>
@@ -70,14 +70,14 @@ WIT_CDP=&lt;端口&gt;   开 CDP 口，agent 可接管录制中的
 <section id="use" class="alt"><div class="wrap">
   <div class="kicker">04 · 使用</div>
   <h2 class="rv">三句话，就是完整闭环。</h2>
-  <Card icon="terminal" title="你和 agent 的对话" d="60"><pre style="margin-top:4px;font:13px/1.9 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap">你    → "帮我录一段 http://localhost:5173"
-agent → 执行 `wit start`，托管浏览器弹出
+  <Term label="你和 agent 的对话" d="60"><span class="c-say">你</span>    → "帮我录一段 http://localhost:5173"
+<span class="c-ok">agent</span> → <span class="c-dim">执行 `wit start`，托管浏览器弹出</span>
 
-你    → 正常使用产品，看到什么说什么，顺手标记问题
-你    → 点工具栏 ■（或对 agent 说"停了"）
+<span class="c-say">你</span>    → <span class="c-dim">正常使用产品，看到什么说什么，顺手标记问题</span>
+<span class="c-say">你</span>    → <span class="c-dim">点工具栏 ■（或对 agent 说"停了"）</span>
 
-你    → "按刚才录的把问题修了"
-agent → 读 session.md，照证据动手</pre></Card>
+<span class="c-say">你</span>    → "按刚才录的把问题修了"
+<span class="c-ok">agent</span> → <span class="c-dim">读 session.md，照证据动手</span></Term>
   <div class="grid g2" style="margin-top:30px">
     <Card icon="eye" n="你的部分 —— 在浏览器里" title="说 + 指" d="0"><pre style="font:12.5px/2 var(--mono)">说话         每句观察 → 带时间戳的 SAY
 Ctrl+点击    标记元素（selector + 截图 + DOM 快照）
