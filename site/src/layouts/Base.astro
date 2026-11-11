@@ -60,6 +60,7 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"ä¸
     background:#fffffff2;backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:999px;
     padding:0 10px 0 20px;box-shadow:0 6px 24px #17181c10;transition:box-shadow .3s}
   nav.sc .wrap{box-shadow:0 10px 34px #17181c1e}
+  .brand{display:inline-flex;align-items:center}
   nav .links{margin-left:auto;display:flex;align-items:center;gap:20px;font-size:13px;font-weight:500}
   nav .links a{color:var(--dim);text-decoration:none;transition:color .15s}
   nav .links a:hover{color:var(--ink)}
@@ -136,7 +137,7 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"ä¸
 </head>
 <body>
 <nav id="nav"><div class="wrap">
-  <a href="/" style="text-decoration:none"><Logo /></a>
+  <a href="/" class="brand" style="text-decoration:none"><Logo /></a>
   <div class="links">
     {nav.map(([href,label]) => <a href={href}>{label}</a>)}
     <a href={langToggle.href} class="lang">{langToggle.label}</a>
@@ -148,7 +149,7 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"ä¸
 
 <footer><div class="wrap">
   <div class="ftop">
-    <a href={lang === "zh" ? "/zh" : "/"} style="text-decoration:none"><Logo size={24}/></a>
+    <a href={lang === "zh" ? "/zh" : "/"} class="brand" style="text-decoration:none"><Logo size={24}/></a>
     <span class="fl">
       <a href={GH}>GitHub</a>
       <a href={GH + "/issues"}>Issues</a>
