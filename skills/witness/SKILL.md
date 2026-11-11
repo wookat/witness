@@ -14,7 +14,7 @@ description: 录制产品体验证据链。用户说"帮我录一段/体验下�
 
 ```bash
 wit start <url>                    # 全局已 npm link，任意目录可用
-# 常用 flag：--duration 60（自动停）· --lang en-US（英文站）· --shot-interval 15000 · --no-transcribe
+# 常用 flag：--duration 60（自动停）· --lang en-US（英文站）· --asr <engine> · --shot-interval 15000 · --no-transcribe
 ```
 
 - dev-url 从项目 package.json scripts / vite 端口推（通常 `http://localhost:5173`）
@@ -23,13 +23,15 @@ wit start <url>                    # 全局已 npm link，任意目录可用
 
 ## 语音管线（免配置默认）
 
-- Edge 内置 SpeechRecognition 实时识别（免费、国内可用）→ say 事件实时落时间轴
+- 实时字幕：云端流式 ASR，`auto` 档逐级兜底 **doubao-web（默认，标点最好）→ doubao-ime（句级时间戳+ITN 数字）→ 浏览器 SR**。say 事件带 segStart/segEnd 时间戳落时间轴
+- 引擎切换（三处等价）：`wit config asr auto|doubao-web|doubao-ime|sr|off`（持久）· `--asr <engine>` / `WIT_ASR`（单次）· MCP `get_asr`/`set_asr`（agent 自己查自己切）。`off` = 不要实时字幕，终稿照出
+- 停止时终稿链：OPENAI_API_KEY → whisper-1 词级时间戳；无 key 走 bcut（B站必剪，免费无需 key）
 - `ZHIPU_API_KEY`（bigmodel.cn 免费）→ 停止时 GLM-4-Flash 按"页面元素词表"纠错（同音字/断句）
-- `OPENAI_API_KEY` → 走 whisper-1 词级时间戳（更准）；`GROQ_API_KEY` → groq whisper（国内被墙勿用）
 - `wit transcribe <sessionDir>` / `wit correct <sessionDir>`：对已录 session 重跑转写/纠错
 - `wit associate <sessionDir>`（需 ZHIPU_API_KEY）：LLM 给每段 SAY 挑相关证据→`assoc.json`，session.md 只显示命中事件、其余折叠；`wit start --associate` 录制停止时自动跑
 - `wit recover <sessionDir>`：崩溃/中断后从 events.jsonl 重建 session.md/review.html/PROMPT.md
-- `wit mcp [sessionDir]`：stdio MCP server——agent 可配进 MCP 客户端按需查证据（`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_body`）
+- `wit mcp [sessionDir]`：stdio MCP server——agent 可配进 MCP 客户端按需查证据，共 10 个工具：`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_asr`/`set_asr`
+- `WIT_CDP=<port>`（env）：给托管浏览器开 CDP 口——agent 可连上录制中的页面亲自当测试者（驱动点击/标记，全程被录）
 
 ## 消费证据（修问题）
 

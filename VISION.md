@@ -73,7 +73,7 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 | 因果爆发链 | ✅ 点击后的请求+body/响应/console/状态变化全记；session.md 渲染层把 ~1.8s 后果缩进归组 | ✅ "点了没反应"显式渲染为"无任何反应——这本身就是证据" |
 | 语音锚点时间轴 | ✅ SAY 块 + 时间窗证据挂载 | ✅ 形态与设想一致 |
 | **按语义智能挑证据** | ✅ `--associate` / `wit associate`：LLM 从 ±5s 候选事件挑相关项→`assoc.json`，session.md 只显示命中、其余折叠；无 key 回退时间窗 | 已上线但属可选层；默认渲染仍是确定性时间窗（语义判断也可留给下游 agent） |
-| agent 主动查询证据 | ✅ `wit mcp`：stdio MCP server，7 个工具（overview/list_says/session_md/events_around/get_errors/get_shot/get_body） | ✅ 已上线 |
+| agent 主动查询证据 | ✅ `wit mcp`：stdio MCP server，10 个工具（overview/list_says/session_md/events_around/get_errors/get_shot/get_dom_state/get_body/get_asr/set_asr） | ✅ 已上线 |
 | 元素/区域标记 | ✅ Ctrl+点击 / M inspect / 拖拽圈选 | ✅ 超出设想（组件链、红框截图） |
 | 多问题一段录 | ✅ N 键 Issue 边界（可选辅助） | ✅ |
 | 语音质量 | ✅ Edge SR 实时（免费）+ 可选 whisper/GLM | SR 准确率是天花板；原话永不改写 |
@@ -89,7 +89,7 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 ## 六、V2+ 路线（向理想版逼近的顺序）
 
 1. ~~**LLM 证据关联**~~ ✅ `--associate`/`wit associate` 已实现（挂载建议只动展示，不改原文）
-2. ~~**MCP server**~~ ✅ `wit mcp` 已实现（7 个 stdio 工具）
+2. ~~**MCP server**~~ ✅ `wit mcp` 已实现（10 个 stdio 工具）
 3. **更强转写**——火山 seed-asr（豆包同源）/ 讯飞 / Scribe 适配器（transcribe.ts 已留 backend 抽象）
 4. **浏览器插件版**——脱离 Playwright，日常浏览器即录（最初的设想形态）
 5. ~~**rrweb 完整回放**~~ ✅ 已实现——`rrweb.jsonl` + review.html 内嵌播放器（胶片条仍是轻量伪回放）

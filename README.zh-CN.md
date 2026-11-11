@@ -52,6 +52,7 @@ wit correct <dir>                 # 重跑 LLM 纠错
 wit associate <dir>               # LLM 给每段语音挑相关证据（需 ZHIPU_API_KEY）
 wit recover <dir>                 # 崩溃后从 events.jsonl 重建产物
 wit mcp [dir]                     # stdio MCP server
+wit config asr <engine>           # 实时 ASR：auto|doubao-web|doubao-ime|sr|off
 ```
 
 ## 证据包 `.witness/sessions/<ts>_<host>/`
@@ -75,13 +76,13 @@ audio.webm / transcript.json
 它按需查询而不是吞全文：
 
 `session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
-`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)`
+`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_asr` · `set_asr`
 
 ## 原则
 
 - **证据不改写**——原话原样落盘；合并/纠错/关联只是展示层建议。
 - **证据 ≠ 意图**——没有语音锚点的行为不会被当成 bug 汇报。
-- **本地优先**——默认确定性记录 + Edge SR；LLM 全是可选层。
+- **本地优先**——默认确定性记录；实时字幕走免费云端流式 ASR（`auto` = doubao-web → doubao-ime → 浏览器 SR 兜底，`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）；LLM 全是可选层。
 - **隐私内置**——密码四通道打码；POST 体凭证字段脱敏；`WIT_NO_BODIES=1` 关响应体；`P` 全冻结；`.witness/` 自动 gitignore。
 
 ## 开发

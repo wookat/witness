@@ -33,7 +33,7 @@ const GH = "https://github.com/wookat/witness";
 
 <div class="stats">
   <div class="stat"><b>3</b><span>recording tracks</span></div>
-  <div class="stat"><b>8</b><span>MCP tools</span></div>
+  <div class="stat"><b>10</b><span>MCP tools</span></div>
   <div class="stat"><b>0</b><span>cloud keys needed</span></div>
   <div class="stat"><b>17</b><span>tests green</span></div>
   <div class="stat"><b>MIT</b><span>open source</span></div>
@@ -79,6 +79,7 @@ const GH = "https://github.com/wookat/witness";
     <Card icon="zap" d="0"><span slot="title"><code>get_errors</code></span>Console errors, page errors, HTTP ≥ 400.</Card>
     <Card icon="box" d="40"><span slot="title"><code>get_shot / get_body</code></span>Screenshot frames and response payloads on demand.</Card>
     <Card icon="api" d="80"><span slot="title"><code>session_md</code></span>The rendered timeline when the agent wants it all.</Card>
+    <Card icon="mic" d="100"><span slot="title"><code>get_asr / set_asr</code></span>The agent checks and flips the live speech engine itself — no human in the config loop.</Card>
   </div>
 </div></section>
 
@@ -88,7 +89,7 @@ const GH = "https://github.com/wookat/witness";
   <div class="kicker">07 · Principles</div>
   <h2 class="rv">Evidence never lies.</h2>
   <div class="grid g2">
-    <Card icon="terminal" title="Local-first, zero config" d="0">System Edge/Chrome + Edge SpeechRecognition — free real-time transcription, no API key, works anywhere. Cloud ASR and LLM polish are optional layers, never the pipeline.</Card>
+    <Card icon="terminal" title="Local-first, zero config" d="0">System Edge/Chrome + free streaming ASR (doubao-web → doubao-ime → browser SR, switchable via <code>wit config asr</code>). No API key needed; LLM polish is an optional layer, never the pipeline.</Card>
     <Card icon="file" title="Words are never rewritten" d="80">Your speech lands verbatim in events.jsonl. Merging, correction and association are display-layer suggestions — the raw testimony stays auditable.</Card>
     <Card icon="eye" title="Evidence ≠ intent" d="0">Clicks and scrolls are facts, not complaints. Without a spoken anchor, agents are told explicitly: never infer a bug from behavior alone.</Card>
     <Card icon="shield" title="Privacy engineered in" d="80">Password fields masked in four channels; POST bodies redact credential fields; P freezes everything, mic included; <code>WIT_NO_BODIES</code> for sensitive apps.</Card>

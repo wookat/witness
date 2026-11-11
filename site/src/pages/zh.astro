@@ -44,7 +44,7 @@ const zhSays = [
 
 <div class="stats">
   <div class="stat"><b>3</b><span>条记录线</span></div>
-  <div class="stat"><b>8</b><span>个 MCP 工具</span></div>
+  <div class="stat"><b>10</b><span>个 MCP 工具</span></div>
   <div class="stat"><b>0</b><span>云端 key 依赖</span></div>
   <div class="stat"><b>17</b><span>项测试通过</span></div>
   <div class="stat"><b>MIT</b><span>开源协议</span></div>
@@ -93,6 +93,7 @@ const zhSays = [
     <Card icon="zap" d="0"><span slot="title"><code>get_errors</code></span>console 报错、页面异常、HTTP ≥400。</Card>
     <Card icon="box" d="40"><span slot="title"><code>get_shot / get_body</code></span>按需取截图帧和响应体。</Card>
     <Card icon="api" d="80"><span slot="title"><code>session_md</code></span>要全文时返回渲染好的时间轴。</Card>
+    <Card icon="mic" d="100"><span slot="title"><code>get_asr / set_asr</code></span>agent 自己查、自己切语音引擎——配置环里不需要人。</Card>
   </div>
 </div></section>
 
@@ -102,7 +103,7 @@ const zhSays = [
   <div class="kicker">07 · 原则</div>
   <h2 class="rv">证据不说谎。</h2>
   <div class="grid g2">
-    <Card icon="terminal" title="本地优先，零配置" d="0">系统 Edge/Chrome + Edge SpeechRecognition——免费实时转写，不需要任何 API key，国内可用。云端 ASR 和 LLM 是可选增强层，永远不是主流程。</Card>
+    <Card icon="terminal" title="本地优先，零配置" d="0">系统 Edge/Chrome + 免费流式 ASR（doubao-web → doubao-ime → 浏览器 SR 兜底，<code>wit config asr</code> 可切）。不需要任何 API key；LLM 只是可选增强层，永远不是主流程。</Card>
     <Card icon="file" title="原话不改写" d="80">你的语音逐字落进 events.jsonl。合并、纠错、语义关联都只是展示层建议——原始证词永远可审计。</Card>
     <Card icon="eye" title="证据 ≠ 意图" d="0">点击和滚动是事实不是抱怨。没有语音锚点时，明确告诉 agent：永远不要从行为推断 bug。</Card>
     <Card icon="shield" title="隐私工程化" d="80">密码字段四通道打码；POST 体自动脱敏凭证字段；P 暂停期全部冻结包括麦克风；敏感应用可用 <code>WIT_NO_BODIES</code>。</Card>

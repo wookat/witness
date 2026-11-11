@@ -60,6 +60,7 @@ wit correct <dir>                 # re-run LLM text polish
 wit associate <dir>               # LLM picks relevant evidence per SAY (ZHIPU_API_KEY)
 wit recover <dir>                 # rebuild artifacts after a crash
 wit mcp [dir]                     # stdio MCP server over the evidence
+wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
 ```
 
 ## The evidence package — `.witness/sessions/<ts>_<host>/`
@@ -83,14 +84,16 @@ audio.webm / transcript.json
 (Claude Code, Cursor, Devin) at it and it pulls exactly what it needs:
 
 `session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
-`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)`
+`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_asr` · `set_asr`
 
 ## Principles
 
 - **Evidence is never rewritten** — speech lands verbatim; merging/correction/association are display-layer suggestions.
 - **Evidence ≠ intent** — behavior without a spoken anchor is never presented as a bug.
-- **Local-first** — deterministic recording + in-browser SpeechRecognition for live SAY preview; final transcript
-  falls back to bcut (bilibili editor ASR, no key needed) when no GROQ/OPENAI key is set. LLM layers are optional.
+- **Local-first** — deterministic recording; live SAY subtitles stream through free cloud ASR
+  (`auto` = doubao-web → doubao-ime → browser SR fallback — pick via `wit config asr`, `--asr`, `WIT_ASR`, or the
+  `get_asr`/`set_asr` MCP tools); final transcript falls back to bcut (bilibili editor ASR, no key needed)
+  when no OPENAI key is set. LLM layers are optional.
 - **Privacy engineered in** — password fields masked across four channels, credential fields redacted in POST bodies,
   `WIT_NO_BODIES=1` disables body capture, `P` freezes everything, `.witness/` is auto-gitignored.
 
