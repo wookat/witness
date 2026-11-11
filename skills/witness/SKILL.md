@@ -30,14 +30,14 @@ wit start <url>                    # wit 已全局安装（npm i -g github:wooka
 - `wit transcribe <sessionDir>` / `wit correct <sessionDir>`：对已录 session 重跑转写/纠错
 - `wit associate <sessionDir>`（需 ZHIPU_API_KEY）：LLM 给每段 SAY 挑相关证据→`assoc.json`，session.md 只显示命中事件、其余折叠；`wit start --associate` 录制停止时自动跑
 - `wit recover <sessionDir>`：崩溃/中断后从 events.jsonl 重建 session.md/review.html/PROMPT.md
-- `wit mcp [sessionDir]`：stdio MCP server——agent 可配进 MCP 客户端按需查证据，共 12 个工具：`list_issues`/`issue_detail`/`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_asr`/`set_asr`
+- `wit mcp [sessionDir]`：stdio MCP server——agent 可配进 MCP 客户端按需查证据，共 12 个工具：`list_segments`/`segment_detail`/`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_asr`/`set_asr`
 - `WIT_CDP=<port>`（env）：给托管浏览器开 CDP 口——agent 可连上录制中的页面亲自当测试者（驱动点击/标记，全程被录）
 
 ## 消费证据（修问题）——按算法执行
 
 用户说"录完了/按录的修"时：
 
-**步骤 1 · 读索引**：`ls .witness/sessions/` 找目录 → 先读 **`ISSUES.md`**（一屏内的问题索引：SAY 原文、嫌疑元素、截图/DOM 引用）。逐问题细节在 `issues/NN.md`；`session.md` 是全量档案，只在 issues 之外要更多上下文时读。没有 ISSUES.md 的老 session 跑 `wit issues <dir>` 生成。
+**步骤 1 · 读索引**：`ls .witness/sessions/` 找目录 → 先读 **`SEGMENTS.md`**（一屏内的语音锚点索引：SAY 原文、嫌疑元素、截图/DOM 引用）。逐段细节在 `segments/NN.md`；`session.md` 是全量档案，只在段文件之外要更多上下文时读。没有 SEGMENTS.md 的老 session 跑 `wit segments <dir>` 生成。**段 ≠ 问题**：段是按 ≥4s 语音缝/动作打断机械切的语音单元，语义归组是你的活。
 
 **步骤 2 · 回显确认清单**（不要直接开修）：
 
@@ -45,7 +45,7 @@ wit start <url>                    # wit 已全局安装（npm i -g github:wooka
 |---|------|----------|----------|----------|
 | 1 | 00:56 | "顶部栏图标没居中" | nav .logo 组偏高 ~2px | shots/003.jpg · suspects |
 
-- 每个 issue 至少归进一条；相邻 issue 可能是同一段话被点击打断（如 #4#5#6 连续），可按意思合并
+- **归组是你做，不是按段照搬**：相邻段常被点击打断（如 S4/S5/S6 连续，嫌疑元素相同），按意思合并成一个确认项；一段含多个问题拆 1a/1b
 - 理解有歧义的标 ❓ 让用户澄清，别自己猜
 - 末尾问：共 N 条，有漏的或理解偏的吗？
 
@@ -53,8 +53,8 @@ wit start <url>                    # wit 已全局安装（npm i -g github:wooka
 
 | 问题类型 | 第一证据 | 补充 |
 |---|---|---|
-| 视觉/位置/样式 | **先开 issues 里挂的 shot 图**（你是多模态，必须看） | dom/snap + suspects.sel |
-| 死按钮/点了没反应 | issues 的"点击无反应"清单 | shot 确认视觉 |
+| 视觉/位置/样式 | **先开段里挂的 shot 图**（你是多模态，必须看） | dom/snap + suspects.sel |
+| 死按钮/点了没反应 | 段的"点击无反应"清单 | shot 确认视觉 |
 | 报错/网络 | console/error/res≥400 行 | `bodies/` 响应体 |
 | 行为/逻辑 | click→req/res 爆发链 | dom snap 前后态 |
 | 定位源码 | suspects `Comp:` 链 > `sel` > 元素文本 | grep 源码 |
@@ -65,7 +65,7 @@ wit start <url>                    # wit 已全局安装（npm i -g github:wooka
 
 ## 深挖路径
 
-`ISSUES.md` → `issues/NN.md` → `events.jsonl`（t 窗口原始事件）→ `shots/`（mark 带红框）→ `bodies/` → `transcript.json`
+`SEGMENTS.md` → `segments/NN.md` → `events.jsonl`（t 窗口原始事件）→ `shots/`（mark 带红框）→ `bodies/` → `transcript.json`
 
 ## 汇报格式
 

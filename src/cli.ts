@@ -107,13 +107,13 @@ program
   });
 
 program
-  .command("issues <sessionDir>")
-  .description("(re)generate ISSUES.md + issues/NN.md + issues.json — the per-issue evidence bundles agents read first")
+  .command("segments <sessionDir>")
+  .description("(re)generate SEGMENTS.md + segments/NN.md + segments.json — speech anchors with evidence bundles the agent reads first (semantic grouping is the agent's job)")
   .action(async dir => {
     const s = await loadSession(dir);
-    const { writeIssues } = await import("./issues.js");
-    const n = writeIssues(s.dir, align(s.events, s.transcript?.segments ?? []), s.meta).length;
-    console.log(`✔ ${n} issue bundle(s) → ` + join(s.dir, "ISSUES.md"));
+    const { writeSegments } = await import("./segments.js");
+    const n = writeSegments(s.dir, align(s.events, s.transcript?.segments ?? []), s.meta).length;
+    console.log(`✔ ${n} speech segment(s) → ` + join(s.dir, "SEGMENTS.md"));
   });
 
 program

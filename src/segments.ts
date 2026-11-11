@@ -7,7 +7,7 @@ type Click = Extract<Ev, { kind: "click" }>;
 type Mark = Extract<Ev, { kind: "mark" }>;
 
 export interface Suspect { via: "click" | "mark" | "vocab"; sel?: string; comp?: string[]; text?: string }
-export interface Issue {
+export interface Segment {
   n: number;
   from: number; to: number;                       // ms window of the speech run
   frags: Say[];                                    // verbatim fragments, in order
@@ -57,7 +57,7 @@ const tokensOf = (s: string) =>
   (s.match(/[一-鿿]{2,}|[a-zA-Z][a-zA-Z0-9_-]{3,}/g) ?? [])
     .map(t => t.toLowerCase());
 
-export function extractIssues(events: Ev[]): Issue[] {
+export function extractSegments(events: Ev[]): Segment[] {
   const runs = sayRuns(events);
   const issueMarks = events.filter((e): e is Extract<Ev, { kind: "issue" }> => e.kind === "issue");
   const spoken = tokensOf(runs.flat().map(s => s.text).join(" "));
@@ -106,19 +106,22 @@ export function extractIssues(events: Ev[]): Issue[] {
   });
 }
 
-const rng = (i: Issue) => `${fmt(i.from)}–${fmt(i.to)}`;
+const rng = (i: Segment) => `${fmt(i.from)}–${fmt(i.to)}`;
 const quote = (s: string) => `“${s.length > 90 ? s.slice(0, 90) + "…" : s}”`;
 
-/** one-screen index: how many problems, where to look next */
-export function renderIssuesIndex(issues: Issue[], meta: { url: string; durationMs?: number }): string {
+/** one-screen index: speech anchors with evidence pointers — segmentation is mechanical, grouping is the agent's job */
+export function renderSegmentsIndex(segments: Segment[], meta: { url: string; durationMs?: number }): string {
   const lines = [
-    `# ISSUES — ${meta.url}`,
+    `# SEGMENTS — ${meta.url}`,
     "",
-    `录制 ${fmt(meta.durationMs ?? issues.at(-1)?.to ?? 0)} · ${issues.length} 个问题。先逐条读 issues/NN.md，再看截图。`,
+    `录制 ${fmt(meta.durationMs ?? segments.at(-1)?.to ?? 0)} · ${segments.length} 段语音锚点。`,
+    "段 ≠ 问题：边界是机械切的（≥4s 语音缝或中间有动作），相邻段可能同属一个问题、一段也可能含多个问题——**语义归组由你决定**。逐段读 segments/NN.md，再看截图。",
     "",
   ];
-  for (const i of issues) {
-    lines.push(`## #${i.n} · ${rng(i)} · ${quote(i.text)}`, "");
+  for (const i of segments) {
+    lines.push(`## S${i.n} · ${rng(i)} · ${quote(i.text)}`, "");
+    if (i.explicit)
+      lines.push("- ⏺ 用户按 N 键显式切出的问题边界（强提示）");
     if (i.suspects.length)
       lines.push(`- 嫌疑元素: ${i.suspects.map(s =>
         [s.via === "vocab" ? "≈" : "", s.comp?.length ? s.comp.join(" › ") + " " : "", s.sel ?? "", s.text ? `“${s.text.slice(0, 40)}”` : ""].join("")
@@ -129,18 +132,23 @@ export function renderIssuesIndex(issues: Issue[], meta: { url: string; duration
       lines.push(`- 错误: ${i.errors.map(e => e.kind === "res" ? `${(e as { status: number }).status} ${(e as { url: string }).url.slice(0, 50)}` : e.kind).join(" · ")}`);
     if (i.shots.length) lines.push(`- 截图: ${i.shots.join(" · ")}`);
     if (i.doms.length) lines.push(`- DOM: ${i.doms.join(" · ")}`);
-    lines.push(`- 详情: issues/${String(i.n).padStart(2, "0")}.md`, "");
+    lines.push(`- 详情: segments/${String(i.n).padStart(2, "0")}.md`, "");
   }
-  if (!issues.length)
-    lines.push("_没有检测到语音问题——events.jsonl 里只有操作证据。问用户这段想说什么，不要猜。_");
+  if (!segments.length)
+    lines.push("_没有语音锚点——events.jsonl 里只有操作证据。问用户这段想说什么，不要猜。_");
   return lines.join("\n");
 }
 
-/** per-issue bundle: verbatim + salient evidence, multimodal refs */
-export function renderIssueFile(i: Issue, meta: { url: string }): string {
+/** per-segment bundle: verbatim + salient evidence, multimodal refs */
+export function renderSegmentFile(i: Segment, meta: { url: string }): string {
   const lines = [
-    `# 问题 #${i.n} · ${rng(i)} · ${meta.url}`,
+    `# 语音段 S${i.n} · ${rng(i)} · ${meta.url}`,
     "",
+    i.explicit
+      ? "> ⏺ 此段是用户按 N 键显式切出的问题边界。"
+      : "> 段边界是机械切的（≥4s 语音缝或中间有动作事件）——可与相邻段合并，也可拆成多个问题。",
+    "",
+    "## 用户原话（逐段）",
     "## 用户原话（逐段）",
     ...i.frags.map(s => `> [${fmt(s.segStart)}] “${s.text}”`),
     "",
@@ -175,18 +183,18 @@ export function renderIssueFile(i: Issue, meta: { url: string }): string {
   return lines.join("\n");
 }
 
-export function writeIssues(dir: string, events: Ev[], meta: { url: string; durationMs?: number }): Issue[] {
-  const issues = extractIssues(events);
-  mkdirSync(join(dir, "issues"), { recursive: true });
-  writeFileSync(join(dir, "ISSUES.md"), renderIssuesIndex(issues, meta));
-  for (const i of issues)
-    writeFileSync(join(dir, "issues", `${String(i.n).padStart(2, "0")}.md`), renderIssueFile(i, meta));
-  writeFileSync(join(dir, "issues.json"), JSON.stringify(
-    issues.map(({ frags, deadClicks, errors, ...rest }) => ({
+export function writeSegments(dir: string, events: Ev[], meta: { url: string; durationMs?: number }): Segment[] {
+  const segments = extractSegments(events);
+  mkdirSync(join(dir, "segments"), { recursive: true });
+  writeFileSync(join(dir, "SEGMENTS.md"), renderSegmentsIndex(segments, meta));
+  for (const i of segments)
+    writeFileSync(join(dir, "segments", `${String(i.n).padStart(2, "0")}.md`), renderSegmentFile(i, meta));
+  writeFileSync(join(dir, "segments.json"), JSON.stringify(
+    segments.map(({ frags, deadClicks, errors, ...rest }) => ({
       ...rest,
       frags: frags.map(s => s.text),
       deadClicks: deadClicks.map(c => ({ t: c.t, sel: c.sel, text: c.text })),
       errors: errors.length,
     })), null, 1));
-  return issues;
+  return segments;
 }
