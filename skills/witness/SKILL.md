@@ -13,7 +13,7 @@ description: 录制产品体验证据链。用户说"帮我录一段/体验下�
 ## 启动录制（需要用户在场说问题）
 
 ```bash
-wit start <url>                    # 全局已 npm link，任意目录可用
+wit start <url>                    # wit 已全局安装（npm i -g github:wookat/witness 或 npm link）
 # 常用 flag：--duration 60（自动停）· --lang en-US（英文站）· --asr <engine> · --shot-interval 15000 · --no-transcribe
 ```
 

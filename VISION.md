@@ -76,7 +76,7 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 | agent 主动查询证据 | ✅ `wit mcp`：stdio MCP server，10 个工具（overview/list_says/session_md/events_around/get_errors/get_shot/get_dom_state/get_body/get_asr/set_asr） | ✅ 已上线 |
 | 元素/区域标记 | ✅ Ctrl+点击 / M inspect / 拖拽圈选 | ✅ 超出设想（组件链、红框截图） |
 | 多问题一段录 | ✅ N 键 Issue 边界（可选辅助） | ✅ |
-| 语音质量 | ✅ Edge SR 实时（免费）+ 可选 whisper/GLM | SR 准确率是天花板；原话永不改写 |
+| 语音质量 | ✅ 云端流式 ASR（auto=doubao-web→doubao-ime→浏览器SR，四入口可切）+ 终稿 whisper/bcut | 原话永不改写 |
 
 ## 五、设计信条
 
@@ -109,7 +109,7 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 |---|---|
 | 浏览器托管 | Playwright + 系统 Edge/Chrome（免下载）；`addInitScript` 早期注入 + `exposeBinding` 页面↔Node 桥 |
 | 录音 | 页面内 MediaRecorder（WebM/Opus，零系统依赖） |
-| 转写 | Edge SpeechRecognition 默认（免费/实时/国内可用）；`transcribe.ts` backend 抽象可换 whisper/火山/Scribe |
+| 转写 | `live-asr.ts` 引擎链：doubao-web 默认 → doubao-ime → 浏览器 SR（`wit config asr`/`--asr`/`WIT_ASR`/MCP `set_asr`）；终稿 whisper/bcut |
 | 事件模型 | 统一 Ev 联合类型 → 流式 events.jsonl（崩溃不丢） |
 | 截图 | 事件驱动（标记/导航/报错）+ 周期兜底（固定高频=频闪根因，已实测） |
 | 关联 | V1 时间窗挂载；理想态 LLM 关联层（见下） |
