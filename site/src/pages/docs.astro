@@ -5,8 +5,8 @@ import Card from "../components/Card.astro";
 import DocsHead from "../components/DocsHead.astro";
 const GH = "https://github.com/wookat/witness";
 const chapters = [
-  ["01","what it is","#what"],["02","install","#install2"],["03","configure","#config"],
-  ["04","use it","#use"],["05","the package","#output"],["06","tell your agent","#agent"],["07","try it","#try"],
+  ["01","install","#install2"],["02","configure","#config"],["03","use it","#use"],
+  ["04","the package","#output"],["05","tell your agent","#agent"],["06","try it","#try"],
 ];
 ---
 <Base title="Witness Docs — install, record, hand evidence to your agent">
@@ -16,22 +16,8 @@ const chapters = [
 
 <div class="ruler"><b class="a">docs</b><i style="--x:4%"></i></div>
 
-<section id="what"><div class="wrap">
-  <div class="kicker">01 · What it is</div>
-  <h2 class="rv">A black box for product QA.</h2>
-  <p class="lede rv" data-d="60">Witness records a human using a web product and turns it into <b>causal evidence</b> an AI coding agent can act on. You talk and point; it keeps the books. One continuous take can hold many issues — segmentation is optional.</p>
-  <div class="grid g3" style="margin-top:34px">
-    <Card icon="mic" n="VOICE" title="Continuous speech" d="0">Live streaming ASR (Doubao web → IME → browser SR fallback, all free). Every spoken observation lands on the timeline verbatim — corrections never overwrite the original.</Card>
-    <Card icon="zap" n="OPS" title="Causal bursts" d="60">Each click captures its ~1.8s aftermath: requests, response bodies, console errors, DOM mutations. A click with <b>no</b> aftermath is recorded as evidence of a dead button.</Card>
-    <Card icon="layers" n="STATE" title="Page forensics" d="120">rrweb full replay, event-driven screenshots, DOM snapshots, element marks with React/Vue component chains. No source-line mapping needed — selectors + components are enough.</Card>
-  </div>
-  <p class="lede rv" data-d="140" style="margin-top:26px">Stopping produces a local evidence package under <code>.witness/sessions/&lt;timestamp&gt;/</code> — nothing leaves your machine unless you hand it to an agent.</p>
-</div></section>
-
-<div class="ruler"><b class="a">install</b><i style="--x:18%"></i></div>
-
 <section id="install2" class="alt"><div class="wrap">
-  <div class="kicker">02 · Install</div>
+  <div class="kicker">01 · Install</div>
   <h2 class="rv">You don't install it. Your agent does.</h2>
   <p class="lede rv" data-d="60">The intended flow: <b>you give the instruction, the agent types the commands.</b> Witness is a CLI (<code>wit</code>) that drives your system Edge/Chrome — no browser download, no cloud account, no keys.</p>
   <Term label="say this to your agent" d="80">Install witness: `npm i -g github:wookat/witness`,
@@ -48,7 +34,7 @@ wit --version</Term>
 <div class="ruler"><b class="a">config</b><i style="--x:36%"></i></div>
 
 <section id="config"><div class="wrap">
-  <div class="kicker">03 · Configure</div>
+  <div class="kicker">02 · Configure</div>
   <h2 class="rv">Zero-config by default; switches when you want them.</h2>
   <div class="grid g2" style="margin-top:34px">
     <Card icon="mic" title="Live ASR engine" d="0"><code>wit config asr</code> persists to <code>~/.witness/config.json</code>; <code>--asr</code> / <code>WIT_ASR</code> override per run. Agents can flip it live via the <code>set_asr</code> MCP tool.<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
@@ -68,7 +54,7 @@ WIT_CDP=&lt;port&gt;   expose CDP so an agent can drive
 <div class="ruler"><b class="a">record</b><b class="b">● REC</b><i style="--x:52%"></i></div>
 
 <section id="use" class="alt"><div class="wrap">
-  <div class="kicker">04 · Use it</div>
+  <div class="kicker">03 · Use it</div>
   <h2 class="rv">Three sentences. That's the whole loop.</h2>
   <Term label="the conversation" d="60"><span class="c-say">you</span>   → "record http://localhost:5173 for me"
 <span class="c-ok">agent</span> → <span class="c-dim">runs `wit start`, managed browser opens</span>
@@ -99,7 +85,7 @@ wit config asr …       engine: auto|doubao-web|ime|sr|off</pre></Card>
 <div class="ruler"><b class="a">package</b><i style="--x:70%"></i></div>
 
 <section id="output"><div class="wrap">
-  <div class="kicker">05 · What you get</div>
+  <div class="kicker">04 · What you get</div>
   <h2 class="rv">One package, two audiences.</h2>
   <p class="lede rv" data-d="60"><b>For you:</b> a visual replay. <b>For your agent:</b> a structured handoff it can fix from.</p>
   <Term label=".witness/sessions/&lt;ts&gt;/" d="80">├─ <span class="c-acc">review.html</span>      <span class="c-dim">→ FOR HUMANS — timeline replay: audio + shots + events, click anything to seek</span>
@@ -123,7 +109,7 @@ wit config asr …       engine: auto|doubao-web|ime|sr|off</pre></Card>
 <div class="ruler"><b class="a">handoff</b><i style="--x:86%"></i></div>
 
 <section id="agent" class="alt"><div class="wrap">
-  <div class="kicker">06 · Tell your agent</div>
+  <div class="kicker">05 · Tell your agent</div>
   <h2 class="rv">Three ways to hand over evidence.</h2>
   <div class="grid g3" style="margin-top:34px">
     <Card icon="terminal" n="EASIEST" title="Point at the directory" d="0"><pre style="font:12px/1.8 var(--mono)">"I recorded a session —
@@ -140,7 +126,7 @@ Read session.md and fix the issues."</pre></Card>
 <div class="ruler"><b class="a">demo</b><b class="b">■ STOP</b><i style="--x:96%"></i></div>
 
 <section id="try"><div class="wrap">
-  <div class="kicker">07 · Try it in two minutes</div>
+  <div class="kicker">06 · Try it in two minutes</div>
   <h2 class="rv">Record the demo page.</h2>
   <p class="lede rv" data-d="60">A tiny broken product ships with the site — it has a dead button, a console error and a bad API response waiting to be caught:</p>
   <Term label="terminal" d="80">wit start https://witness.zalize.com/demo-app.html --duration 60

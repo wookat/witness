@@ -5,8 +5,8 @@ import Card from "../../components/Card.astro";
 import DocsHead from "../../components/DocsHead.astro";
 const GH = "https://github.com/wookat/witness";
 const chapters = [
-  ["01","是什么","#what"],["02","安装","#install2"],["03","配置","#config"],
-  ["04","使用","#use"],["05","证据包","#output"],["06","交给 AI","#agent"],["07","演示","#try"],
+  ["01","安装","#install2"],["02","配置","#config"],["03","使用","#use"],
+  ["04","证据包","#output"],["05","交给 AI","#agent"],["06","演示","#try"],
 ];
 ---
 <Base lang="zh" title="Witness 文档 — 安装、录制、把证据交给 agent">
@@ -16,22 +16,8 @@ const chapters = [
 
 <div class="ruler"><b class="a">docs</b><i style="--x:4%"></i></div>
 
-<section id="what"><div class="wrap">
-  <div class="kicker">01 · 是什么</div>
-  <h2 class="rv">产品体验的黑匣子。</h2>
-  <p class="lede rv" data-d="60">Witness 录下"人正常使用一个网页产品"的过程，转成 AI 编码 agent 能直接拿来修问题的<b>因果证据</b>。人的嘴 + AI 的记账：你边说边指，它负责记录。一次连续录制可以装多个问题，不需要刻意分段。</p>
-  <div class="grid g3" style="margin-top:34px">
-    <Card icon="mic" n="语音轨" title="连续说话" d="0">真流式 ASR（豆包网页版 → 豆包输入法 → 浏览器 SR 逐级兜底，全免费）。每句吐槽原文落到时间轴上——纠错永远不覆盖原始语音。</Card>
-    <Card icon="zap" n="操作轨" title="因果爆发链" d="60">每次点击捕获其后 ~1.8 秒的全部后果：请求、响应体、console 报错、DOM 变化。点了<b>毫无反应</b>本身会被记成证据——死按钮无所遁形。</Card>
-    <Card icon="layers" n="状态轨" title="页面取证" d="120">rrweb 全量回放 + 事件驱动截图 + DOM 快照，标记元素带 React/Vue 组件链。不需要精确到源码行——selector + 组件链足够定位。</Card>
-  </div>
-  <p class="lede rv" data-d="140" style="margin-top:26px">停止后在 <code>.witness/sessions/&lt;时间戳&gt;/</code> 生成本地证据包——除非你自己交给 agent，任何东西都不出本机。</p>
-</div></section>
-
-<div class="ruler"><b class="a">安装</b><i style="--x:18%"></i></div>
-
 <section id="install2" class="alt"><div class="wrap">
-  <div class="kicker">02 · 安装</div>
+  <div class="kicker">01 · 安装</div>
   <h2 class="rv">不用你装，让 agent 装。</h2>
   <p class="lede rv" data-d="60">正确姿势是<b>你下指令，agent 敲命令</b>。Witness 本体是 CLI（<code>wit</code>），驱动你系统里的 Edge/Chrome——不下载浏览器、不需要云账号、不要 key。</p>
   <Term label="对你的 agent 说一句" d="80">安装 witness：执行 `npm i -g github:wookat/witness`，
@@ -48,7 +34,7 @@ wit --version</Term>
 <div class="ruler"><b class="a">配置</b><i style="--x:36%"></i></div>
 
 <section id="config"><div class="wrap">
-  <div class="kicker">03 · 配置</div>
+  <div class="kicker">02 · 配置</div>
   <h2 class="rv">默认零配置；想调再调。</h2>
   <div class="grid g2" style="margin-top:34px">
     <Card icon="mic" title="实时 ASR 引擎" d="0"><code>wit config asr</code> 持久化到 <code>~/.witness/config.json</code>；<code>--asr</code> / <code>WIT_ASR</code> 单次覆盖。agent 也能通过 <code>set_asr</code> MCP 工具自己切。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
@@ -68,7 +54,7 @@ WIT_CDP=&lt;端口&gt;   开 CDP 口，agent 可接管录制中的
 <div class="ruler"><b class="a">录制</b><b class="b">● REC</b><i style="--x:52%"></i></div>
 
 <section id="use" class="alt"><div class="wrap">
-  <div class="kicker">04 · 使用</div>
+  <div class="kicker">03 · 使用</div>
   <h2 class="rv">三句话，就是完整闭环。</h2>
   <Term label="你和 agent 的对话" d="60"><span class="c-say">你</span>    → "帮我录一段 http://localhost:5173"
 <span class="c-ok">agent</span> → <span class="c-dim">执行 `wit start`，托管浏览器弹出</span>
@@ -99,7 +85,7 @@ wit config asr …      引擎：auto|doubao-web|ime|sr|off</pre></Card>
 <div class="ruler"><b class="a">证据包</b><i style="--x:70%"></i></div>
 
 <section id="output"><div class="wrap">
-  <div class="kicker">05 · 你得到什么</div>
+  <div class="kicker">04 · 你得到什么</div>
   <h2 class="rv">一个证据包，两种读者。</h2>
   <p class="lede rv" data-d="60"><b>给人</b>：可视化回放。<b>给 agent</b>：能直接修问题的结构化交接。</p>
   <Term label=".witness/sessions/&lt;时间戳&gt;/" d="80">├─ <span class="c-acc">review.html</span>      <span class="c-dim">→ 给人看 —— 时间轴回放：语音+截图+事件对齐，点哪跳哪</span>
@@ -123,7 +109,7 @@ wit config asr …      引擎：auto|doubao-web|ime|sr|off</pre></Card>
 <div class="ruler"><b class="a">交接</b><i style="--x:86%"></i></div>
 
 <section id="agent" class="alt"><div class="wrap">
-  <div class="kicker">06 · 怎么对 AI 说</div>
+  <div class="kicker">05 · 怎么对 AI 说</div>
   <h2 class="rv">三种方式把证据交出去。</h2>
   <div class="grid g3" style="margin-top:34px">
     <Card icon="terminal" n="最省事" title="指个路径" d="0"><pre style="font:12px/1.8 var(--mono)">"我录了一段，证据在
@@ -140,7 +126,7 @@ wit config asr …      引擎：auto|doubao-web|ime|sr|off</pre></Card>
 <div class="ruler"><b class="a">演示</b><b class="b">■ STOP</b><i style="--x:96%"></i></div>
 
 <section id="try"><div class="wrap">
-  <div class="kicker">07 · 两分钟上手</div>
+  <div class="kicker">06 · 两分钟上手</div>
   <h2 class="rv">拿演示页开录。</h2>
   <p class="lede rv" data-d="60">官网自带一个故意做坏的小产品——死按钮、console 报错、错误响应，全都等着被抓：</p>
   <Term label="terminal" d="80">wit start https://witness.zalize.com/demo-app.html --duration 60
