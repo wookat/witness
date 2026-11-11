@@ -7,8 +7,8 @@ const GH = "https://github.com/wookat/witness";
 <Base lang="zh" title="Witness 文档 — 安装、录制、把证据交给 agent">
 <section style="padding:120px 0 40px"><div class="wrap">
   <div class="kicker">文档</div>
-  <h2 style="margin-bottom:10px">落地页之外的完整说明。</h2>
-  <p class="lede">它是什么、装了什么、怎么配置、怎么录——以及你的 agent 到底收到什么东西。</p>
+  <h2 style="margin-bottom:10px">你动嘴，命令让 agent 去敲。</h2>
+  <p class="lede">它是什么、怎么让 agent 帮你装和用、以及证据包里到底有什么。</p>
   <p style="margin-top:18px;font:500 12.5px var(--mono);color:var(--faint)">
     <a href="#what">01 是什么</a> · <a href="#install2">02 安装</a> · <a href="#config">03 配置</a> · <a href="#use">04 使用</a> · <a href="#output">05 证据包</a> · <a href="#agent">06 交给 AI</a> · <a href="#try">07 演示</a>
   </p>
@@ -32,19 +32,17 @@ const GH = "https://github.com/wookat/witness";
 
 <section id="install2" class="alt"><div class="wrap">
   <div class="kicker">02 · 安装</div>
-  <h2 class="rv">一个包，零下载，零 key。</h2>
-  <p class="lede rv" data-d="60">Witness 是 CLI（<code>wit</code>），不是浏览器插件。它通过 Playwright 驱动你<b>系统里的 Edge 或 Chrome</b>——不下载浏览器、不需要云账号。</p>
-  <Term label="terminal" d="80"><span class="c-dim"># 需要 Node 18+ · Windows/macOS/Linux · 系统装有 Edge/Chrome</span>
-npm i -g github:wookat/witness
-wit --version                     <span class="c-dim"># 验证</span>
-wit start http://localhost:5173   <span class="c-dim"># 第一段录制</span></Term>
-  <div class="grid g2" style="margin-top:30px">
-    <Card icon="box" title="装了什么东西" d="0"><b><code>wit</code> 命令行</b>——录制器、session 渲染器、转写器、MCP server 四合一。全局配置在 <code>~/.witness/config.json</code>，ASR 凭证缓存 <code>~/.witness/doubao-creds.json</code>。证据永远落在<b>当前项目</b>的 <code>.witness/sessions/</code>。</Card>
-    <Card icon="terminal" title="或者直接让 AI 装" d="60">把这段贴给任意编码 agent，它能自己装好并开录：<pre style="margin-top:10px;font:12px/1.7 var(--mono);background:var(--warm);border:1px solid var(--line);border-radius:8px;padding:12px 14px;white-space:pre-wrap">安装 witness：执行 `npm i -g github:wookat/witness`，
-用 `wit --version` 验证，然后跑
-`wit start http://localhost:5173`，
-浏览器打开后告诉我。</pre></Card>
+  <h2 class="rv">不用你装，让 agent 装。</h2>
+  <p class="lede rv" data-d="60">正确姿势是<b>你下指令，agent 敲命令</b>。Witness 本体是 CLI（<code>wit</code>），驱动你系统里的 Edge/Chrome——不下载浏览器、不需要云账号、不要 key。</p>
+  <Card icon="terminal" title="对你的 agent 说一句" d="80"><pre style="margin-top:4px;font:13px/1.8 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap">安装 witness：执行 `npm i -g github:wookat/witness`，
+用 `wit --version` 验证一下。需要 Node 18+。</pre></Card>
+  <div class="grid g2" style="margin-top:24px">
+    <Card icon="box" title="装到你机器上的是什么" d="0"><b><code>wit</code> 命令行</b>——录制器、session 渲染器、转写器、MCP server 四合一。配置在 <code>~/.witness/config.json</code>，ASR 凭证缓存 <code>~/.witness/doubao-creds.json</code>。证据永远落在<b>当前项目</b>的 <code>.witness/sessions/</code>。</Card>
+    <Card icon="file" title="教不认识它的 agent" d="60">仓库自带 <code>skills/witness/SKILL.md</code>——现成的技能文件，放进 <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code>，之后说"帮我录一段"就能触发整套流程。<a href={GH + "/blob/main/skills/witness/SKILL.md"}>查看 ↗</a></Card>
   </div>
+  <Term label="agent 实际执行的命令" d="100"><span class="c-dim"># 透明起见——你的 agent 在背后敲的是：</span>
+npm i -g github:wookat/witness
+wit --version</Term>
 </div></section>
 
 <div class="ruler"><b class="a">配置</b><i style="--x:36%"></i></div>
@@ -71,21 +69,30 @@ WIT_CDP=&lt;端口&gt;   开 CDP 口，agent 可接管录制中的
 
 <section id="use" class="alt"><div class="wrap">
   <div class="kicker">04 · 使用</div>
-  <h2 class="rv">说、指、继续用。</h2>
-  <p class="lede rv" data-d="60">在项目根目录跑 <code>wit start &lt;url&gt;</code>，弹出受管浏览器——像平时一样用产品，<b>看到什么说什么</b>。识别出的字幕实时出现在工具栏下方。</p>
+  <h2 class="rv">三句话，就是完整闭环。</h2>
+  <Card icon="terminal" title="你和 agent 的对话" d="60"><pre style="margin-top:4px;font:13px/1.9 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap">你    → "帮我录一段 http://localhost:5173"
+agent → 执行 `wit start`，受管浏览器弹出
+
+你    → 正常使用产品，看到什么说什么，顺手标记问题
+你    → 点工具栏 ■（或对 agent 说"停了"）
+
+你    → "按刚才录的把问题修了"
+agent → 读 session.md，照证据动手</pre></Card>
   <div class="grid g2" style="margin-top:30px">
-    <Card icon="eye" title="录制中" d="0"><pre style="font:12.5px/2 var(--mono)">Ctrl+点击    标记元素（selector + 截图 + DOM 快照）
-M            检视模式：悬停点选元素 / 拖拽圈选区域
-N            切分新的问题边界（可选）
+    <Card icon="eye" n="你的部分 —— 在浏览器里" title="说 + 指" d="0"><pre style="font:12.5px/2 var(--mono)">说话         每句观察 → 带时间戳的 SAY
+Ctrl+点击    标记元素（selector + 截图 + DOM 快照）
+M            检视模式：悬停点选 / 拖拽圈选区域
+N            切分新问题边界（可选）
 P            暂停/继续——证据和麦克风一起冻结
-Alt+Shift+R  停止 · 或点工具栏 ■ · 或 Ctrl+C</pre></Card>
-    <Card icon="file" title="停止之后" d="60"><pre style="font:12.5px/2 var(--mono)">wit list                所有 session
-wit open                打开最新的 review.html
-wit transcribe &lt;dir&gt;    重跑转写
-wit correct &lt;dir&gt;       LLM 润色（原文保留）
-wit associate &lt;dir&gt;     LLM 给每段话挑相关证据
-wit recover &lt;dir&gt;       崩溃后重建产物
-wit mcp [dir]           以 MCP 服务对外提供证据</pre></Card>
+■ / Alt+Shift+R   停止</pre></Card>
+    <Card icon="file" n="agent 的部分 —— 它会跑的命令" title="CLI 全表面" d="60"><pre style="font:12.5px/2 var(--mono)">wit start &lt;url&gt;       开录（由 agent 发起）
+wit list / open       浏览 session
+wit transcribe &lt;dir&gt;  重跑转写
+wit correct &lt;dir&gt;     LLM 润色（原文保留）
+wit associate &lt;dir&gt;   LLM 给每段话挑证据
+wit recover &lt;dir&gt;     崩溃重建
+wit mcp [dir]         MCP 服务拉证据
+wit config asr …      引擎：auto|doubao-web|ime|sr|off</pre></Card>
   </div>
 </div></section>
 

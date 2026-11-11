@@ -7,8 +7,8 @@ const GH = "https://github.com/wookat/witness";
 <Base title="Witness Docs — install, record, hand evidence to your agent">
 <section style="padding:120px 0 40px"><div class="wrap">
   <div class="kicker">Docs</div>
-  <h2 style="margin-bottom:10px">Everything after the landing page.</h2>
-  <p class="lede">What Witness is, what it installs, how to configure it, how to record — and exactly what your agent receives.</p>
+  <h2 style="margin-bottom:10px">You talk. Your agent runs the commands.</h2>
+  <p class="lede">What Witness is, how your agent installs and drives it for you, and exactly what lands in the evidence package.</p>
   <p style="margin-top:18px;font:500 12.5px var(--mono);color:var(--faint)">
     <a href="#what">01 what</a> · <a href="#install2">02 install</a> · <a href="#config">03 configure</a> · <a href="#use">04 use</a> · <a href="#output">05 the package</a> · <a href="#agent">06 tell your agent</a> · <a href="#try">07 try it</a>
   </p>
@@ -32,19 +32,17 @@ const GH = "https://github.com/wookat/witness";
 
 <section id="install2" class="alt"><div class="wrap">
   <div class="kicker">02 · Install</div>
-  <h2 class="rv">One package, no downloads, no keys.</h2>
-  <p class="lede rv" data-d="60">Witness is a CLI (<code>wit</code>), not a browser extension. It drives your <b>system Edge or Chrome</b> through Playwright — no browser download, no cloud account.</p>
-  <Term label="terminal" d="80"><span class="c-dim"># requires Node 18+ · Windows/macOS/Linux · system Edge/Chrome</span>
-npm i -g github:wookat/witness
-wit --version                     <span class="c-dim"># verify</span>
-wit start http://localhost:5173   <span class="c-dim"># first recording</span></Term>
-  <div class="grid g2" style="margin-top:30px">
-    <Card icon="box" title="What gets installed" d="0"><b>the <code>wit</code> CLI</b> — recorder, session renderer, transcriber, MCP server. Global config at <code>~/.witness/config.json</code>, ASR credentials cached at <code>~/.witness/doubao-creds.json</code>. Evidence always lands in the <b>current project's</b> <code>.witness/sessions/</code>.</Card>
-    <Card icon="terminal" title="Or let your agent install it" d="60">Paste this to any coding agent — it can install, verify and record for you:<pre style="margin-top:10px;font:12px/1.7 var(--mono);background:var(--warm);border:1px solid var(--line);border-radius:8px;padding:12px 14px;white-space:pre-wrap">Install witness: `npm i -g github:wookat/witness`,
-verify with `wit --version`, then run
-`wit start http://localhost:5173` and tell me
-when the managed browser opens.</pre></Card>
+  <h2 class="rv">You don't install it. Your agent does.</h2>
+  <p class="lede rv" data-d="60">The intended flow: <b>you give the instruction, the agent types the commands.</b> Witness is a CLI (<code>wit</code>) that drives your system Edge/Chrome — no browser download, no cloud account, no keys.</p>
+  <Card icon="terminal" title="Say this to your agent" d="80"><pre style="margin-top:4px;font:13px/1.8 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap">Install witness: `npm i -g github:wookat/witness`,
+verify with `wit --version`. Requires Node 18+.</pre></Card>
+  <div class="grid g2" style="margin-top:24px">
+    <Card icon="box" title="What lands on your machine" d="0"><b>the <code>wit</code> CLI</b> — recorder, session renderer, transcriber, MCP server in one binary. Config at <code>~/.witness/config.json</code>, ASR creds at <code>~/.witness/doubao-creds.json</code>. Evidence always lands in the <b>current project's</b> <code>.witness/sessions/</code>.</Card>
+    <Card icon="file" title="Teach an agent that doesn't know it" d="60">The repo ships <code>skills/witness/SKILL.md</code> — a ready-made skill file. Drop it into <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code> and phrases like "帮我录一段" trigger the whole workflow. <a href={GH + "/blob/main/skills/witness/SKILL.md"}>View it ↗</a></Card>
   </div>
+  <Term label="what the agent actually runs" d="100"><span class="c-dim"># for transparency — under the hood your agent does:</span>
+npm i -g github:wookat/witness
+wit --version</Term>
 </div></section>
 
 <div class="ruler"><b class="a">config</b><i style="--x:36%"></i></div>
@@ -71,21 +69,30 @@ WIT_CDP=&lt;port&gt;   expose CDP so an agent can drive
 
 <section id="use" class="alt"><div class="wrap">
   <div class="kicker">04 · Use it</div>
-  <h2 class="rv">Talk, point, keep going.</h2>
-  <p class="lede rv" data-d="60">Run <code>wit start &lt;url&gt;</code> from your project root. A managed browser opens — use the product normally and <b>say what you see out loud</b>. Live subtitles appear under the toolbar.</p>
+  <h2 class="rv">Three sentences. That's the whole loop.</h2>
+  <Card icon="terminal" title="The conversation" d="60"><pre style="margin-top:4px;font:13px/1.9 var(--mono);background:var(--term);color:var(--term-text);border-radius:10px;padding:16px 18px;white-space:pre-wrap">you   → "record http://localhost:5173 for me"
+agent → runs `wit start`, managed browser opens
+
+you   → use the product, talk out loud, mark problems
+you   → press ■ (or tell the agent "stop")
+
+you   → "fix the issues from that recording"
+agent → reads session.md, fixes from the evidence</pre></Card>
   <div class="grid g2" style="margin-top:30px">
-    <Card icon="eye" title="While recording" d="0"><pre style="font:12.5px/2 var(--mono)">Ctrl+Click   mark an element (selector + shot + DOM)
+    <Card icon="eye" n="YOUR PART — inside the browser" title="Talk &amp; point" d="0"><pre style="font:12.5px/2 var(--mono)">speak        every observation → timestamped SAY
+Ctrl+Click   mark an element (selector + shot + DOM)
 M            inspect mode — hover-pick or drag a region
-N            split a new issue boundary (optional)
+N            new issue boundary (optional)
 P            pause/resume — freezes evidence AND mic
-Alt+Shift+R  stop · or the ■ button · or Ctrl+C</pre></Card>
-    <Card icon="file" title="After stopping" d="60"><pre style="font:12.5px/2 var(--mono)">wit list                 all sessions
-wit open                 latest review.html
-wit transcribe &lt;dir&gt;     re-run transcription
-wit correct &lt;dir&gt;        LLM polish (verbatim kept)
-wit associate &lt;dir&gt;      LLM picks evidence per SAY
-wit recover &lt;dir&gt;        rebuild after a crash
-wit mcp [dir]            serve evidence over MCP</pre></Card>
+■ / Alt+Shift+R   stop</pre></Card>
+    <Card icon="file" n="AGENT'S PART — commands it may run" title="The CLI surface" d="60"><pre style="font:12.5px/2 var(--mono)">wit start &lt;url&gt;        record (agent launches it)
+wit list / open        browse sessions
+wit transcribe &lt;dir&gt;   re-run transcription
+wit correct &lt;dir&gt;      LLM polish (verbatim kept)
+wit associate &lt;dir&gt;    LLM picks evidence per SAY
+wit recover &lt;dir&gt;      rebuild after a crash
+wit mcp [dir]          serve evidence over MCP
+wit config asr …       engine: auto|doubao-web|ime|sr|off</pre></Card>
   </div>
 </div></section>
 
