@@ -8,11 +8,11 @@ const { lang = "en", title, lede, chapters = [] } = Astro.props;
     <span class="dpill rv"><i></i>{lang === "zh" ? "使用文档" : "DOCS"}</span>
     <h1 class="dt rv" data-d="80">{title}</h1>
     <p class="lede rv" data-d="160">{lede}</p>
-    <nav class="chaps rv" data-d="240" aria-label="chapters">
+    <div class="chaps rv" data-d="240" role="navigation" aria-label="chapters">
       {chapters.map(([n, label, href]) => (
         <a class="ch" href={href}><b>{n}</b><span>{label}</span><i class="ar">→</i></a>
       ))}
-    </nav>
+    </div>
   </div>
 </header>
 <style>
