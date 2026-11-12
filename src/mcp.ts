@@ -33,12 +33,13 @@ const brief = (e: Ev) => {
 
 export async function serveMcp(sessionDir?: string): Promise<void> {
   const dir = resolve(sessionDir ?? latestSession() ?? "");
-  if (!existsSync(join(dir, "events.jsonl"))) {
-    console.error(`no events.jsonl in ${dir}`);
-    process.exit(1);
-  }
+  const hasSession = existsSync(join(dir, "events.jsonl"));
+  if (!hasSession) console.error(`no events.jsonl in ${dir} — serving anyway; tools will report no session`);
   let session: LoadedSession | undefined;
-  const load = async () => (session ??= await loadSession(dir));
+  const load = async () => {
+    if (!hasSession) throw new Error(`no recorded session found (looked in ${dir})`);
+    return (session ??= await loadSession(dir));
+  };
   // keep every file access inside the session dir
   const safe = (p: string) => {
     const r = resolve(dir, p);
