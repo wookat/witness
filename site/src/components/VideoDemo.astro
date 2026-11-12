@@ -2,14 +2,16 @@
 // Real session footage in a layered composition — main window plus
 // tilted artifact panels floating beside it (devin.ai-style depth).
 import Icon from "./Icon.astro";
+import { ui } from "../i18n.js";
 const { lang = "en" } = Astro.props;
+const t = ui(lang).video;
 ---
 <div class="stage rv" data-d="120">
   <div class="win">
     <div class="chrome">
       <i class="r"></i><i class="y"></i><i class="g"></i>
       <div class="url">localhost:5173/checkout</div>
-      <span class="tag">{lang === "zh" ? "PLAYWRIGHT 实录 · 一镜到底" : "RECORDED WITH PLAYWRIGHT · ONE TAKE"}</span>
+      <span class="tag">{t.tag}</span>
     </div>
     <video src="/demo.mp4" autoplay muted loop playsinline preload="metadata"></video>
   </div>

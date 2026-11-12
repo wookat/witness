@@ -1,19 +1,10 @@
 ---
 import Tape from "./Tape.astro";
 import Icon from "./Icon.astro";
+import { ui } from "../i18n.js";
 const GH = "https://github.com/wookat/witness";
 const { lang = "en" } = Astro.props;
-const t = lang === "zh" ? {
-  pill: "开源 · MIT · 本地优先",
-  h1a: "你开口，", h1b: "Witness 补全", rot: ["证据。", "那个 bug。", "那次卡顿。", "那个 500。", "前因后果。"],
-  sub: "像平时一样体验产品、用嘴说出哪里不对——“这个按钮点了没反应”。Witness 把你说的每句话焊死在那一秒的因果证据上，然后把证据包交给你的 AI 编码 agent。",
-  cta1: "查看 GitHub", cta2: "工作原理", fsay: "“这个按钮点了没反应”",
-} : {
-  pill: "OPEN SOURCE · MIT · LOCAL-FIRST",
-  h1a: "You say it.", h1b: "Witness proves", rot: ["it.", "the bug.", "the jank.", "the 500.", "the why."],
-  sub: "Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second, then hands the package to your AI coding agent.",
-  cta1: "View on GitHub", cta2: "How it works", fsay: "“this button does nothing”",
-};
+const t = ui(lang).hero;
 ---
 <header class="hero">
   <div class="grid-bg"></div>
@@ -36,8 +27,8 @@ const t = lang === "zh" ? {
       <a class="btn" href="#how">{t.cta2} ↓</a>
     </div>
     <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
-    <div class="insthint rv" data-d="380">{lang === "zh" ? "↑ 丢给你的 AI agent——它装完就能帮你录" : "↑ hand this to your AI agent — it installs and records for you"}</div>
-    <div class="instmeta rv" data-d="420">{lang === "zh" ? "装的是 wit CLI——录制·渲染·MCP 一体 · Node 18+ · 系统 Edge/Chrome · 免 key" : "installs the wit CLI — recorder · renderer · MCP in one · Node 18+ · system Edge/Chrome · no keys"}</div>
+    <div class="insthint rv" data-d="380">{t.insthint}</div>
+    <div class="instmeta rv" data-d="420">{t.instmeta}</div>
     <Tape />
   </div>
 </header>

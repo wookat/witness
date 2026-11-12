@@ -1,0 +1,37 @@
+---
+import { ui } from "../i18n.js";
+// The honest comparison — what you could do instead, and where each lands.
+const { lang = "en" } = Astro.props;
+const t = ui(lang).vs;
+---
+<div class="wrap">
+  <div class="kicker">{t.kicker}</div>
+  <h2 class="rv">{t.h2}</h2>
+  <p class="lede rv" data-d="80">{t.lede}</p>
+  <div class="vt rv" data-d="140">
+    <table>
+      <thead><tr>{t.cols.map((c, i) => <th class={i === 3 ? "hl" : ""}>{c}</th>)}</tr></thead>
+      <tbody>
+        {t.rows.map(r => <tr>
+          {r.map((c, i) => i === 3
+            ? <td class="hl"><b>{c}</b></td>
+            : i === 0 ? <td class="rh">{c}</td> : <td>{c}</td>)}
+        </tr>)}
+      </tbody>
+    </table>
+  </div>
+</div>
+<style>
+  .vt{overflow-x:auto;margin-top:40px}
+  table{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;font-size:13.5px;min-width:640px}
+  th{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:left;padding:15px 18px;border-bottom:1px solid var(--line);background:var(--bg)}
+  th.hl{color:var(--rec);background:var(--rec-soft)}
+  td{padding:13px 18px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.rh{color:var(--ink);font-weight:600;font-size:13px;white-space:nowrap}
+  td.hl{background:#fdf5f5;color:var(--ink);border-left:1px solid #f2d4d4}
+  th.hl{border-left:1px solid #f2d4d4}
+  td.hl b{font-weight:600}
+  tr:hover td{background:#fbfaf7}
+  tr:hover td.hl{background:#fbeeee}
+</style>

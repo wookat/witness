@@ -1,11 +1,13 @@
 ---
 // Docs masthead — pill + display title + chapter-nav strip.
 // Shares the landing's flight-recorder vocabulary (kicker dot, mono, hover lift).
+import { ui } from "../i18n.js";
 const { lang = "en", title, lede, chapters = [] } = Astro.props;
+const pill = ui(lang).docsPill;
 ---
 <header class="dhead">
   <div class="wrap">
-    <span class="dpill rv"><i></i>{lang === "zh" ? "使用文档" : "DOCS"}</span>
+    <span class="dpill rv"><i></i>{pill}</span>
     <h1 class="dt rv" data-d="80">{title}</h1>
     <p class="lede rv" data-d="160">{lede}</p>
     <div class="chaps rv" data-d="240" role="navigation" aria-label="chapters">

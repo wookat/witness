@@ -1,0 +1,144 @@
+---
+// Shared homepage body — every locale renders this; all copy comes from src/i18n/*.
+import Base from "../layouts/Base.astro";
+import Hero from "./Hero.astro";
+import Card from "./Card.astro";
+import Term from "./Term.astro";
+import Demo from "./Demo.astro";
+import VideoDemo from "./VideoDemo.astro";
+import Flow from "./Flow.astro";
+import AudSplit from "./AudSplit.astro";
+import Convo from "./Convo.astro";
+import Keys from "./Keys.astro";
+import Agents from "./Agents.astro";
+import Vs from "./Vs.astro";
+import Faq from "./Faq.astro";
+import { ui } from "../i18n.js";
+const GH = "https://github.com/wookat/witness";
+const { lang = "en" } = Astro.props;
+const t = ui(lang);
+---
+<Base lang={lang} title={t.meta.title} desc={t.meta.desc}>
+<Hero lang={lang} />
+
+<div class="ruler"><b class="a">00:00</b><b class="b">REC</b><i style="--x:12%"></i></div>
+
+<section class="alt"><div class="wrap center">
+  <div class="kicker">{t.problem.k}</div>
+  <h2 class="rv">{t.problem.h}</h2>
+  <p class="lede rv" data-d="100" set:html={t.problem.p} />
+</div></section>
+
+<div class="ruler"><b class="a">00:18</b><i style="--x:34%"></i></div>
+
+<section><div class="wrap">
+  <div class="kicker">{t.demoSec.k}</div>
+  <h2 class="rv">{t.demoSec.h}</h2>
+  <p class="lede rv" data-d="80" set:html={t.demoSec.p} />
+  <div style="margin-top:52px"><VideoDemo lang={lang} /></div>
+</div></section>
+
+<div class="stats">
+  <div class="stat"><b>3</b><span>{t.stats[0]}</span></div>
+  <div class="stat"><b>12</b><span>{t.stats[1]}</span></div>
+  <div class="stat"><b>0</b><span>{t.stats[2]}</span></div>
+  <div class="stat"><b>17</b><span>{t.stats[3]}</span></div>
+  <div class="stat"><b>MIT</b><span>{t.stats[4]}</span></div>
+</div>
+
+<section id="how" class="alt"><div class="wrap">
+  <div class="kicker">{t.how.k}</div>
+  <h2 class="rv">{t.how.h}</h2>
+  <p class="lede rv" data-d="80" set:html={t.how.p} />
+  <div class="grid g3">
+    {t.how.cards.map(([ic, n, title, d], i) => (
+      <Card icon={ic} n={n} title={title} d={i * 80}><span set:html={d} /></Card>
+    ))}
+  </div>
+  <Flow steps={t.flow} />
+  <Keys lang={lang} />
+</div></section>
+
+<div class="ruler"><b class="a">01:12</b><i style="--x:71%"></i></div>
+
+<section id="evidence"><div class="wrap">
+  <div class="kicker">{t.evidence.k}</div>
+  <h2 class="rv">{t.evidence.h}</h2>
+  <p class="lede rv" data-d="80" set:html={t.evidence.p} />
+  <Demo says={t.evidence.says} hint={t.evidence.hint} />
+</div></section>
+
+<div class="ruler"><b class="a">01:48</b><b class="b">SAY ×3</b><i style="--x:82%"></i></div>
+
+<section class="alt"><div class="wrap">
+  <div class="kicker">{t.aud.k}</div>
+  <h2 class="rv">{t.aud.h}</h2>
+  <AudSplit labels={t.aud.labels} />
+</div></section>
+
+<section id="mcp"><div class="wrap">
+  <div class="kicker">{t.mcp.k}</div>
+  <h2 class="rv" set:html={t.mcp.h} />
+  <p class="lede rv" data-d="80" set:html={t.mcp.p} />
+  <div class="grid g3">
+    {t.mcp.cards.map(([ic, title, d], i) => (
+      <Card icon={ic} d={(i % 3) * 40}><span slot="title" set:html={title} /><span set:html={d} /></Card>
+    ))}
+  </div>
+  <p class="mcap rv" data-d="140">{t.mcp.mcap}</p>
+</div></section>
+
+<section class="alt">
+  <Agents lang={lang} />
+</section>
+
+<div class="ruler"><b class="a">02:31</b><b class="b">STOP ■</b><i style="--x:94%"></i></div>
+
+<section><div class="wrap">
+  <div class="kicker">{t.principles.k}</div>
+  <h2 class="rv">{t.principles.h}</h2>
+  <div class="grid g2">
+    {t.principles.cards.map(([ic, title, d], i) => (
+      <Card icon={ic} title={title} d={(i % 2) * 80}><span set:html={d} /></Card>
+    ))}
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">03:05</b><i style="--x:58%"></i></div>
+
+<section id="vs" class="alt">
+  <Vs lang={lang} />
+</section>
+
+<section id="who"><div class="wrap">
+  <div class="kicker">{t.who.k}</div>
+  <h2 class="rv">{t.who.h}</h2>
+  <div class="grid g2">
+    {t.who.cards.map(([ic, title, d], i) => (
+      <Card icon={ic} title={title} d={(i % 2) * 80}><span set:html={d} /></Card>
+    ))}
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">04:02</b><b class="b">SAY ×8</b><i style="--x:80%"></i></div>
+
+<section id="faq" class="alt"><div class="wrap">
+  <div class="kicker">{t.faq.k}</div>
+  <h2 class="rv">{t.faq.h}</h2>
+  <Faq lang={lang} />
+</div></section>
+
+<section id="install"><div class="wrap">
+  <div class="kicker">{t.install.k}</div>
+  <h2 class="rv">{t.install.h}</h2>
+  <p class="lede rv" data-d="60" set:html={t.install.p} />
+  <Convo lang={lang} d="100" />
+  <div class="cta rv" data-d="160" style="display:flex;gap:12px;margin-top:30px">
+    <a class="btn pri" href={GH}>{t.install.cta1}<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <a class="btn" href={t.docsPath}>{t.install.cta2}</a>
+  </div>
+</div></section>
+<style>
+  .mcap{margin-top:22px;font:500 11.5px var(--mono);color:var(--faint);letter-spacing:.05em}
+</style>
+</Base>

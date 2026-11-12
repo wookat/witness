@@ -1,19 +1,32 @@
 ---
 import Logo from "../components/Logo.astro";
-const { title = "Witness — voice-anchored evidence recorder for AI coding agents", lang = "en" } = Astro.props;
+import { ui, LANGS } from "../i18n.js";
+const { lang = "en", title, desc } = Astro.props;
 const GH = "https://github.com/wookat/witness";
-const nav = lang === "zh"
-  ? [["/zh#how","原理"],["/zh#evidence","证据"],["/zh#mcp","MCP"],["/zh#install","安装"],["/zh/docs","文档"]]
-  : [["/#how","How it works"],["/#evidence","Evidence"],["/#mcp","MCP"],["/#install","Install"],["/docs","Docs"]];
-const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"中"};
+const t = ui(lang);
+const cur = LANGS.find(l => l.code === lang) ?? LANGS[0];
+const pageTitle = title ?? t.meta.title;
+const pageDesc = desc ?? t.meta.desc;
+const home = cur.path === "/" ? "" : cur.path.slice(0, -1);   // "" or "/zh" or "/zh-hant" or "/ja"
+const nav = [["#how",t.nav.how],["#evidence",t.nav.evidence],["#mcp",t.nav.mcp],["#install",t.nav.install],["#faq",t.nav.faq]]
+  .map(([a, l]) => [(home || "/") + a, l]);
+nav.push([t.docsPath, t.nav.docs]);
+const f = t.footer;
+const fcols = [
+  [f.cols[0], [[home+"#how",f.product.how],[home+"#evidence",f.product.evidence],[home+"#mcp",f.product.mcp],[home+"#faq",f.product.faq],[home+"#install",f.product.install]]],
+  [f.cols[1], [[t.docsPath,f.docs.usage],[GH,f.docs.readme],[GH+"/blob/main/VISION.md",f.docs.vision],[GH+"/releases",f.docs.releases]]],
+  [f.cols[2], [[GH,f.community.github],[GH+"/issues",f.community.issues],[GH+"/blob/main/LICENSE",f.community.license],[GH+"/stargazers",f.community.stars]]],
+];
 ---
 <!doctype html>
-<html lang={lang === "zh" ? "zh-CN" : "en"}>
+<html lang={cur.htmlLang}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title}</title>
-<meta name="description" content="Talk, point, ship the fix. Witness records your voice, clicks, network, errors and DOM replay while you use a product — then hands your AI agent a causal evidence package it can act on.">
+<title>{pageTitle}</title>
+<meta name="description" content={pageDesc}>
+{LANGS.map(l => <link rel="alternate" hreflang={l.htmlLang} href={new URL(l.path, Astro.site).href} />)}
+<link rel="alternate" hreflang="x-default" href={new URL("/", Astro.site).href} />
 <meta property="og:title" content="Witness — your voice, welded to the evidence">
 <meta property="og:description" content="Say what's wrong, point at it, keep going. One recording → a causal evidence package your AI coding agent can fix from.">
 <meta property="og:image" content="https://witness.zalize.com/og.png">
@@ -67,6 +80,20 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"�
   nav .gh{background:var(--ink);color:#f7f6f3!important;border-radius:999px;padding:9px 18px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
   nav .gh:hover{background:#2b2c33}
   nav .lang{font:600 11.5px var(--mono);color:var(--rec)!important;border:1px solid #f0cdcd;border-radius:999px;padding:5px 11px}
+  /* language menu */
+  .lmenu{position:relative}
+  .lmenu>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font:600 11.5px var(--mono);color:var(--rec);border:1px solid #f0cdcd;border-radius:999px;padding:5px 11px;user-select:none;transition:border-color .15s}
+  .lmenu>summary::-webkit-details-marker{display:none}
+  .lmenu>summary:hover{border-color:#e0b4b4}
+  .lmenu[open]>summary{background:var(--rec-soft)}
+  .lmenu>summary svg{color:var(--faint);transition:transform .2s}
+  .lmenu[open]>summary svg{transform:rotate(180deg)}
+  .lmenu-pop{position:absolute;top:calc(100% + 8px);right:0;min-width:148px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 14px 40px #17181c1c;display:flex;flex-direction:column;gap:2px;z-index:60}
+  .lm{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:500;color:var(--ink)!important;transition:background .13s}
+  .lm:hover{background:var(--warm)}
+  .lm.cur{background:var(--rec-soft);color:var(--rec-ink)!important}
+  .lmf{font:600 10px var(--mono);color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:2px 5px;min-width:22px;text-align:center}
+  .lm.cur .lmf{color:var(--rec);border-color:#f0cdcd}
   @media(max-width:700px){nav .links a:not(.gh):not(.lang){display:none}}
 
   /* ---------- timecode ruler — the brand motif ---------- */
@@ -140,34 +167,48 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"�
   <a href="/" class="brand" style="text-decoration:none"><Logo /></a>
   <div class="links">
     {nav.map(([href,label]) => <a href={href}>{label}</a>)}
-    <a href={langToggle.href} class="lang">{langToggle.label}</a>
-    <a class="gh" href={GH}>GitHub ★</a>
+    <details class="lmenu" id="lmenu">
+      <summary><span class="lflag">{cur.flag}</span><svg width="9" height="9" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary>
+      <div class="lmenu-pop">
+        {LANGS.map(l => <a class={"lm" + (l.code === lang ? " cur" : "")} href={l.path}><span class="lmf">{l.flag}</span>{l.name}</a>)}
+      </div>
+    </details>
+    <a class="gh" href={GH}>GitHub <span id="ghstars">★</span></a>
   </div>
 </div></nav>
 
 <slot />
 
 <footer><div class="wrap">
-  <div class="ftop">
-    <a href={lang === "zh" ? "/zh" : "/"} class="brand" style="text-decoration:none"><Logo size={24}/></a>
-    <span class="fl">
-      <a href={GH}>GitHub</a>
-      <a href={GH + "/issues"}>Issues</a>
-      <a href={lang === "zh" ? "/zh/docs" : "/docs"}>Docs</a>
-    </span>
+  <div class="fgrid">
+    <div class="fbrand">
+      <a href={cur.path} class="brand" style="text-decoration:none"><Logo size={24}/></a>
+      <p class="ftag">{f.tagline}</p>
+      <p class="fmeta mono">{f.selfRec} <span class="frec">●</span></p>
+    </div>
+    {fcols.map(([h, links]) => (
+      <div class="fcol"><h5>{h}</h5><ul>
+        {links.map(([href, label]) => <li><a href={href}>{label}</a></li>)}
+      </ul></div>
+    ))}
   </div>
   <div class="fbot">
-    <span>{lang === "zh" ? "© 2026 zalize · MIT 协议" : "© 2026 zalize · MIT license"}</span>
+    <span>{f.copy}</span>
     <span class="mono">wit · witness.zalize.com</span>
   </div>
 </div></footer>
 <style>
-  footer{padding:52px 0 44px;border-top:1px solid var(--line)}
-  .ftop{display:flex;align-items:center;gap:20px}
-  .fl{margin-left:auto;display:flex;gap:20px;flex-wrap:wrap}
-  .fl a{color:var(--dim);text-decoration:none;font-size:13px;transition:color .15s}
-  .fl a:hover{color:var(--rec)}
-  .fbot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:24px;padding-top:18px;border-top:1px dashed var(--line);color:var(--faint);font-size:12px}
+  footer{padding:56px 0 44px;border-top:1px solid var(--line)}
+  .fgrid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:32px}
+  @media(max-width:760px){.fgrid{grid-template-columns:1fr 1fr}}
+  .ftag{margin-top:16px;font-size:13px;color:var(--dim);line-height:1.7;max-width:300px}
+  .fmeta{margin-top:14px;font-size:11px;color:var(--faint)}
+  .frec{color:var(--rec);font-size:9px;vertical-align:1px}
+  .fcol h5{font:600 11px var(--mono);letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:14px}
+  .fcol ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:9px}
+  .fcol a{color:var(--dim);text-decoration:none;font-size:13px;transition:color .15s}
+  .fcol a:hover{color:var(--rec)}
+  .fbot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:36px;padding-top:18px;border-top:1px dashed var(--line);color:var(--faint);font-size:12px}
   .fbot .mono{font-family:var(--mono)}
 </style>
 
@@ -182,6 +223,13 @@ const langToggle = lang === "zh" ? {href:"/",label:"EN"} : {href:"/zh",label:"�
     if (d) el.style.transitionDelay = d + "ms";
     io.observe(el);
   });
+  const lm = document.getElementById("lmenu");
+  addEventListener("click", e => { if (lm?.open && !lm.contains(e.target as Node)) lm.open = false; });
+  fetch("https://api.github.com/repos/wookat/witness").then(r => r.ok ? r.json() : null).then(d => {
+    const el = document.getElementById("ghstars");
+    const n = d && d.stargazers_count;
+    if (el && typeof n === "number") el.textContent = "★ " + (n >= 1000 ? (n / 1000).toFixed(1) + "k" : n);
+  }).catch(() => {});
 </script>
 </body>
 </html>

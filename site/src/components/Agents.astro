@@ -1,0 +1,29 @@
+---
+import Card from "./Card.astro";
+import Icon from "./Icon.astro";
+import { ui } from "../i18n.js";
+// Two ways an agent consumes a session: paste the handoff, or plug the MCP.
+const { lang = "en" } = Astro.props;
+const t = ui(lang).agents;
+const agents = t.agents;
+---
+<div class="wrap">
+  <div class="kicker">{t.kicker}</div>
+  <h2 class="rv">{t.h2}</h2>
+  <p class="lede rv" data-d="80">{t.lede}</p>
+  <div class="grid g2">
+    <Card icon="file" title={t.c1t} d="0">{t.c1d}</Card>
+    <Card icon="api" title={t.c2t} d="80">{t.c2d}</Card>
+  </div>
+  <div class="alist rv" data-d="160">
+    <span class="wl">{t.works}</span>
+    {agents.map(a => <span class="an">{a}</span>)}
+  </div>
+</div>
+<style>
+  .alist{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:26px}
+  .wl{font:600 10.5px var(--mono);letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-right:6px}
+  .an{font:600 12.5px var(--mono);color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 16px;transition:all .18s}
+  .an:hover{color:var(--ink);border-color:var(--line2);transform:translateY(-1px);box-shadow:0 6px 16px #17181c0c}
+  .an:first-of-type{color:var(--rec-ink);background:var(--rec-soft);border-color:#f0cdcd}
+</style>
