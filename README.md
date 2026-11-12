@@ -140,4 +140,6 @@ npm test        # build + node:test suite (align / speech-run / bursts / prompts
   <img src="docs/logo.svg" width="38" alt="Witness">
   <br>
   <sub>Built by <b>zalize</b> (<a href="https://github.com/wookat">@wookat</a>) · <a href="LICENSE">MIT</a></sub>
+  <br>
+  <sub>Questions welcome — <a href="mailto:jikemiry@gmail.com">jikemiry@gmail.com</a> · <a href="https://github.com/wookat/witness/issues">issues</a></sub>
 </div>

@@ -16,7 +16,7 @@ export default {
     cols: ["產品", "文件", "社群"],
     product: { how: "運作原理", evidence: "證據產出", mcp: "MCP 接入", faq: "常見問題", install: "安裝" },
     docs: { usage: "使用文件", readme: "GitHub README", vision: "願景與路線", releases: "更新記錄" },
-    community: { github: "GitHub", issues: "問題回報", license: "MIT 授權", stars: "Star 歷史" },
+    community: { github: "GitHub", issues: "問題回報", license: "MIT 授權", stars: "Star 歷史", contact: "聯絡信箱" },
     copy: "© 2026 zalize · MIT 授權",
   },
   hero: {
@@ -200,6 +200,7 @@ Process in this order:
       ["錄到一半當機 / 被我結束了，全沒了嗎？", "events.jsonl 逐行串流寫入，最多丟最後幾百毫秒。<code>wit recover &lt;dir&gt;</code> 隨時從事件流重建 session.md、review.html、PROMPT.md。"],
       ["收費嗎？", "MIT 開源，無帳號、無必需 key。免費 ASR 是預設鏈路；付費模型全是自帶 key 的可選增強。"],
     ],
+    contact: `還有問題？→ <a href="mailto:jikemiry@gmail.com">jikemiry@gmail.com</a>，或直接 <a href="https://github.com/wookat/witness/issues" target="_blank" rel="noopener">開 Issue</a>——歡迎來問。`,
   },
   install: {
     k: "12 · 上手",

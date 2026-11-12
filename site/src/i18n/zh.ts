@@ -16,7 +16,7 @@ export default {
     cols: ["产品", "文档", "社区"],
     product: { how: "工作原理", evidence: "证据产出", mcp: "MCP 接入", faq: "常见问题", install: "安装" },
     docs: { usage: "使用文档", readme: "GitHub README", vision: "愿景与路线", releases: "更新记录" },
-    community: { github: "GitHub", issues: "问题反馈", license: "MIT 协议", stars: "Star 历史" },
+    community: { github: "GitHub", issues: "问题反馈", license: "MIT 协议", stars: "Star 历史", contact: "联系邮箱" },
     copy: "© 2026 zalize · MIT 协议",
   },
   hero: {
@@ -200,6 +200,7 @@ Process in this order:
       ["录到一半崩了 / 被我杀了，全没了吗？", "events.jsonl 逐行流式落盘，最多丢最后几百毫秒。<code>wit recover &lt;dir&gt;</code> 随时从事件流重建 session.md、review.html、PROMPT.md。"],
       ["收费吗？", "MIT 开源，无账号、无必需 key。免费 ASR 是默认链路；付费模型全是自带 key 的可选增强。"],
     ],
+    contact: `还有问题？→ <a href="mailto:jikemiry@gmail.com">jikemiry@gmail.com</a>，或直接 <a href="https://github.com/wookat/witness/issues" target="_blank" rel="noopener">提 Issue</a>——欢迎来问。`,
   },
   install: {
     k: "12 · 上手",

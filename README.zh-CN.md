@@ -127,4 +127,6 @@ npm test        # 编译 + node:test（align / speech-run / burst / prompt / rev
   <img src="docs/logo.svg" width="38" alt="Witness">
   <br>
   <sub>Built by <b>zalize</b> (<a href="https://github.com/wookat">@wookat</a>) · <a href="LICENSE">MIT</a></sub>
+  <br>
+  <sub>有问题欢迎来信 —— <a href="mailto:jikemiry@gmail.com">jikemiry@gmail.com</a> · <a href="https://github.com/wookat/witness/issues">issues</a></sub>
 </div>

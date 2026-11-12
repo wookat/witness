@@ -17,7 +17,7 @@ export default {
     cols: ["Product", "Docs", "Community"],
     product: { how: "How it works", evidence: "Evidence", mcp: "MCP", faq: "FAQ", install: "Install" },
     docs: { usage: "Usage docs", readme: "GitHub README", vision: "Vision & roadmap", releases: "Releases" },
-    community: { github: "GitHub", issues: "Issues", license: "MIT license", stars: "Star history" },
+    community: { github: "GitHub", issues: "Issues", license: "MIT license", stars: "Star history", contact: "Email" },
     copy: "© 2026 zalize · MIT license",
   },
   hero: {
@@ -201,6 +201,7 @@ Process in this order:
       ["It crashed / I killed it — is the take gone?", "events.jsonl streams to disk line by line; at most the last few hundred milliseconds are lost. <code>wit recover &lt;dir&gt;</code> rebuilds session.md, review.html and PROMPT.md from the stream."],
       ["Is it free?", "MIT, no accounts, no required keys. Free ASR engines are the default path; paid-model hooks are bring-your-own-key and optional."],
     ],
+    contact: `Still curious? → <a href="mailto:jikemiry@gmail.com">jikemiry@gmail.com</a> · or <a href="https://github.com/wookat/witness/issues" target="_blank" rel="noopener">open an issue</a>. Questions welcome.`,
   },
   install: {
     k: "12 · Get started",

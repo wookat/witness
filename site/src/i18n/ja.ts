@@ -16,7 +16,7 @@ export default {
     cols: ["プロダクト", "ドキュメント", "コミュニティ"],
     product: { how: "仕組み", evidence: "エビデンス", mcp: "MCP", faq: "FAQ", install: "インストール" },
     docs: { usage: "使い方ドキュメント", readme: "GitHub README", vision: "ビジョンとロードマップ", releases: "リリース" },
-    community: { github: "GitHub", issues: "Issue", license: "MIT ライセンス", stars: "Star 履歴" },
+    community: { github: "GitHub", issues: "Issue", license: "MIT ライセンス", stars: "Star 履歴", contact: "メール" },
     copy: "© 2026 zalize · MIT ライセンス",
   },
   hero: {
@@ -200,6 +200,7 @@ Process in this order:
       ["途中でクラッシュ/強制終了したら？", "events.jsonl は行ごとにストリーミング保存。失われるのは最大でも最後の数百ミリ秒。<code>wit recover &lt;dir&gt;</code> で session.md・review.html・PROMPT.md をいつでも再構築できます。"],
       ["有料ですか？", "MIT。アカウント不要、必須キーなし。無料 ASR が既定経路で、有料モデルのフックは全て BYO キーの任意機能です。"],
     ],
+    contact: `他に聞きたいことは？ → <a href="mailto:jikemiry@gmail.com">jikemiry@gmail.com</a> · または <a href="https://github.com/wookat/witness/issues" target="_blank" rel="noopener">Issue を作成</a>。質問歓迎です。`,
   },
   install: {
     k: "12 · はじめる",
