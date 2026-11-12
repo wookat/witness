@@ -11,7 +11,9 @@ export class Shots {
   private latest: Buffer | null = null;
   private latestAt = 0;
   private cdp: any = null;
-  constructor(private dir: string, private store: EventStore) {}
+  // evidence clips (mark/click/region) get higher quality — small area, high stakes;
+  // periodic full frames stay lean. webp option for size-sensitive setups.
+  constructor(private dir: string, private store: EventStore, private format: "jpeg" | "webp" = "jpeg") {}
 
   /** start a CDP screencast — periodic shots become memory reads, no repaint flicker */
   async arm(page: Page) {
@@ -40,11 +42,11 @@ export class Shots {
     if (this.seq >= MAX_SHOTS || this.busy) return null;
     this.busy = true;
     try {
-      const name = `${String(++this.seq).padStart(3, "0")}${tag ? "-" + tag : ""}.jpg`;
+      const name = `${String(++this.seq).padStart(3, "0")}${tag ? "-" + tag : ""}.${this.format === "webp" ? "webp" : "jpg"}`;
       const rel = `shots/${name}`;
-      if (clip || !this.latest || Date.now() - this.latestAt > 5000) {
-        // region crops and no fresh screencast frame → real screenshot
-        await page.screenshot({ type: "jpeg", quality: 70, path: join(this.dir, rel), clip });
+      // screencast frames are jpeg-only — webp mode always takes a real screenshot
+      if (clip || this.format === "webp" || !this.latest || Date.now() - this.latestAt > 5000) {
+        await page.screenshot({ type: this.format, quality: clip ? 82 : 68, path: join(this.dir, rel), clip });
       } else {
         await writeFile(join(this.dir, rel), this.latest);
       }

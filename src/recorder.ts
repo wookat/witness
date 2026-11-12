@@ -31,6 +31,8 @@ export interface RecOptions {
   rr?: boolean;              // default true: rrweb full-DOM replay capture → rrweb.jsonl + review.html player
   asr?: AsrChoice;           // live speech engine: auto|doubao-web|doubao-ime|sr|off (default auto)
   keyframes?: boolean;       // opt-in: render rrweb → per-segment keyframe jpgs after stop (slower finalize)
+  shotFormat?: "jpeg" | "webp"; // screenshot codec — jpeg default (best agent compat), webp ~35% smaller
+  dsf?: number;              // deviceScaleFactor — 1 default; 2 gives retina-sharp shots for human zoom
 }
 
 const slug = (s: string) => s.replace(/^https?:\/\//, "").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
@@ -72,7 +74,7 @@ export async function record(opts: RecOptions) {
 
   const store = new EventStore(dir);
   const audio = new AudioSink(dir);
-  const shots = new Shots(dir, store);
+  const shots = new Shots(dir, store, opts.shotFormat);
 
   let paused = false;                 // node-side mirror of page pause (via _ui events)
   const rrEnabled = opts.rr !== false && !!rrwebUmd();
@@ -107,6 +109,7 @@ export async function record(opts: RecOptions) {
 
   const ctx: BrowserContext = await browser.newContext({
     viewport: { width: opts.width ?? 1560, height: opts.height ?? 960 },
+    deviceScaleFactor: opts.dsf ?? 1,
     permissions: ["microphone"],
     ignoreHTTPSErrors: true,
   });

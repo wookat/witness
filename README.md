@@ -53,6 +53,7 @@ few hundred milliseconds. `wit recover` rebuilds everything.
 
 ```bash
 wit start <url> [--lang en-US] [--duration 60] [--no-rr] [--associate]
+                [--shot-format jpeg|webp] [--dsf 1|2] [--keyframes]
 wit list                          # sessions with url/duration/say count
 wit open latest                   # open review.html
 wit transcribe <dir>              # re-run cloud ASR

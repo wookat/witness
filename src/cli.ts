@@ -33,6 +33,8 @@ program
   .option("--shot-interval <ms>", "periodic screenshot interval", "10000")
   .option("--width <px>", "viewport width", "1560")
   .option("--height <px>", "viewport height", "960")
+  .option("--dsf <n>", "device pixel ratio for screenshots (1=default, 2=retina)", "1")
+  .option("--shot-format <fmt>", "screenshot codec: jpeg|webp (jpeg=compat, webp=smaller)", "jpeg")
   .action(async (url, o) => {
     await record({
       url,
@@ -41,6 +43,8 @@ program
       shotInterval: Number(o.shotInterval),
       width: Number(o.width),
       height: Number(o.height),
+      dsf: Number(o.dsf),
+      shotFormat: o.shotFormat === "webp" ? "webp" : "jpeg",
       duration: o.duration ? Number(o.duration) : undefined,
       lang: o.lang,
       correct: !!o.correct,
