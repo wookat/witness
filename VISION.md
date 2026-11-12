@@ -138,7 +138,7 @@ agent 按需挖证据而非一次塞死：`list_segments` / `segment_detail(n)` 
 说"录完了" → agent 读 `SEGMENTS.md` → **先回显问题确认清单，用户确认后再修** → 定位源码 → 修 → 引用证据点汇报。
 方式 B：CLI（`wit start/list/open/transcribe/correct/segments/keyframes`）。方式 C（远期）：浏览器插件。
 
-**接入**：Devin 走 `skills/witness`（已全局安装）；Cursor/Claude/Codex 贴 PROMPT.md+目录；
+**接入**：支持 skill 的 agent 加载 `skills/witness/SKILL.md`；Cursor/Claude/Codex 贴 PROMPT.md+目录；
 V2 起 MCP server 直连。session 目录自描述（README.txt），无 lock-in。
 
 **部署**：Node 18+ + 系统 Edge/Chrome；`npm install && npm run build && npm link` → `wit`/`rec`；

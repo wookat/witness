@@ -149,7 +149,7 @@ Process in this order:
     c1t: "PROMPT.md → 粘贴",
     c1d: "每个 session 自带交接文件：格式说明、页面词表、修复规则。贴进任何会跑命令的 agent——它就知道该怎么读证据、先复述清单再动手。",
     c2t: "wit mcp → 接入",
-    c2d: "支持 MCP 的 agent 直接连 stdio server：12 个工具按需挖证据，不用把整包塞进上下文。仓库还自带 SKILL.md——Devin 直接加载为原生 skill，其他 agent 可以当规则文件用。",
+    c2d: "支持 MCP 的 agent 直接连 stdio server：12 个工具按需挖证据，不用把整包塞进上下文。仓库还自带 SKILL.md——支持 skill 的 agent 原生加载，其他可以当规则文件用。",
     works: "适配",
     agents: ["Devin", "Claude Code", "Cursor", "Codex", "Windsurf", "任何 MCP 客户端"],
   },
@@ -193,7 +193,7 @@ Process in this order:
     items: [
       ["需要装什么？", "Node 18+ 和系统 Edge/Chrome——优先用你机器上的真浏览器，找不到才装自带 chromium。<code>npm i -g github:wookat/witness</code>，完事。"],
       ["有什么数据会离开本机？", "证据包全部落在本地 <code>.witness/sessions/</code>（自动 gitignore）。实时字幕按你选的引擎流式发麦克风音频（默认 doubao-web）；<code>--asr sr</code> 走系统/浏览器识别，<code>--asr off</code> 直接不要实时字幕。终稿转写走 bcut（免费）或你自己的 OPENAI_API_KEY 走 whisper——<code>--no-transcribe</code> 可全跳过。LLM 纠错/关联只有显式传 flag 且有 key 才跑。"],
-      ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——12 个查询工具按需挖证据，而不是一次性塞全文。仓库自带的 SKILL.md 在 Devin 上是原生 skill，在其他 agent 上可当规则文件。"],
+      ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——12 个查询工具按需挖证据，而不是一次性塞全文。仓库自带的 SKILL.md 在支持 skill 的 agent 上原生加载，其余可当规则文件。"],
       ["密码出现在页面里怎么办？", "密码字段四通道打码；POST 体自动脱敏凭证字段；<code>P</code> 随时全冻结（含麦克风）；敏感应用设 <code>WIT_NO_BODIES=1</code> 直接不存响应体。"],
       ["可以说什么语言？", "识别语言默认跟随浏览器/系统语言——<code>--lang &lt;bcp47&gt;</code>（如 en-US、ja-JP）按次覆盖。原话永远逐字落盘——识别错字保留可审计，LLM 纠错只是可选的展示层。"],
       ["只能录 localhost 吗？", "任何 URL——托管浏览器就是你的真实浏览器，登录照样用。不过在本地开发站上最锋利：agent 修的时候能同时看到源码。"],
