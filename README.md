@@ -1,15 +1,24 @@
-# Witness
+<div align="center">
+  <a href="https://witness.zalize.com"><img src="docs/og.png" alt="Witness — You say it. Witness proves it." width="760"></a>
+  <br><br>
+  <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A518-17181c?style=flat-square" alt="Node ≥ 18">
+  <img src="https://img.shields.io/badge/MCP-12%20tools-17181c?style=flat-square" alt="12 MCP tools">
+  <br>
+  <b>English</b> · <a href="README.zh-CN.md">中文</a> · <a href="https://witness.zalize.com">witness.zalize.com</a> · <a href="VISION.md">VISION.md</a>
+</div>
+
+<br>
 
 **Voice-anchored causal evidence recorder for AI coding agents.**
-
-[中文](README.zh-CN.md) · [witness.zalize.com](https://witness.zalize.com) · [VISION.md](VISION.md) · MIT
 
 You experience the product and talk — *“this button does nothing.”*
 Witness welds every word to the causal evidence of that exact second: clicks, requests,
 console errors, DOM mutations, screenshots, full rrweb replay — then hands a structured
 evidence package to your AI coding agent.
 
-![demo](docs/demo.gif)
+<p align="center"><img src="docs/demo.gif" alt="Recording a session with wit" width="820"></p>
 
 ## Why
 
@@ -48,6 +57,13 @@ No downloads, no API keys. System Edge/Chrome is preferred; bundled Chromium is 
 
 `events.jsonl` streams to disk as you go — kill the process and you lose only the last
 few hundred milliseconds. `wit recover` rebuilds everything.
+
+## What the agent reads
+
+Each spoken fragment lands on a timeline as a `SAY` block carrying the causal burst of
+that moment — dead clicks, mutations, errors — with linked shots and DOM snapshots.
+
+<p align="center"><img src="docs/evidence.png" alt="session.md — each SAY anchors its causal burst" width="820"></p>
 
 ## CLI
 
@@ -112,4 +128,10 @@ npm install && npm run build && npm link
 npm test        # build + node:test suite (align / speech-run / bursts / prompts / review html)
 ```
 
-MIT.
+<br>
+
+<div align="center">
+  <img src="docs/logo.svg" width="38" alt="Witness">
+  <br>
+  <sub>Built by <b>zalize</b> (<a href="https://github.com/wookat">@wookat</a>) · <a href="LICENSE">MIT</a></sub>
+</div>

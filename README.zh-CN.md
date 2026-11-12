@@ -1,13 +1,22 @@
-# Witness
+<div align="center">
+  <a href="https://witness.zalize.com"><img src="docs/og.png" alt="Witness — 你开口，Witness 补全证据。" width="760"></a>
+  <br><br>
+  <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A518-17181c?style=flat-square" alt="Node ≥ 18">
+  <img src="https://img.shields.io/badge/MCP-12%20tools-17181c?style=flat-square" alt="12 个 MCP 工具">
+  <br>
+  <a href="README.md">English</a> · <b>中文</b> · <a href="https://witness.zalize.com">witness.zalize.com</a> · <a href="VISION.md">愿景与路线 VISION.md</a>
+</div>
+
+<br>
 
 **语音锚定的因果证据记录仪——为 AI 编码 agent 设计。**
-
-[English](README.md) · [witness.zalize.com](https://witness.zalize.com) · [愿景与路线 VISION.md](VISION.md) · MIT
 
 你像平时一样体验产品、用嘴说哪里不对——“这个按钮点了没反应”。
 Witness 把你说的每句话焊死在那一秒发生的因果事实上：点击、请求、报错、DOM 变化、截图、rrweb 全量回放——产出一份结构化证据包，直接喂给 AI agent 修。
 
-![demo](docs/demo.gif)
+<p align="center"><img src="docs/demo.gif" alt="用 wit 录制一段 session" width="820"></p>
 
 ## 为什么
 
@@ -40,6 +49,12 @@ wit start http://localhost:5173       # 托管浏览器打开——正常体验+
 | `■` / `Ctrl+C` | 停止并生成证据包 |
 
 events.jsonl 边录边落盘——进程被杀也只丢最后几百毫秒，`wit recover` 随时重建全部产物。
+
+## agent 读到什么
+
+每个语音片段落进时间轴成为 `SAY` 块，带着那一秒的因果爆发链——死点击、DOM 变化、报错——挂好截图和 DOM 快照。
+
+<p align="center"><img src="docs/evidence.png" alt="session.md——每段 SAY 锚定它的因果爆发链" width="820"></p>
 
 ## 命令
 
@@ -100,4 +115,10 @@ npm install && npm run build && npm link
 npm test        # 编译 + node:test（align / speech-run / burst / prompt / review html）
 ```
 
-MIT.
+<br>
+
+<div align="center">
+  <img src="docs/logo.svg" width="38" alt="Witness">
+  <br>
+  <sub>Built by <b>zalize</b> (<a href="https://github.com/wookat">@wookat</a>) · <a href="LICENSE">MIT</a></sub>
+</div>
