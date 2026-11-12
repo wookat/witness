@@ -4,6 +4,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { Command } from "commander";
 import { record } from "./recorder.js";
 import { transcribe, hasTranscriber } from "./transcribe.js";
@@ -16,7 +17,8 @@ import { loadSession } from "./store-read.js";
 config({ path: [join(process.cwd(), ".env"), join(import.meta.dirname, "..", ".env")] });
 
 const program = new Command();
-program.name("wit").description("witness — voice-anchored evidence recorder for AI agents").version("0.1.0");
+const { version } = createRequire(import.meta.url)("../package.json");
+program.name("wit").description("witness — voice-anchored evidence recorder for AI agents").version(version);
 
 program
   .command("start <url>")
