@@ -28,7 +28,7 @@ const wordmark = `w<span style="position:relative">ı<span style="position:absol
 
 const html = (t) => `<!doctype html><html><body style="margin:0;background:#f7f6f3;font-family:-apple-system,'Segoe UI',sans-serif;
   width:1200px;height:630px;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;overflow:hidden">
-  <div style="position:absolute;inset:0;background-image:linear-gradient(#e3e1da 1px,transparent 1px),linear-gradient(90deg,#e3e1da 1px,transparent 1px);background-size:52px 52px;mask-image:radial-gradient(ellipse 75% 65% at 50% 42%,transparent 28%,#000 78%)"></div>
+  <div style="position:absolute;inset:0;background-image:linear-gradient(#e3e1da 1px,transparent 1px),linear-gradient(90deg,#e3e1da 1px,transparent 1px);background-size:52px 52px;mask-image:radial-gradient(ellipse 120% 95% at 50% 47%,transparent 75%,#000 100%)"></div>
   <div style="position:absolute;top:40px;left:56px;right:56px;height:26px;border-top:1px solid #e3e1da;border-bottom:1px solid #e3e1da;
     background:repeating-linear-gradient(90deg,#d4d2ca 0 1px,transparent 1px 56px),repeating-linear-gradient(90deg,#e3e1da 0 1px,transparent 1px 14px);
     background-position:0 100%,0 100%;background-size:auto 9px,auto 5px;background-repeat:repeat-x"></div>
