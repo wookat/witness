@@ -141,5 +141,5 @@ npm test        # build + node:test suite (align / speech-run / bursts / prompts
   <br>
   <sub>Built by <b>zalize</b> (<a href="https://github.com/wookat">@wookat</a>) · <a href="LICENSE">MIT</a></sub>
   <br>
-  <sub>Questions welcome — <a href="mailto:jikemiry@gmail.com">jikemiry@gmail.com</a> · <a href="https://github.com/wookat/witness/issues">issues</a></sub>
+  <sub>Questions welcome — <a href="mailto:wookat@qq.com">wookat@qq.com</a> · <a href="https://github.com/wookat/witness/issues">issues</a></sub>
 </div>

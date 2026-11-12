@@ -200,7 +200,7 @@ Process in this order:
       ["录到一半崩了 / 被我杀了，全没了吗？", "events.jsonl 逐行流式落盘，最多丢最后几百毫秒。<code>wit recover &lt;dir&gt;</code> 随时从事件流重建 session.md、review.html、PROMPT.md。"],
       ["收费吗？", "MIT 开源，无账号、无必需 key。免费 ASR 是默认链路；付费模型全是自带 key 的可选增强。"],
     ],
-    contact: `还有问题？→ <a href="mailto:jikemiry@gmail.com">jikemiry@gmail.com</a>，或直接 <a href="https://github.com/wookat/witness/issues" target="_blank" rel="noopener">提 Issue</a>——欢迎来问。`,
+    contact: `还有问题？→ <a href="mailto:wookat@qq.com">wookat@qq.com</a>，或直接 <a href="https://github.com/wookat/witness/issues" target="_blank" rel="noopener">提 Issue</a>——欢迎来问。`,
   },
   install: {
     k: "12 · 上手",
