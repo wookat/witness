@@ -5,8 +5,8 @@ const { lang = "en" } = Astro.props;
 const t = ui(lang).vs;
 ---
 <div class="wrap">
-  <div class="kicker">{t.kicker}</div>
-  <h2 class="rv">{t.h2}</h2>
+  <div class="kicker">{t.k}</div>
+  <h2 class="rv">{t.h}</h2>
   <p class="lede rv" data-d="80">{t.lede}</p>
   <div class="vt rv" data-d="140">
     <table>
@@ -19,6 +19,20 @@ const t = ui(lang).vs;
         </tr>)}
       </tbody>
     </table>
+  </div>
+  <p class="ph2 rv" data-d="180">{t.ph2}</p>
+  <div class="vt rv" data-d="200">
+    <table>
+      <thead><tr>{t.pcols.map((c, i) => <th class={i === t.pcols.length - 1 ? "hl" : ""}>{c}</th>)}</tr></thead>
+      <tbody>
+        {t.prows.map(r => <tr>
+          {r.map((c, i) => i === t.pcols.length - 1
+            ? <td class="hl"><b>{c}</b></td>
+            : i === 0 ? <td class="rh">{c}</td> : <td>{c}</td>)}
+        </tr>)}
+      </tbody>
+    </table>
+    <p class="vnote">{t.pnote}</p>
   </div>
 </div>
 <style>
@@ -34,4 +48,6 @@ const t = ui(lang).vs;
   td.hl b{font-weight:600}
   tr:hover td{background:#fbfaf7}
   tr:hover td.hl{background:#fbeeee}
+  .ph2{margin:34px 0 0;font-size:14px;font-weight:600;color:var(--ink)}
+  .vnote{margin-top:12px;font-size:12px;color:var(--faint)}
 </style>

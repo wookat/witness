@@ -177,6 +177,18 @@ Process in this order:
       ["Rewind the page state", "—", "video ≠ DOM", "rrweb full-DOM replay"],
       ["Stays on your disk", "—", "depends where it uploads", "always — .witness/sessions"],
     ],
+    ph2: "…and against the tools you'd actually reach for:",
+    pcols: ["", "Jam", "Replay.io", "Loom", "Replay SaaS*", "Witness"],
+    prows: [
+      ["Speech → anchored evidence", "◐ voiceover on video", "—", "◐ narration", "—", "verbatim speech, welded to events"],
+      ["Built for AI agents", "◐ AI repro + MCP", "✓ MCP + time-travel", "—", "—", "session.md + PROMPT.md + 12-tool MCP"],
+      ["Console / network", "✓", "✓ runtime-level", "—", "✓", "✓ + causal bursts, dead clicks"],
+      ["Replay depth", "video · 2-min DOM", "runtime time-travel — deepest", "video", "✓ DOM replay", "✓ rrweb full-DOM"],
+      ["Stays on your disk", "— uploads + account", "— uploads", "— uploads", "— SaaS", "✓ .witness/sessions, no account"],
+      ["Nothing installed in the product", "◐ browser extension", "◐ dedicated browser", "✓", "— SDK required", "✓ any URL"],
+      ["Open source", "—", "◐ devtools only", "—", "—", "✓ MIT"],
+    ],
+    pnote: "*Session-replay SaaS = LogRocket / FullStory and friends. From their public docs, Nov 2026 — if a row is stale, tell us.",
   },
   who: {
     k: "10 · Who it's for",

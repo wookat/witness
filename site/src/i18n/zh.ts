@@ -176,6 +176,18 @@ Process in this order:
       ["回到那一秒的页面", "—", "视频 ≠ DOM", "rrweb 全量回放"],
       ["数据留在本地", "—", "看传到了哪", "永远在 .witness/sessions"],
     ],
+    ph2: "……以及和那些你真正会用的工具比：",
+    pcols: ["", "Jam", "Replay.io", "Loom", "Replay SaaS*", "Witness"],
+    prows: [
+      ["语音 → 锚定证据", "◐ 视频配音", "—", "◐ 旁白", "—", "原话逐字，焊进事件"],
+      ["为 AI agent 而造", "◐ AI 生成 repro + MCP", "✓ MCP + 时间旅行", "—", "—", "session.md + PROMPT.md + 12 工具 MCP"],
+      ["console / 网络", "✓", "✓ runtime 级", "—", "✓", "✓ + 因果爆发链、死点击"],
+      ["回放深度", "视频 · 2 分钟 DOM", "runtime 时间旅行——最深", "视频", "✓ DOM 回放", "✓ rrweb 全量 DOM"],
+      ["留在你磁盘上", "— 上传 + 要账号", "— 上传", "— 上传", "— SaaS", "✓ .witness/sessions，零账号"],
+      ["产品侧零安装", "◐ 浏览器扩展", "◐ 专用浏览器", "✓", "— 需埋 SDK", "✓ 任意 URL"],
+      ["开源", "—", "◐ 仅 devtools", "—", "—", "✓ MIT"],
+    ],
+    pnote: "*Replay SaaS = LogRocket / FullStory 一类。来源：各家公开文档，2026-11——如有过时请告诉我们。",
   },
   who: {
     k: "10 · 谁在用",

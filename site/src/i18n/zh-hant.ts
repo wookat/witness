@@ -176,6 +176,18 @@ Process in this order:
       ["回到那一秒的頁面", "—", "影片 ≠ DOM", "rrweb 全量回放"],
       ["資料留在本機", "—", "看傳到了哪", "永遠在 .witness/sessions"],
     ],
+    ph2: "……以及和那些你真的會用的工具比：",
+    pcols: ["", "Jam", "Replay.io", "Loom", "Replay SaaS*", "Witness"],
+    prows: [
+      ["語音 → 錨定證據", "◐ 影片配音", "—", "◐ 旁白", "—", "原話逐字，焊進事件"],
+      ["為 AI agent 而造", "◐ AI 生成 repro + MCP", "✓ MCP + 時間旅行", "—", "—", "session.md + PROMPT.md + 12 工具 MCP"],
+      ["console / 網路", "✓", "✓ runtime 級", "—", "✓", "✓ + 因果爆發鏈、死點擊"],
+      ["回放深度", "影片 · 2 分鐘 DOM", "runtime 時間旅行——最深", "影片", "✓ DOM 回放", "✓ rrweb 全量 DOM"],
+      ["留在你磁碟上", "— 上傳 + 要帳號", "— 上傳", "— 上傳", "— SaaS", "✓ .witness/sessions，零帳號"],
+      ["產品側零安裝", "◐ 瀏覽器擴充", "◐ 專用瀏覽器", "✓", "— 需埋 SDK", "✓ 任意 URL"],
+      ["開源", "—", "◐ 僅 devtools", "—", "—", "✓ MIT"],
+    ],
+    pnote: "*Replay SaaS = LogRocket / FullStory 一類。來源：各家公開文件，2026-11——如有過時請告訴我們。",
   },
   who: {
     k: "10 · 誰在用",
