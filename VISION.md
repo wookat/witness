@@ -73,7 +73,9 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 | 因果爆发链 | ✅ 点击后的请求+body/响应/console/状态变化全记；session.md 渲染层把 ~1.8s 后果缩进归组 | ✅ "点了没反应"显式渲染为"无任何反应——这本身就是证据" |
 | 语音锚点时间轴 | ✅ SAY 块 + 时间窗证据挂载 | ✅ 形态与设想一致 |
 | **按语义智能挑证据** | ✅ `--associate` / `wit associate`：LLM 从 ±5s 候选事件挑相关项→`assoc.json`，session.md 只显示命中、其余折叠；无 key 回退时间窗 | 已上线但属可选层；默认渲染仍是确定性时间窗（语义判断也可留给下游 agent） |
-| agent 主动查询证据 | ✅ `wit mcp`：stdio MCP server，10 个工具（overview/list_says/session_md/events_around/get_errors/get_shot/get_dom_state/get_body/get_asr/set_asr） | ✅ 已上线 |
+| agent 主动查询证据 | ✅ `wit mcp`：stdio MCP server，12 个工具（list_segments/segment_detail/session_overview/list_says/session_md/events_around/get_errors/get_shot/get_dom_state/get_body/get_asr/set_asr） | ✅ 已上线 |
+| **语音锚点 → 问题包** | ✅ `SEGMENTS.md` + `segments/NN.md`：语音段索引（原话+嫌疑元素+死点击+⚠证据缺口+挂图）；段≠问题，语义归组归 agent | ✅ 已上线；`wit segments` 可重建 |
+| **agent 可读的回放** | ✅ `wit keyframes` / `--keyframes`：rrweb.jsonl → 每段起/中/止关键帧 jpg | ✅ 已上线（可选层） |
 | 元素/区域标记 | ✅ Ctrl+点击 / M inspect / 拖拽圈选 | ✅ 超出设想（组件链、红框截图） |
 | 多问题一段录 | ✅ N 键 Issue 边界（可选辅助） | ✅ |
 | 语音质量 | ✅ 云端流式 ASR（auto=doubao-web→doubao-ime→浏览器SR，四入口可切）+ 终稿 whisper/bcut | 原话永不改写 |
@@ -83,25 +85,26 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 1. **证据不改写**：语音碎片原样落盘。合并/纠错是展示层和下游的事。证人证词一字不动。
 2. **证据 ≠ 意图**：点击/标记只是"发生了什么"，只有语音说明"用户想说什么"。无 SAY 时禁止从行为推断问题。
 3. **本地优先零依赖**：无云 key 全功能可用；模型层全部是可选增强，不是链路必需。
-4. **受众分离**：人看 review.html（视觉+音频跳转）；agent 看 session.md/events.jsonl（结构化文本）。
+4. **受众分离**：人看 review.html（视觉+音频跳转）；agent 走 `SEGMENTS.md` → `segments/NN.md` → 按需下钻 `events.jsonl`/`shots/`/`keyframes/`（结构化文本+多模态图）。
 5. **降级不丢信息**：理想版做不到的（智能关联），用"全量记录+原始可查"兜底——宁可多给，不可猜错地少给。
 
 ## 六、V2+ 路线（向理想版逼近的顺序）
 
 1. ~~**LLM 证据关联**~~ ✅ `--associate`/`wit associate` 已实现（挂载建议只动展示，不改原文）
-2. ~~**MCP server**~~ ✅ `wit mcp` 已实现（10 个 stdio 工具）
+2. ~~**MCP server**~~ ✅ `wit mcp` 已实现（12 个 stdio 工具）
+2b. ~~**语音锚点问题包 + 关键帧**~~ ✅ `SEGMENTS.md`/`segments/` + `wit keyframes` 已实现
 3. **更强转写**——火山 seed-asr（豆包同源）/ 讯飞 / Scribe 适配器（transcribe.ts 已留 backend 抽象）
 4. **浏览器插件版**——脱离 Playwright，日常浏览器即录（最初的设想形态）
-5. ~~**rrweb 完整回放**~~ ✅ 已实现——`rrweb.jsonl` + review.html 内嵌播放器（胶片条仍是轻量伪回放）
+5. ~~**rrweb 完整回放**~~ ✅ 已实现——`rrweb.jsonl` + review.html 内嵌播放器（胶片条仍是轻量伪回放）；`wit keyframes` 另渲染每段关键帧给 agent
 6. **崩溃恢复** ✅ `wit recover` 已实现——从 events.jsonl 重建全部产物
 
 ## 七、交付物受众对照
 
 | 给人看 | 给 AI agent |
 |---|---|
-| review.html（语音卡片+截图+音频跳转） | PROMPT.md（入口+词表+规则） |
-| shots/*.jpg、audio.webm | session.md（主时间轴） |
-| README.txt（目录导览） | events.jsonl / transcript.json / bodies/ / session.json |
+| review.html（语音卡片+截图+音频跳转+rrweb 回放） | SEGMENTS.md → segments/NN.md（语音锚点索引，先读） |
+| shots/*.jpg、audio.webm、keyframes/ | session.md（全量档案）· events.jsonl / transcript.json / bodies/ |
+| README.txt（目录导览） | PROMPT.md（入口+词表+规则）· shots/ · dom/ · session.json |
 
 ## 八、技术方案（理想版的实现层）
 
@@ -111,7 +114,7 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 | 录音 | 页面内 MediaRecorder（WebM/Opus，零系统依赖） |
 | 转写 | `live-asr.ts` 引擎链：doubao-web 默认 → doubao-ime → 浏览器 SR（`wit config asr`/`--asr`/`WIT_ASR`/MCP `set_asr`）；终稿 whisper/bcut |
 | 事件模型 | 统一 Ev 联合类型 → 流式 events.jsonl（崩溃不丢） |
-| 截图 | 事件驱动（标记/导航/报错）+ 周期兜底（固定高频=频闪根因，已实测） |
+| 截图 | 事件驱动（click/mark 裁切 + 导航/报错）+ 周期兜底（固定高频=频闪根因，已实测）；分级质量 q82 证据/q68 周期，jpeg|webp 可选 |
 | 关联 | V1 时间窗挂载；理想态 LLM 关联层（见下） |
 | 渲染 | session.md / review.html（零依赖单页）/ PROMPT.md（含页面词表） |
 | 技术栈 | TypeScript + Node.js + Commander + dotenv + OpenAI SDK（兼容端点） |
@@ -122,16 +125,17 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 `{say_index: [ev_ids]}` 挂载建议 + 每 SAY 语义摘要 → session.md 按建议渲染证据点，
 "全部证据"折叠区兜底。无 key/失败 → 回退时间窗。**只动挂载建议，证据原文不动。**
 
-### MCP 查询口（V2）
+### MCP 查询口（V2，已实现为 12 个工具）
 
-agent 按需挖证据而非一次塞死：`get_say(t)` / `get_requests_around(t)` /
-`get_dom_state(t)` / `get_errors()` / `get_shot(t)` / `latest_session()`。
+agent 按需挖证据而非一次塞死：`list_segments` / `segment_detail(n)` /
+`session_overview` / `list_says` / `session_md` / `events_around(t_ms, radius, kinds)` /
+`get_errors` / `get_shot` / `get_body` / `get_dom_state(t)` / `get_asr` / `set_asr`。
 
 ## 九、使用、接入与部署
 
 **使用（方式 A：agent 驱动）**：说"帮我录一段"→ 浏览器弹出 → 体验+说话+Ctrl点/N/P → 点 ■ →
-说"看最新录制，按证据修" → agent 读 session.md → 定位源码 → 修 → 引用证据点汇报。
-方式 B：CLI（`wit start/list/open/transcribe/correct`）。方式 C（远期）：浏览器插件。
+说"录完了" → agent 读 `SEGMENTS.md` → **先回显问题确认清单，用户确认后再修** → 定位源码 → 修 → 引用证据点汇报。
+方式 B：CLI（`wit start/list/open/transcribe/correct/segments/keyframes`）。方式 C（远期）：浏览器插件。
 
 **接入**：Devin 走 `skills/witness`（已全局安装）；Cursor/Claude/Codex 贴 PROMPT.md+目录；
 V2 起 MCP server 直连。session 目录自描述（README.txt），无 lock-in。
