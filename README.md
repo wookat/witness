@@ -42,7 +42,7 @@ No downloads, no API keys. System Edge/Chrome is preferred; bundled Chromium is 
 | Browse + talk | Full audio; clicks/scrolls/inputs/navigation auto-logged; live transcript preview under the toolbar |
 | `Ctrl+click` | Mark an element — selector, outerHTML, component chain, red-frame screenshot |
 | `M` | Inspect mode: hover-highlight, click to mark; **drag to crop a region** |
-| `N` | Explicit issue boundary — `⏺ ISSUE #n` divider in the output; many issues, one take |
+| `N` | Explicit boundary marker — `⏺ ISSUE #n` divider; a strong grouping hint for the agent |
 | `P` | Pause/resume — **all events and audio freeze** (privacy) |
 | `■` / `Ctrl+C` | Stop and finalize the evidence package |
 
@@ -72,6 +72,8 @@ wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
 SEGMENTS.md       # speech anchors: verbatim + suspects + shot/dom refs (agents read first)
 segments/*.md   # per-segment bundle: verbatim frags, dead clicks, errors, linked shots
 keyframes/*.jpg  # rrweb-rendered replay frames per segment (wit keyframes)
+KEYFRAMES.md     # keyframe index
+segments.json    # machine-readable segment index (what MCP serves)
 session.md      # timeline archive: each SAY block carries its causal burst
 PROMPT.md       # paste-ready handoff instructions + page vocabulary
 review.html     # human view: speech cards + audio seek + filmstrip + embedded rrweb replay
@@ -79,7 +81,7 @@ events.jsonl    # complete raw stream, crash-safe
 rrweb.jsonl     # full DOM event stream (--no-rr to disable)
 dom/*.html      # DOM snapshots on nav/mark/30s
 assoc.json      # optional LLM evidence-association suggestions
-shots/*.jpg     # event-driven + periodic + spoken-segment frames
+shots/*.jpg     # click/mark crops + periodic + spoken-segment frames (--shot-format webp for ~35% smaller)
 bodies/*.json   # response bodies ≤64KB
 audio.webm / transcript.json
 ```

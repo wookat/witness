@@ -35,7 +35,7 @@ wit start http://localhost:5173       # 托管浏览器打开——正常体验+
 | 正常浏览+说话 | 全程录音；点击/滚动/输入/导航自动记录；识别文字实时显示在工具栏下方 |
 | `Ctrl+点击` | 标记元素（selector+outerHTML+组件链+红框截图） |
 | `M` | Inspect：悬停高亮，点选标记；**拖拽圈选区域**截局部图 |
-| `N` | 显式切 **Issue 边界**——`⏺ ISSUE #n` 分隔，多问题一段录完 |
+| `N` | 显式边界标记——`⏺ ISSUE #n` 分隔，是给 agent 归组的强提示 |
 | `P` | 暂停/继续——暂停期**所有事件与录音都冻结**（隐私） |
 | `■` / `Ctrl+C` | 停止并生成证据包 |
 
@@ -45,6 +45,7 @@ events.jsonl 边录边落盘——进程被杀也只丢最后几百毫秒，`wit
 
 ```bash
 wit start <url> [--lang en-US] [--duration 60] [--no-rr] [--associate]
+                [--shot-format jpeg|webp] [--dsf 1|2] [--keyframes]
 wit list                          # sessions 列表（url/时长/say 数）
 wit open latest                   # 打开 review.html
 wit transcribe <dir>              # 重跑云端转写
@@ -64,6 +65,7 @@ SEGMENTS.md       # 语音段索引：原话+嫌疑元素+截图/DOM 引用（ag
 segments/*.md     # 每段一包：逐段原话 + 死点击 + 报错 + 挂图
 keyframes/*.jpg   # rrweb 回放渲染的关键帧（wit keyframes / --keyframes）
 KEYFRAMES.md      # 关键帧索引
+segments.json     # 机器可读的语音段索引（MCP 对外服务的就是它）
 session.md      # 时间轴档案：每段 SAY 下挂因果爆发链
 PROMPT.md       # 可粘贴给 agent 的交接模板 + 页面词表
 review.html     # 回放页：语音卡片 + 音频跳转 + 胶片条 + 内嵌 rrweb 回放
@@ -71,7 +73,7 @@ events.jsonl    # 全量原始事件，崩溃安全
 rrweb.jsonl     # rrweb DOM 事件流（--no-rr 关闭）
 dom/*.html      # DOM 快照（nav/mark/每30s）
 assoc.json      # （可选）LLM 证据关联建议
-shots/*.jpg     # 事件驱动 + 周期 + 说话段截图
+shots/*.jpg     # click/mark 裁切 + 周期 + 说话段截图（--shot-format webp 省 ~35% 体积）
 bodies/*.json   # 响应体 ≤64KB
 audio.webm / transcript.json
 ```
