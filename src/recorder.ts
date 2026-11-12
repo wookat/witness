@@ -319,7 +319,7 @@ export async function record(opts: RecOptions) {
     }
     writeFileSync(join(dir, "session.json"), JSON.stringify({ ...meta, events: events.length, audio: audio.hasAudio }, null, 1));
 
-    const clip = `witness session: ${dir}\n读 ${join(dir, "session.md")} 修复其中的问题`;
+    const clip = `witness session: ${dir}\nRead ${join(dir, "session.md")} and fix the reported issues`;
     copyToClipboard(clip);
     console.log(`\n\x1b[32m✔\x1b[0m session → ${dir}`);
     console.log(`  main file: ${join(dir, "session.md")}`);

@@ -107,15 +107,14 @@ export default {
       ["audio.webm", "元の録音", { img: "/sample/review.png", cap: "引用をクリックでその秒を再生" }],
     ],
     agents: [
-      ["PROMPT.md", "引き継ぎ書 + ページ語彙", { pre: `これは Witness で録画したプロダクト体験のフィードバック（音声 + クリック + ページの因果エビデンス）。
+      ["PROMPT.md", "引き継ぎ書 + ページ語彙", { pre: `This is a product-feedback session recorded by Witness (voice + clicks + live page evidence).
 
-次の順で処理してください：
-1. session.md を読む —— タイムライン：各発話（SAY）にその瞬間の click/mark/net/console/mut エビデンスがぶら下がっています
-2. 指摘された問題をいったんチェックリストに復唱し、確認を取ってから直してください——いきなり修正しない：
-   | # | 時刻 | 発話原文 | あなたの解釈 | 関連エビデンス |
-   各 SAY は最低1件の問題に帰属；1発話に複数問題なら 1a/1b に分割；解釈が曖昧なら ❓
-3. 確認後に1件ずつ修正：selector / コンポーネント名でコードを特定
-4. 直せないものは理由と必要な追加エビデンスを報告に明記`, cap: "PROMPT.md 抜粋——まず問題リストの復唱を求める" }],
+Process in this order:
+1. Read SEGMENTS.md — an index of N speech-anchored segments; verbatim speech + suspects + shots in segments/NN.md
+2. Restate the user's issues as a checklist (grouped by you), confirm BEFORE fixing:
+   | # | time | user said (verbatim) | your understanding | linked evidence |
+3. After confirmation, fix each — locate code via selector / React component name
+4. For anything unfixable, state the reason and the extra evidence needed`, cap: "PROMPT.md 抜粋——生成物は英語、あなたの言葉は逐語" }],
       ["session.md", "因果エビデンスのタイムライン", { pre: `### 00:17 · SAY
 > [00:17] "えっと、このページなんですが"
 > [00:19] "この操作というか"

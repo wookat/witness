@@ -236,7 +236,7 @@ export function renderMarkdown(events: Ev[], meta: Meta, transcript?: Transcript
       const l = line(r.lead);
       if (l) lines.push(l);
       if (!r.burst.length && isTrigger(r.lead))
-        lines.push(`  - _（点击后 ${BURST_MS / 1000}s 内页面无任何反应——这本身就是证据）_`);
+        lines.push(`  - _(no page reaction for ${BURST_MS / 1000}s after the click — that itself is evidence)_`);
       for (const be of r.burst.slice(0, 8)) {
         if (pairedRes.has(be)) continue;
         const bl = line(be);
@@ -389,18 +389,18 @@ export function renderReviewHtml(events: Ev[], meta: Meta, rrJsonl?: string, pro
   <a class="m" href="${esc(meta.url)}" target="_blank" rel="noopener">${esc(meta.url)}</a>
   <span class="m">${new Date(meta.startedAt).toLocaleString()} · ${fmt(meta.durationMs)}</span>
   <span class="sp"></span>
-  <button class="btn pri" id="copyai" title="复制给 AI agent 的证据指引">⧉ Copy for AI</button>
+  <button class="btn pri" id="copyai" title="Copy the agent handoff instructions">⧉ Copy for AI</button>
 </header>
 <div class="wrap">
   <div class="card">
     <div id="stage"></div>
     <div class="tr">
-      <button class="pp" id="pp" title="播放/暂停"><svg viewBox="0 0 12 12" width="13" height="13"><path d="M3.6 2.1v7.8c0 .62.68.99 1.2.66l6-3.9a.78.78 0 0 0 0-1.32l-6-3.9c-.52-.33-1.2.04-1.2.66z" fill="currentColor"/></svg></button>
+      <button class="pp" id="pp" title="play/pause"><svg viewBox="0 0 12 12" width="13" height="13"><path d="M3.6 2.1v7.8c0 .62.68.99 1.2.66l6-3.9a.78.78 0 0 0 0-1.32l-6-3.9c-.52-.33-1.2.04-1.2.66z" fill="currentColor"/></svg></button>
       <span class="tc"><b id="cur">00:00</b> / ${fmt(meta.durationMs)}</span>
       <span class="spd"><b data-v="1" class="on">1×</b><b data-v="1.5">1.5×</b><b data-v="2">2×</b><b data-v="4">4×</b></span>
       <label class="sw"><input type="checkbox" id="fol" checked><i></i>follow</label>
       <span class="sp"></span>
-      <span class="m">${rrEmbed ? "DOM 回放" : "截图序列"} · 音频驱动时钟</span>
+      <span class="m">${rrEmbed ? "DOM replay" : "shot sequence"} · audio-driven clock</span>
     </div>
     <div id="tlw"><div id="tl"><div class="head" id="ph"></div></div><div class="bubble" id="bub"></div></div>
     <div class="legend" id="lg"></div>
@@ -437,27 +437,27 @@ const dur=D.meta.durationMs||1;
 const _mic=D.evs.find(e=>e.kind==='note'&&/mic recording|microphone/i.test(e.text||''));
 const bias=_mic?_mic.t:0;
 const KC={say:'#8b5cf6',nav:'#3b82f6',click:'#0891b2',mark:'#ec4899',note:'#f59e0b',key:'#f59e0b',input:'#64748b',scroll:'#cbd5e1',mut:'#cbd5e1',shot:'#94a3b8',req:'#a5b4fc',res:'#a5b4fc',console:'#f59e0b',error:'#ef4444',err:'#ef4444',issue:'#ff4f00',_ui:'#e2e8f0'};
-const LNAMES=[['say','语音'],['nav','跳转'],['click','点击'],['mark','标记'],['note','批注'],['console','警告'],['error','报错'],['res','失败请求']];
+const LNAMES=[['say','speech'],['nav','nav'],['click','clicks'],['mark','marks'],['note','notes'],['console','console'],['error','errors'],['res','failed reqs']];
 const isBad=e=>e.kind==='error'||e.kind==='err'||(e.kind==='res'&&(e.status===0||e.status>=400))||(e.kind==='console'&&(e.level==='error'||e.level==='warning'));
 const kcol=e=>isBad(e)?'#ef4444':(KC[e.kind]||'#cbd5e1');
 const desc=e=>{
   switch(e.kind){
-    case 'nav':return '打开 '+esc(e.url);
-    case 'click':return '点击 '+esc(e.text||e.sel)+(e.kbd?' <span class=sel>(键盘)</span>':'');
+    case 'nav':return 'open '+esc(e.url);
+    case 'click':return 'click '+esc(e.text||e.sel)+(e.kbd?' <span class=sel>(keyboard)</span>':'');
     case 'say':return '🎙 '+esc(e.text);
-    case 'mark':return e.region?'圈选区域 '+e.region.w+'×'+e.region.h:'标记 '+esc(e.text||e.sel)+' <span class=sel>'+esc(e.sel)+(e.react&&e.react.length?' · '+e.react.join(' › '):'')+'</span>';
-    case 'console':return '控制台 '+e.level+'：'+esc((e.text||'').slice(0,140));
-    case 'error':case 'err':return '报错：'+esc((e.message||e.text||'').slice(0,140));
-    case 'req':return '请求 '+e.method+' '+esc((e.url||'').slice(0,110));
-    case 'res':return '响应 '+e.status+' '+esc((e.url||'').slice(0,110));
+    case 'mark':return e.region?'region '+e.region.w+'×'+e.region.h:'mark '+esc(e.text||e.sel)+' <span class=sel>'+esc(e.sel)+(e.react&&e.react.length?' · '+e.react.join(' › '):'')+'</span>';
+    case 'console':return 'console '+e.level+': '+esc((e.text||'').slice(0,140));
+    case 'error':case 'err':return 'error: '+esc((e.message||e.text||'').slice(0,140));
+    case 'req':return 'req '+e.method+' '+esc((e.url||'').slice(0,110));
+    case 'res':return 'res '+e.status+' '+esc((e.url||'').slice(0,110));
     case 'mut':return 'DOM '+esc(e.sel)+' '+esc((e.summary||'').slice(0,64));
-    case 'scroll':return '滚动 y='+e.y;
-    case 'input':return '输入 '+esc(e.sel)+(e.masked?' 🔒':'');
-    case 'key':return '按键 '+e.key;
+    case 'scroll':return 'scroll y='+e.y;
+    case 'input':return 'input '+esc(e.sel)+(e.masked?' 🔒':'');
+    case 'key':return 'key '+e.key;
     case 'note':return esc(e.text);
-    case 'shot':return '截图';
-    case 'issue':return '⏺ Issue #'+e.n+' 边界';
-    case 'paused':return '⏸ 暂停';case 'resumed':return '继续录制';
+    case 'shot':return 'shot';
+    case 'issue':return '⏺ Issue #'+e.n+' boundary';
+    case 'paused':return '⏸ paused';case 'resumed':return 'resumed';
     default:return e.kind;
   }
 };
@@ -485,7 +485,7 @@ if(hasRR){
 let sImg=null,curShot='';
 if(!rrReady){
   if(frames.length){sImg=document.createElement('img');stage.appendChild(sImg);sImg.onclick=()=>{if(sImg.src){lbi.src=sImg.src;lb.classList.add('on')}};sImg.style.cursor='zoom-in'}
-  else stage.innerHTML='<div id="emptymsg">本次录制无画面（无 rrweb/截图），仅音频与事件</div>';
+  else stage.innerHTML='<div id="emptymsg">No visuals in this session (no rrweb/shots) — audio and events only</div>';
 }
 const setShot=t=>{if(!sImg)return;const f=frameAt(t)||frames[0];if(f&&f.p!==curShot){curShot=f.p;sImg.src=f.p}};
 /* ---------- unified clock ---------- */
@@ -526,7 +526,7 @@ for(const e of D.evs){
     b.style.left=(Math.min(1,a/dur)*100)+'%';
     b.style.width=Math.max(0.5,(z-a)/dur*100)+'%';
     b.style.top='6px';b.style.background='#8b5cf6';
-    b.title=fmt(a)+' 语音：'+esc(e.text||'').slice(0,60);
+    b.title=fmt(a)+' speech: '+esc(e.text||'').slice(0,60);
     tl.appendChild(b);continue;
   }
   const tk=document.createElement('div');
@@ -572,8 +572,8 @@ for(const b of D.blocks){
     q.onclick=()=>seek(f.t);tp.appendChild(q);qEls.push(q);
   }
 }
-if(!anySay)tp.innerHTML='<div class="hint" style="padding:30px 10px">本段录制没有识别到语音。</div>'+tp.innerHTML;
-else tp.insertAdjacentHTML('afterbegin','<div class="hint" style="padding:2px 10px 8px;border-bottom:1px solid #eceef2;margin-bottom:6px">'+qEls.length+' segments · 点击任意句跳转</div>');
+if(!anySay)tp.innerHTML='<div class="hint" style="padding:30px 10px">No speech recognized in this recording.</div>'+tp.innerHTML;
+else tp.insertAdjacentHTML('afterbegin','<div class="hint" style="padding:2px 10px 8px;border-bottom:1px solid #eceef2;margin-bottom:6px">'+qEls.length+' segments · click any line to seek</div>');
 /* ---------- events tab ---------- */
 const ep=document.getElementById('ep');
 for(const e of D.evs){
@@ -597,15 +597,15 @@ if(marks.length){
     const errs=es.filter(isBad).length,says=es.filter(e=>e.kind==='say').length||D.blocks.filter(b=>b.frags&&b.frags.some(f=>f.t>=m.at&&f.t<to)).length;
     const c=document.createElement('div');c.className='is';
     c.innerHTML='<div class=top><span class=at>'+fmt(m.at)+'</span><span class="sev'+(errs?' bug':'')+'">'+(errs?'BUG':'QUESTION')+'</span></div>'
-      +'<div class=ti>Issue #'+m.issue+'</div><div class=ds>'+esc(sayOf(m.at).slice(0,80)||'（无语音说明）')+'</div>'
-      +'<div class=ds style="margin-top:4px">'+says+' 段语音 · '+es.length+' 条事件 · '+errs+' 处异常</div>';
+      +'<div class=ti>Issue #'+m.issue+'</div><div class=ds>'+esc(sayOf(m.at).slice(0,80)||'(no spoken note)')+'</div>'
+      +'<div class=ds style="margin-top:4px">'+says+' speech frags · '+es.length+' events · '+errs+' anomalies</div>';
     c.onclick=()=>seek(m.at);ip.appendChild(c);
   });
 }else{
   // no explicit N-splits: auto-cluster into one card per contiguous speech run
   const runs=D.blocks.filter(b=>b.frags&&b.frags.length&&b.head!=='prelude');
   if(!runs.length){
-    ip.innerHTML='<div class="hint" style="padding:30px 10px">无语音段可归纳。</div>';
+    ip.innerHTML='<div class="hint" style="padding:30px 10px">No speech segments to summarize.</div>';
   }
   runs.forEach((b,i)=>{
     const nx=D.blocks[D.blocks.indexOf(b)+1],to=nx&&nx.at!=null?nx.at:dur;
@@ -616,8 +616,8 @@ if(marks.length){
     const c=document.createElement('div');c.className='is';
     c.innerHTML='<div class=top><span class=at>'+fmt(at)+'</span><span class="sev'+(errs?' bug':'')+'">'+(errs?'BUG':'QUESTION')+'</span></div>'
       +'<div class=ti>'+esc(b.frags.map(f=>f.text).join(' ').slice(0,90))+'</div>'
-      +(marks2.length?'<div class=ds>标记：<span class=sel>'+esc(marks2.map(m=>m.sel).slice(0,3).join(' · '))+'</span></div>':'')
-      +'<div class=ds style="margin-top:4px">'+b.frags.length+' 段语音 · '+es.length+' 条事件 · '+errs+' 处异常</div>';
+      +(marks2.length?'<div class=ds>marks: <span class=sel>'+esc(marks2.map(m=>m.sel).slice(0,3).join(' · '))+'</span></div>':'')
+      +'<div class=ds style="margin-top:4px">'+b.frags.length+' speech frags · '+es.length+' events · '+errs+' anomalies</div>';
     c.onclick=()=>seek(at);ip.appendChild(c);
   });
 }
@@ -628,21 +628,21 @@ const nFail=D.evs.filter(e=>e.kind==='res'&&(e.status===0||e.status>=400)).lengt
 const nSay=D.blocks.reduce((n,b)=>n+(b.frags?b.frags.length:0),0);
 const navs=[...new Set(D.evs.filter(e=>e.kind==='nav').map(e=>e.url))];
 ap.innerHTML='<div class=stats>'
-  +'<div><b>'+fmt(dur)+'</b><span>时长</span></div>'
-  +'<div><b>'+nSay+'</b><span>语音段</span></div>'
-  +'<div><b>'+D.evs.length+'</b><span>事件</span></div>'
-  +'<div><b>'+frames.length+'</b><span>截图</span></div>'
-  +'<div><b>'+nErr+'</b><span>页面报错</span></div>'
-  +'<div><b>'+nFail+'</b><span>失败请求</span></div></div>'
-  +'<div class=hint>把 PROMPT.md 丢给你的 AI agent（Devin / Cursor / Claude Code），它会读 session.md 时间轴、events.jsonl 原始事件和 shots/ 截图来定位修复。</div>'
-  +'<button class="btn pri" id="copyai2" style="width:100%;padding:10px">⧉ 复制 agent 指引（PROMPT.md）</button>'
+  +'<div><b>'+fmt(dur)+'</b><span>duration</span></div>'
+  +'<div><b>'+nSay+'</b><span>speech segs</span></div>'
+  +'<div><b>'+D.evs.length+'</b><span>events</span></div>'
+  +'<div><b>'+frames.length+'</b><span>shots</span></div>'
+  +'<div><b>'+nErr+'</b><span>page errors</span></div>'
+  +'<div><b>'+nFail+'</b><span>failed reqs</span></div></div>'
+  +'<div class=hint>Hand PROMPT.md to your AI agent (Devin / Cursor / Claude Code) — it reads the session.md timeline, events.jsonl raw events and shots/ screenshots to locate the fix.</div>'
+  +'<button class="btn pri" id="copyai2" style="width:100%;padding:10px">⧉ Copy agent brief (PROMPT.md)</button>'
   +'<div class=files>'
-  +'<div><a href="session.md">session.md</a> · 语音+证据时间轴</div>'
-  +'<div><a href="PROMPT.md">PROMPT.md</a> · 给 agent 的指引</div>'
-  +'<div><a href="events.jsonl">events.jsonl</a> · 原始事件流</div>'
-  +'<div><a href="audio.webm">audio.webm</a> · 原始录音</div>'
-  +'<div>shots/ · '+frames.length+' 张截图　bodies/ · 请求体</div>'
-  +(navs.length?'<div style="color:#9aa3b2;margin-top:6px">访问页面：'+navs.map(esc).join('<br>')+'</div>':'')
+  +'<div><a href="session.md">session.md</a> · speech + evidence timeline</div>'
+  +'<div><a href="PROMPT.md">PROMPT.md</a> · agent handoff</div>'
+  +'<div><a href="events.jsonl">events.jsonl</a> · raw event stream</div>'
+  +'<div><a href="audio.webm">audio.webm</a> · raw recording</div>'
+  +'<div>shots/ · '+frames.length+' screenshots　bodies/ · request bodies</div>'
+  +(navs.length?'<div style="color:#9aa3b2;margin-top:6px">visited: '+navs.map(esc).join('<br>')+'</div>':'')
   +'</div>';
 /* ---------- tabs / copy / lightbox ---------- */
 document.querySelectorAll('.tabs b').forEach(b=>b.onclick=()=>{
@@ -651,8 +651,8 @@ document.querySelectorAll('.tabs b').forEach(b=>b.onclick=()=>{
 });
 const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1600)};
 const copyAI=()=>{
-  const txt=D.prompt||('证据目录：本目录\\n先读 session.md，再按需查 events.jsonl 与 shots/。');
-  (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('已复制，粘贴给你的 AI agent')).catch(()=>toast('复制失败——请手动打开 PROMPT.md'));
+  const txt=D.prompt||('Evidence directory: this folder\\nRead session.md first, then consult events.jsonl and shots/ as needed.');
+  (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('copied — paste it to your AI agent')).catch(()=>toast('copy failed — open PROMPT.md manually'));
 };
 document.getElementById('copyai').onclick=copyAI;
 document.getElementById('copyai2').onclick=copyAI;
@@ -667,25 +667,25 @@ export function renderPrompt(sessionDir: string, events: Ev[] = [], issueCount =
     events.flatMap(e => (e.kind === "mark" || e.kind === "click") && e.text ? [e.text] : [])
   )].slice(0, 30);
   return [
-    "这是 Witness 录制的一段产品体验反馈（voice + click + 页面实况证据链）。",
+    "This is a product-feedback session recorded by Witness (voice + clicks + live page evidence).",
     "",
-    `证据目录: ${sessionDir}`,
+    `Evidence directory: ${sessionDir}`,
     "",
-    "请按以下顺序处理：",
-    `1. 读 \`SEGMENTS.md\` —— ${issueCount} 段语音锚点索引；每段的语音原文/嫌疑元素/截图/DOM 快照打包在 \`segments/NN.md\``,
-    "   （段边界是机械切的——相邻段可合并、一段可拆多问题；`session.md` 是全量时间轴档案，需要更多上下文时读）",
-    "2. 先把用户指出的问题复述成清单（由你归组，不是按段照搬），请用户确认后再动手——不要直接开修：",
-    "   | # | 时间 | 用户原话 | 你的理解 | 关联证据 |",
-    "   相邻段可归并成一个问题；一段含多个问题拆成 1a/1b；理解有歧义的标 ❓ 让用户澄清，别自己猜。",
-    "   清单末尾问一句：共 N 条，有漏的或理解偏的吗？",
-    "3. 用户确认（或纠正）后逐条修复：用 `selector`/`React 组件名` 在代码里定位；需要原始数据查 `events.jsonl`；视觉确认看 `shots/`",
-    "4. 修不了的在汇报里标注原因和需要的补充证据",
+    "Process in this order:",
+    `1. Read \`SEGMENTS.md\` — an index of ${issueCount} speech-anchored segments; each segment's verbatim speech, suspect elements, screenshots and DOM snapshots are packaged in \`segments/NN.md\``,
+    "   (segment boundaries are cut mechanically — adjacent segments may merge, one segment may hold several issues; `session.md` is the full timeline archive for more context)",
+    "2. First restate the user's issues as a checklist (grouped by you, not copied per-segment), get user confirmation before touching code — do NOT start fixing:",
+    "   | # | time | user said (verbatim) | your understanding | linked evidence |",
+    "   Merge adjacent segments into one issue; split multi-issue segments into 1a/1b; mark ambiguous ones ❓ and ask the user — never guess.",
+    "   End the checklist with: \"N issues total — anything missing or misunderstood?\"",
+    "3. After the user confirms (or corrects), fix them one by one: locate code via `selector`/`React component name`; pull raw data from `events.jsonl`; verify visuals in `shots/`",
+    "4. For anything you can't fix, state the reason and the extra evidence needed in your report.",
     "",
-    "注意：SAY 是语音识别原文碎片（按停顿分段），连续引用的多条碎片属同一段话；含口语与同音字误识别，请结合下方词表按意图理解，勿逐字采信。",
-    "`⏺ ISSUE #n` 是用户按 N 键显式切出的问题边界——边界之间的语音与证据视为同一个问题。",
-    "paused/resumed 之间的暂停区间无任何记录（用户主动冻结证据），不要解读那段时间。",
-    ...(vocab.length ? [`页面元素文字（辅助理解转写）：${vocab.join(" / ")}`] : []),
-    "重要：如果没有 SAY 语音段，绝对不要从点击/滚动行为推断用户想报什么问题——那些只是操作证据。直接问用户他这段想说什么。",
+    "Note: SAY lines are raw speech-recognition fragments (split on pauses); consecutive fragments may belong to one utterance. They contain colloquialisms and homophone errors — read for intent using the vocabulary below, not literally.",
+    "`⏺ ISSUE #n` marks an issue boundary the user cut explicitly with the N key — speech and evidence between boundaries belong to the same issue.",
+    "The paused/resumed window records nothing (the user deliberately froze evidence) — do not interpret that interval.",
+    ...(vocab.length ? [`Page element text (to help read the transcript): ${vocab.join(" / ")}`] : []),
+    "IMPORTANT: if there are no SAY segments, never infer what the user wanted to report from clicks/scrolls — those are only interaction evidence. Ask the user directly what the session was about.",
   ].join("\n");
 }
 
@@ -707,16 +707,16 @@ export async function writeSessionFiles(dir: string, events: Ev[], meta: Meta, t
   await writeFile(join(dir, "review.html"), html);
   await writeFile(join(dir, "PROMPT.md"), prompt);
   await writeFile(join(dir, "README.txt"), [
-    "这个目录怎么读 ——",
+    "How to read this directory —",
     "",
-    "【给人看】双击 review.html",
-    "    语音 + 截图 + 操作对齐的视觉时间轴，点击语音片段可跳到录音对应位置。",
+    "[For humans] Double-click review.html",
+    "    A visual timeline aligning speech, screenshots and interactions; click a speech fragment to jump to that point in the recording.",
     "",
-    "【给 AI agent】把 PROMPT.md 的内容连同本目录交给 agent",
-    "    SEGMENTS.md 语音段索引（先读）· segments/NN.md 每段一包 · session.md 证据时间轴",
-    "    events.jsonl 原始事件 · shots/ 截图 · audio.webm 录音",
+    "[For AI agents] Hand PROMPT.md to an agent along with this directory",
+    "    SEGMENTS.md speech-segment index (read first) · segments/NN.md one package per segment · session.md evidence timeline",
+    "    events.jsonl raw events · shots/ screenshots · audio.webm recording",
     "",
-    "其余：session.json 元数据 · transcript.json 识别结果 · bodies/ 网络响应体",
+    "Rest: session.json metadata · transcript.json recognition results · bodies/ response bodies",
   ].join("\n"));
   if (transcript) await writeFile(join(dir, "transcript.json"), JSON.stringify(transcript, null, 1));
   if (assoc?.size) {

@@ -36,12 +36,12 @@ export async function correctSays(events: Ev[], appUrl?: string): Promise<Ev[]> 
         {
           role: "system",
           content:
-            "你在整理语音转写（ASR）碎片，来源是用户口述网页产品体验反馈。ASR 会按停顿把一句话切成多条，也常把发音相近的词听错。两步：① 把语义上属于同一句话/同一件事的连续碎片合并成完整一句（间隔大也可合，只要语义连贯；不同问题不要硬合）；② 按页面词汇纠正明显错字（常见 UI 词：按钮、输入框、页面、点击、弹窗、滚动、接口、报错、导航、菜单、入口、链接、图标、文案、教程、反馈、缩放、侧边栏），拿不准保留原样。禁止增删内容、禁止改变先后顺序、禁止解释。每行输出格式 `范围|句子`，范围是输入序号，如 `1-2|这个反馈按钮有问题` 或 `3|你要么实现它`。",
+            "You are cleaning up speech-recognition (ASR) fragments of a user giving spoken feedback on a web product. ASR splits utterances on pauses and mishears similar-sounding words. Two steps: ① merge consecutive fragments that semantically belong to one utterance/issue into a full sentence (merge across large gaps only if the semantics continue; never force different issues together); ② correct obvious misrecognized words using the page vocabulary (common UI words: 按钮 button, 输入框 input, 页面 page, 点击 click, 弹窗 dialog, 滚动 scroll, 接口 API, 报错 error, 导航 nav, 菜单 menu, 入口 entry, 链接 link, 图标 icon, 文案 copy, 教程 tutorial, 反馈 feedback, 缩放 zoom, 侧边栏 sidebar). Keep the original language — never translate. When unsure, keep the fragment as-is. Do not add or remove content, do not reorder, do not explain. Output one line per sentence as `range|sentence` where range is input indices, e.g. `1-2|这个反馈按钮有问题` or `3|the submit button does nothing`.",
         },
         {
           role: "user",
           content:
-            `${appUrl ? `页面：${appUrl}\n` : ""}${vocab ? `页面上用户指点过的元素文字：${vocab}\n` : ""}\nASR碎片：\n${numbered}`,
+            `${appUrl ? `Page: ${appUrl}\n` : ""}${vocab ? `Element text the user pointed at on the page: ${vocab}\n` : ""}\nASR fragments:\n${numbered}`,
         },
       ],
     });

@@ -107,15 +107,14 @@ export default {
       ["audio.webm", "原始錄音", { img: "/sample/review.png", cap: "語音卡片點哪句播哪句" }],
     ],
     agents: [
-      ["PROMPT.md", "交接說明 + 頁面詞表", { pre: `這是 Witness 錄製的一段產品體驗回饋（voice + click + 頁面實況證據鏈）。
+      ["PROMPT.md", "交接說明 + 頁面詞表", { pre: `This is a product-feedback session recorded by Witness (voice + clicks + live page evidence).
 
-請按以下順序處理：
-1. 讀 session.md —— 時間軸：每段語音（SAY）下方掛該時刻的 click/mark/net/console/mut 證據
-2. 先把使用者指出的問題複述成清單，請使用者確認後再動手——不要直接開修：
-   | # | 時間 | 使用者原話 | 你的理解 | 關聯證據 |
-   每段 SAY 至少歸進一個問題；一句話含多個問題拆成 1a/1b；理解有歧義的標 ❓
-3. 使用者確認後逐條修復：用 selector/元件名在程式碼裡定位
-4. 修不了的在回報裡標注原因和需要的補充證據`, cap: "真實 PROMPT.md 節選——要求 agent 先複述清單再修" }],
+Process in this order:
+1. Read SEGMENTS.md — an index of N speech-anchored segments; verbatim speech + suspects + shots in segments/NN.md
+2. Restate the user's issues as a checklist (grouped by you), confirm BEFORE fixing:
+   | # | time | user said (verbatim) | your understanding | linked evidence |
+3. After confirmation, fix each — locate code via selector / React component name
+4. For anything unfixable, state the reason and the extra evidence needed`, cap: "真實 PROMPT.md 節選——產物是英文的，你的原話逐字保留" }],
       ["session.md", "因果證據時間軸", { pre: `### 00:17 · SAY
 > [00:17] "就比如說這個頁面的話"
 > [00:19] "這個互動啊"

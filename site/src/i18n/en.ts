@@ -111,12 +111,11 @@ export default {
       ["PROMPT.md", "handoff doc + page vocabulary", { pre: `This is a product-feedback session recorded by Witness (voice + clicks + live page evidence).
 
 Process in this order:
-1. Read session.md — the timeline: each speech segment (SAY) carries that moment's click/mark/net/console/mut evidence
-2. Restate the reported issues as a checklist and confirm with the user BEFORE fixing:
-   | # | time | verbatim | your reading | linked evidence |
-   Every SAY belongs to at least one issue; an utterance with several issues splits into 1a/1b; mark ambiguity with ❓
-3. After confirmation, fix each item — locate in code via selector / component name
-4. For anything unfixable, state why and what extra evidence you need`, cap: "a PROMPT.md excerpt — tells the agent to confirm a list first" }],
+1. Read SEGMENTS.md — an index of N speech-anchored segments; verbatim speech + suspects + shots in segments/NN.md
+2. Restate the user's issues as a checklist (grouped by you), confirm BEFORE fixing:
+   | # | time | user said (verbatim) | your understanding | linked evidence |
+3. After confirmation, fix each — locate code via selector / React component name
+4. For anything unfixable, state the reason and the extra evidence needed`, cap: "a PROMPT.md excerpt — agent-facing output is English, your words stay verbatim" }],
       ["session.md", "causal evidence timeline", { pre: `### 00:17 · SAY
 > [00:17] "so like, on this page"
 > [00:19] "this interaction thing"

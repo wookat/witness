@@ -1,72 +1,73 @@
 ---
 name: witness
-description: 录制产品体验证据链。用户说"帮我录一段/体验下页面/看下最新录制/按录制修问题"时使用。witness 打开托管浏览器录语音+点击+请求+console+状态变化，产出 .witness/sessions/ 证据包。
+description: Record voice-anchored product evidence. Use when the user asks to record a session, walk through a page, check the latest recording, or fix issues from a recording — in any language ("record this page", "帮我录一段", "看下最新录制", "按录制修问题"). witness opens a managed browser that captures speech + clicks + requests + console + DOM state into a .witness/sessions/ evidence bundle.
 ---
 
-# Witness — 语音锚点证据录制
+# Witness — voice-anchored evidence recording
 
-## 何时触发
+## When to trigger
 
-- "帮我录一段 / 体验下这个页面 / 看下最新录制 / 按录制里的问题修"
-- 用户给了 `.witness/sessions/<dir>` 路径或说"这是我录的"
+- "record a session / walk me through this page / check the latest recording / fix what I recorded" (or the same intent in any language: 帮我录一段, 体验下这个页面, 录一段看看, enregistre, 録画して…)
+- The user gives you a `.witness/sessions/<dir>` path or says "this is my recording"
 
-## 启动录制（需要用户在场说问题）
+## Start a recording (the user must be present to speak)
 
 ```bash
-wit start <url>                    # wit 已全局安装（npm i -g github:wookat/witness 或 npm link）
-# 常用 flag：--duration 60（自动停）· --lang en-US（英文站）· --asr <engine> · --shot-interval 15000 · --no-transcribe
+wit start <url>                    # wit installed globally (npm i -g github:wookat/witness or npm link)
+# common flags: --duration 60 (auto-stop) · --lang en-US (English pages) · --asr <engine> · --shot-interval 15000 · --no-transcribe
 ```
 
-- dev-url 从项目 package.json scripts / vite 端口推（通常 `http://localhost:5173`）
-- 启动后告诉用户：浏览器里正常用+说话（识别文字会实时出现在工具栏下方）；`Ctrl+点击` 直接标记元素；`M` 进 inspect 模式（悬停点选元素，或**拖拽圈选区域**）；`N` 切分新问题边界（一段录多个问题）；`P` 暂停/继续（暂停期证据全冻结）；`Alt+Shift+R` 或点 ■ 停止
-- 录制期间不要阻塞等待；停止后自动生成 session.md；events.jsonl 流式落盘，进程被杀也保住已录部分
+- Derive the dev URL from package.json scripts / the vite port (usually `http://localhost:5173`)
+- After starting, tell the user: use the page normally and speak — recognized text streams live under the toolbar. `Ctrl+click` marks an element; `M` enters inspect mode (hover-pick an element, or **drag to lasso a region**); `N` cuts a new issue boundary (one recording can hold several issues); `P` pauses/resumes (evidence fully frozen while paused); `Alt+Shift+R` or the ■ button stops.
+- Do not block waiting during recording; session.md is generated on stop. events.jsonl streams to disk, so a killed process still preserves what was recorded.
 
-## 语音管线（免配置默认）
+## Speech pipeline (zero-config defaults)
 
-- 实时字幕：云端流式 ASR，`auto` 档逐级兜底 **doubao-web（默认，标点最好）→ doubao-ime（句级时间戳+ITN 数字）→ 浏览器 SR**。say 事件带 segStart/segEnd 时间戳落时间轴
-- 引擎切换（三处等价）：`wit config asr auto|doubao-web|doubao-ime|sr|off`（持久）· `--asr <engine>` / `WIT_ASR`（单次）· MCP `get_asr`/`set_asr`（agent 自己查自己切）。`off` = 不要实时字幕，终稿照出
-- 停止时终稿链：OPENAI_API_KEY → whisper-1 词级时间戳；无 key 走 bcut（B站必剪，免费无需 key）
-- `ZHIPU_API_KEY`（bigmodel.cn 免费）→ 停止时 GLM-4-Flash 按"页面元素词表"纠错（同音字/断句）
-- `wit transcribe <sessionDir>` / `wit correct <sessionDir>`：对已录 session 重跑转写/纠错
-- `wit associate <sessionDir>`（需 ZHIPU_API_KEY）：LLM 给每段 SAY 挑相关证据→`assoc.json`，session.md 只显示命中事件、其余折叠；`wit start --associate` 录制停止时自动跑
-- `wit recover <sessionDir>`：崩溃/中断后从 events.jsonl 重建 session.md/review.html/PROMPT.md
-- `wit mcp [sessionDir]`：stdio MCP server——agent 可配进 MCP 客户端按需查证据，共 12 个工具：`list_segments`/`segment_detail`/`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_asr`/`set_asr`
-- `WIT_CDP=<port>`（env）：给托管浏览器开 CDP 口——agent 可连上录制中的页面亲自当测试者（驱动点击/标记，全程被录）
+- Live captions: cloud streaming ASR. `auto` falls through **doubao-web (default, best punctuation) → doubao-ime (sentence-level timestamps + ITN digits) → browser SR**. say events land on the timeline with segStart/segEnd.
+- Engine switch (three equivalent ways): `wit config asr auto|doubao-web|doubao-ime|sr|off` (persistent) · `--asr <engine>` / `WIT_ASR` (one-off) · MCP `get_asr`/`set_asr` (an agent can check/switch itself). `off` = no live captions; the final transcript still renders.
+- On stop, final transcript chain: OPENAI_API_KEY → whisper-1 word-level timestamps; without a key it falls back to bcut (bilibili's free endpoint, no key needed).
+- `ZHIPU_API_KEY` (free at bigmodel.cn) → on stop, GLM-4-Flash corrects homophones/phrasing against the page-element vocabulary (display layer only — raw evidence is never rewritten).
+- `wit transcribe <sessionDir>` / `wit correct <sessionDir>`: re-run transcription/correction on a recorded session.
+- `wit associate <sessionDir>` (needs ZHIPU_API_KEY): an LLM links each SAY to its related evidence → `assoc.json`; session.md then shows only hit events and collapses the rest. `wit start --associate` runs it automatically on stop.
+- `wit recover <sessionDir>`: rebuild session.md/review.html/PROMPT.md from events.jsonl after a crash/interruption.
+- `wit mcp [sessionDir]`: stdio MCP server — point an agent's MCP client at it to query evidence on demand; 12 tools: `list_segments`/`segment_detail`/`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_asr`/`set_asr`
+- `WIT_CDP=<port>` (env): opens a CDP port on the managed browser — an agent can attach to the recording page and act as the tester itself (drive clicks/marks, all captured).
 
-## 消费证据（修问题）——按算法执行
+## Consuming evidence (fixing issues) — follow this algorithm
 
-用户说"录完了/按录的修"时：
+When the user says "I'm done recording / fix what I recorded":
 
-**步骤 1 · 读索引**：`ls .witness/sessions/` 找目录 → 先读 **`SEGMENTS.md`**（一屏内的语音锚点索引：SAY 原文、嫌疑元素、截图/DOM 引用）。逐段细节在 `segments/NN.md`；`session.md` 是全量档案，只在段文件之外要更多上下文时读。没有 SEGMENTS.md 的老 session 跑 `wit segments <dir>` 生成。**段 ≠ 问题**：段是按 ≥4s 语音缝/动作打断机械切的语音单元，语义归组是你的活。
+**Step 1 · Read the index**: `ls .witness/sessions/` for the directory → read **`SEGMENTS.md`** first (a one-screen index of speech anchors: verbatim SAY text, suspect elements, shot/DOM references). Per-segment detail lives in `segments/NN.md`; `session.md` is the full archive — read it only when you need context beyond the segment files. For old sessions without SEGMENTS.md, run `wit segments <dir>`. **Segments ≠ issues**: segments are speech units cut mechanically on ≥4s gaps or intervening actions; semantic grouping is your job.
 
-**步骤 2 · 回显确认清单**（不要直接开修）：
+**Step 2 · Echo a confirmation checklist (do NOT start fixing)**:
 
-| # | 时间 | 用户原话 | 你的理解 | 关联证据 |
-|---|------|----------|----------|----------|
-| 1 | 00:56 | "顶部栏图标没居中" | nav .logo 组偏高 ~2px | shots/003.jpg · suspects |
+| # | time | user said (verbatim) | your understanding | linked evidence |
+|---|------|----------------------|--------------------|-----------------|
+| 1 | 00:56 | "顶部栏图标没居中" | nav .logo group sits ~2px high | shots/003.jpg · suspects |
 
-- **归组是你做，不是按段照搬**：相邻段常被点击打断（如 S4/S5/S6 连续，嫌疑元素相同），按意思合并成一个确认项；一段含多个问题拆 1a/1b
-- 理解有歧义的标 ❓ 让用户澄清，别自己猜
-- 末尾问：共 N 条，有漏的或理解偏的吗？
+- **You group — don't copy per-segment**: adjacent segments are often split by a click (e.g. S4/S5/S6 consecutive, same suspects); merge by meaning into one confirmation item. A segment holding multiple issues splits into 1a/1b.
+- Keep the user's words verbatim in whatever language they spoke — quote, never translate.
+- Mark ambiguous ones ❓ and ask the user — never guess.
+- End with: "N issues total — anything missing or misunderstood?"
 
-**步骤 3 · 用户确认后逐条修，按类型路由证据**：
+**Step 3 · After confirmation, fix one by one — route by issue type**:
 
-| 问题类型 | 第一证据 | 补充 |
+| issue type | first evidence | supplementary |
 |---|---|---|
-| 视觉/位置/样式 | **先开段里挂的 shot 图**（你是多模态，必须看） | dom/snap + suspects.sel |
-| 死按钮/点了没反应 | 段的"点击无反应"清单 | shot 确认视觉 |
-| 报错/网络 | console/error/res≥400 行 | `bodies/` 响应体 |
-| 行为/逻辑 | click→req/res 爆发链 | dom snap 前后态 |
-| 定位源码 | suspects `Comp:` 链 > `sel` > 元素文本 | grep 源码 |
+| visual / position / style | **open the shot attached to the segment first** (you are multimodal — you must look) | dom/snap + suspects.sel |
+| dead button / click does nothing | the segment's dead-click list | shot to confirm visuals |
+| errors / network | console/error/res≥400 lines | `bodies/` response bodies |
+| behavior / logic | click→req/res burst chain | dom snap before/after state |
+| locate source code | suspects `Comp:` chain > `sel` > element text | grep the source |
 
-**步骤 4 · 汇报**：`#n fixed/blocked · 引用的证据点 · 改了什么`；修不了标注缺什么证据，让用户重录那一段。
+**Step 4 · Report**: `#n fixed/blocked · evidence points cited · what changed`; for unfixable items state what evidence is missing and ask the user to re-record that part.
 
-**铁律**：视觉描述不先看 shot 不下结论 · 无 SAY 段不从点击/滚动推断意图 · 转写是口语原文，按意图理解不逐字抠 · 段里标了 `⚠ 证据缺口` = 语音声称但窗口内无对应事件——汇报时要点名缺什么 · `.witness/` 不入 git · 音频截图含隐私不外传
+**Iron rules**: never conclude on visual claims without looking at the shot first · never infer intent from clicks/scrolls when there are no SAY segments · transcripts are verbatim colloquial speech in the user's language — read for intent, not literally · segments flagged `⚠ evidence gap` = speech claims something the window doesn't show — name the missing evidence in your report · `.witness/` never goes into git · audio/screenshots contain private data — never exfiltrate
 
-## 深挖路径
+## Drill-down path
 
-`SEGMENTS.md` → `segments/NN.md` → `keyframes/`（rrweb 回放帧，`wit keyframes` 生成）→ `events.jsonl`（t 窗口原始事件）→ `shots/`（mark 带红框、click 带目标裁切）→ `bodies/` → `transcript.json`
+`SEGMENTS.md` → `segments/NN.md` → `keyframes/` (rrweb replay frames, via `wit keyframes`) → `events.jsonl` (raw events by t window) → `shots/` (marks carry a red box, clicks carry a target crop) → `bodies/` → `transcript.json`
 
-## 汇报格式
+## Report format
 
-每个问题回指证据点：`[00:12] SAY "..." · button#submit → POST /api/x 500`，说明修复对应哪条证据；修不了的标注缺什么证据，让用户重录那一段。
+Tie every issue back to evidence: `[00:12] SAY "..." · button#submit → POST /api/x 500`, so each fix maps to its evidence; for unfixable items state what evidence is missing and ask the user to re-record that part.

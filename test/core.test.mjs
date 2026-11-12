@@ -117,7 +117,7 @@ test("burst: click followed by nothing reports 'no reaction' as evidence", () =>
     say(1000, "嗯", 1000, 1500),
     click(5000, "没反应的按钮"),
   ], meta);
-  assert.ok(md.includes("无任何反应"));
+  assert.ok(md.includes("no page reaction"));
 });
 
 test("burst: consequence outside the window stays a standalone line", () => {
@@ -163,13 +163,13 @@ test("prompt: carries page vocab and the no-inference rule", () => {
   ]);
   assert.ok(p.includes("提交订单"));
   assert.ok(p.includes("教程"));
-  assert.ok(p.includes("绝对不要从点击/滚动行为推断"));
-  assert.ok(p.includes("同音字误识别"));
+  assert.ok(p.includes("never infer"));
+  assert.ok(p.includes("homophone"));
 });
 
 test("prompt: empty vocab omits the vocab line", () => {
   const p = renderPrompt("/tmp/s", [say(5000, "嗯", 5000, 5500)]);
-  assert.ok(!p.includes("页面元素文字"));
+  assert.ok(!p.includes("Page element text"));
 });
 
 // ---------- renderReviewHtml ----------

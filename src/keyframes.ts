@@ -58,10 +58,10 @@ export async function renderKeyframes(
       }
     }
     writeFileSync(join(dir, "KEYFRAMES.md"), [
-      "# KEYFRAMES — rrweb 回放渲染的关键帧",
+      "# KEYFRAMES — frames rendered from the rrweb replay",
       "",
-      "每段 3 帧（起/中/止）。文件名 `S{段号}-{0|1|2}.jpg`，段号对应 segments/NN.md。",
-      "这不是全量回放——要更细的时刻去 events.jsonl 按 t 查，或看 review.html。",
+      "3 frames per segment (start/middle/end). Filename `S{segment}-{0|1|2}.jpg`, where the segment number matches segments/NN.md.",
+      "This is not the full replay — for finer moments look up t in events.jsonl, or open review.html.",
       "",
     ].join("\n"));
     return n;

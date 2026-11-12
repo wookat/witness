@@ -62,12 +62,12 @@ export async function associateSays(events: Ev[]): Promise<AssocMap> {
       {
         role: "system",
         content:
-          "你是 QA 证据关联器。用户在产品上随口说出反馈（可能有语音识别错字），" +
-          "每条 SAY 后面列出同一时间窗口内的候选页面事件（E编号 +相对毫秒 描述）。\n" +
-          "任务：为每条 SAY 选出与之相关的事件编号（如：反馈提到按钮没反应→选该点击及其后果；" +
-          "提到界面元素→选对应 mark/click/mut；纯感受可无事件），并给一个≤12字的问题标题。\n" +
-          "输出格式，每行一条，不要任何解释：\nSAY#后面的数字|标题|事件编号,事件编号,…\n" +
-          "示例：12|按钮无响应|45,46,47",
+          "You are a QA evidence linker. A user speaks feedback while using a product (ASR may contain recognition errors). " +
+          "After each SAY line, candidate page events from the same time window are listed (E-number, +ms offset, description).\n" +
+          "Task: for each SAY, pick the related event numbers (e.g. user says a button does nothing → pick that click and its aftermath; " +
+          "mentions a UI element → pick the matching mark/click/mut; a pure feeling may have no events). Also give a concise issue title (≤12 words, same language as the SAY).\n" +
+          "Output format, one per line, no explanations:\n<number after SAY#>|<title>|<event numbers, comma-separated>\n" +
+          "Example: 12|submit button unresponsive|45,46,47",
       },
       { role: "user", content: sections.join("\n\n") },
     ],

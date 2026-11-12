@@ -64,10 +64,10 @@ const near = (events: Ev[], kind: "shot" | "dom", from: number, to: number, limi
 /** speech claims something the event window doesn't show → flag the gap instead of letting the agent miss it */
 const gapHints = (text: string, clicks: number, errors: number): string[] => {
   const gaps: string[] = [];
-  if (/报错|错误|异常|崩溃|崩了|白屏/.test(text) && !errors)
-    gaps.push("语音提到报错/异常，但窗口内无 console/error/4xx–5xx 事件——证据可能没录到或转写有误");
-  if (/没反应|点不动|不响应|失灵/.test(text) && !clicks)
-    gaps.push("语音说点击无反应，但窗口内无点击事件——点击可能在窗外或未被录到");
+  if (/报错|错误|异常|崩溃|崩了|白屏|error|crash|exception|broken|blank|white screen/i.test(text) && !errors)
+    gaps.push("speech mentions an error/crash, but no console/error/4xx–5xx events in the window — evidence may not have been captured, or the transcript is wrong");
+  if (/没反应|点不动|不响应|失灵|no (response|reaction)|not (responding|working)|does( nothing)?|unresponsive|dead/i.test(text) && !clicks)
+    gaps.push("speech says a click did nothing, but no click events in the window — the click may be outside the window or was not recorded");
   return gaps;
 };
 
@@ -134,80 +134,79 @@ export function renderSegmentsIndex(segments: Segment[], meta: { url: string; du
   const lines = [
     `# SEGMENTS — ${meta.url}`,
     "",
-    `录制 ${fmt(meta.durationMs ?? segments.at(-1)?.to ?? 0)} · ${segments.length} 段语音锚点。`,
-    "段 ≠ 问题：边界是机械切的（≥4s 语音缝或中间有动作），相邻段可能同属一个问题、一段也可能含多个问题——**语义归组由你决定**。逐段读 segments/NN.md，再看截图。",
+    `${fmt(meta.durationMs ?? segments.at(-1)?.to ?? 0)} recorded · ${segments.length} speech-anchored segments.`,
+    "Segments ≠ issues: boundaries are cut mechanically (a ≥4s speech gap or an action in between). Adjacent segments may belong to the same issue, and one segment may contain several issues — **semantic grouping is your job**. Read each segments/NN.md, then look at the screenshots.",
     "",
   ];
   for (const i of segments) {
     lines.push(`## S${i.n} · ${rng(i)} · ${quote(i.text)}`, "");
     if (i.explicit)
-      lines.push("- ⏺ 用户按 N 键显式切出的问题边界（强提示）");
+      lines.push("- ⏺ issue boundary cut explicitly by the user (N key) — strong signal");
     if (i.suspects.length)
-      lines.push(`- 嫌疑元素: ${i.suspects.map(s =>
+      lines.push(`- suspect elements: ${i.suspects.map(s =>
         [s.via === "vocab" ? "≈" : "", s.comp?.length ? s.comp.join(" › ") + " " : "", s.sel ?? "", s.text ? `“${s.text.slice(0, 40)}”` : ""].join("")
       ).join(" · ")}`);
     if (i.deadClicks.length)
-      lines.push(`- **${i.deadClicks.length} 次点击无任何反应** —— 死 UI 硬证据`);
+      lines.push(`- **${i.deadClicks.length} clicks with zero page reaction** — hard evidence of dead UI`);
     if (i.errors.length)
-      lines.push(`- 错误: ${i.errors.map(e => e.kind === "res" ? `${(e as { status: number }).status} ${(e as { url: string }).url.slice(0, 50)}` : e.kind).join(" · ")}`);
+      lines.push(`- errors: ${i.errors.map(e => e.kind === "res" ? `${(e as { status: number }).status} ${(e as { url: string }).url.slice(0, 50)}` : e.kind).join(" · ")}`);
     if (i.gaps.length)
-      lines.push(`- ⚠ 证据缺口: ${i.gaps.join(" · ")}`);
-    if (i.shots.length) lines.push(`- 截图: ${i.shots.join(" · ")}`);
-    if (i.keyframes?.length) lines.push(`- 关键帧(rrweb回放): ${i.keyframes.join(" · ")}`);
+      lines.push(`- ⚠ evidence gap: ${i.gaps.join(" · ")}`);
+    if (i.shots.length) lines.push(`- shots: ${i.shots.join(" · ")}`);
+    if (i.keyframes?.length) lines.push(`- keyframes (rrweb replay): ${i.keyframes.join(" · ")}`);
     if (i.doms.length) lines.push(`- DOM: ${i.doms.join(" · ")}`);
-    lines.push(`- 详情: segments/${String(i.n).padStart(2, "0")}.md`, "");
+    lines.push(`- detail: segments/${String(i.n).padStart(2, "0")}.md`, "");
   }
   if (!segments.length)
-    lines.push("_没有语音锚点——events.jsonl 里只有操作证据。问用户这段想说什么，不要猜。_");
+    lines.push("_No speech anchors — events.jsonl holds interaction evidence only. Ask the user what this session was about; do not guess._");
   return lines.join("\n");
 }
 
 /** per-segment bundle: verbatim + salient evidence, multimodal refs */
 export function renderSegmentFile(i: Segment, meta: { url: string }): string {
   const lines = [
-    `# 语音段 S${i.n} · ${rng(i)} · ${meta.url}`,
+    `# Segment S${i.n} · ${rng(i)} · ${meta.url}`,
     "",
     i.explicit
-      ? "> ⏺ 此段是用户按 N 键显式切出的问题边界。"
-      : "> 段边界是机械切的（≥4s 语音缝或中间有动作事件）——可与相邻段合并，也可拆成多个问题。",
+      ? "> ⏺ This segment is an issue boundary the user cut explicitly with the N key."
+      : "> Segment boundaries are cut mechanically (a ≥4s speech gap or an action event in between) — this may merge with adjacent segments or split into several issues.",
     "",
-    "## 用户原话（逐段）",
-    "## 用户原话（逐段）",
+    "## Verbatim speech (fragments)",
     ...i.frags.map(s => `> [${fmt(s.segStart)}] “${s.text}”`),
     "",
   ];
   if (i.suspects.length) {
-    lines.push("## 嫌疑元素（按可靠性排序）");
+    lines.push("## Suspect elements (most reliable first)");
     for (const s of i.suspects)
       lines.push(`- [${s.via}] ${s.comp?.length ? `Comp: ${s.comp.join(" › ")} · ` : ""}${s.sel ?? ""}${s.text ? ` · “${s.text.slice(0, 60)}”` : ""}`);
     lines.push("");
   }
   if (i.deadClicks.length) {
-    lines.push("## 点击无反应（死 UI 证据）");
+    lines.push("## Dead clicks (dead-UI evidence)");
     for (const c of i.deadClicks)
-      lines.push(`- [${fmt(c.t)}] CLICK \`${c.sel}\` ${c.text ? `“${c.text.slice(0, 50)}”` : ""} —— 1.8s 内无请求/报错/DOM 变化`);
+      lines.push(`- [${fmt(c.t)}] CLICK \`${c.sel}\` ${c.text ? `“${c.text.slice(0, 50)}”` : ""} — no request/error/DOM change within 1.8s`);
     lines.push("");
   }
   if (i.errors.length) {
-    lines.push("## 错误");
+    lines.push("## Errors");
     for (const e of i.errors)
       lines.push(`- [${fmt(e.t)}] ${e.kind.toUpperCase()} ${e.kind === "res" ? `${(e as { status: number }).status} ${(e as { url: string }).url}` : e.kind === "console" ? (e as { text: string }).text : (e as { message?: string }).message ?? ""}`);
     lines.push("");
   }
   if (i.gaps.length) {
-    lines.push("## 证据缺口（可能录不到证据）");
+    lines.push("## Evidence gaps (may not have been recorded)");
     for (const g of i.gaps) lines.push(`- ⚠ ${g}`);
     lines.push("");
   }
-  lines.push("## 视觉证据（先看这些）");
-  if (i.keyframes?.length) lines.push("### 关键帧（rrweb 回放渲染）", ...i.keyframes.map(s => `- ${s}`), "");
+  lines.push("## Visual evidence (look at these first)");
+  if (i.keyframes?.length) lines.push("### Keyframes (rrweb replay renders)", ...i.keyframes.map(s => `- ${s}`), "");
   if (i.shots.length) lines.push(...i.shots.map(s => `- ${s}`));
   if (i.doms.length) lines.push(...i.doms.map(s => `- ${s}`));
   lines.push(
     "",
-    "## 现场计数",
-    `- ${Object.entries(i.counts).map(([k, v]) => `${k}×${v}`).join(" · ") || "无"}`,
-    `- 深挖: events.jsonl 里 t ∈ [${i.from}, ${i.to}]ms`,
+    "## Scene counts",
+    `- ${Object.entries(i.counts).map(([k, v]) => `${k}×${v}`).join(" · ") || "none"}`,
+    `- dig deeper: events.jsonl for t ∈ [${i.from}, ${i.to}]ms`,
   );
   return lines.join("\n");
 }
