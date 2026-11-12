@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://witness.zalize.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://witness.zalize.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://witness.zalize.com/zh/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://witness.zalize.com/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://witness.zalize.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://witness.zalize.com/"/>
+    <lastmod>2026-11-13</lastmod><changefreq>weekly</changefreq><priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://witness.zalize.com/zh/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://witness.zalize.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://witness.zalize.com/zh/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://witness.zalize.com/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://witness.zalize.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://witness.zalize.com/"/>
+    <lastmod>2026-11-13</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://witness.zalize.com/zh-hant/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://witness.zalize.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://witness.zalize.com/zh/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://witness.zalize.com/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://witness.zalize.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://witness.zalize.com/"/>
+    <lastmod>2026-11-13</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://witness.zalize.com/ja/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://witness.zalize.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://witness.zalize.com/zh/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://witness.zalize.com/zh-hant/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://witness.zalize.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://witness.zalize.com/"/>
+    <lastmod>2026-11-13</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://witness.zalize.com/docs/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://witness.zalize.com/docs/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://witness.zalize.com/zh/docs/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://witness.zalize.com/zh-hant/docs/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://witness.zalize.com/ja/docs/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://witness.zalize.com/docs/"/>
+    <lastmod>2026-11-13</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://witness.zalize.com/zh/docs/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://witness.zalize.com/docs/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://witness.zalize.com/zh/docs/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://witness.zalize.com/zh-hant/docs/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://witness.zalize.com/ja/docs/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://witness.zalize.com/docs/"/>
+    <lastmod>2026-11-13</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://witness.zalize.com/zh-hant/docs/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://witness.zalize.com/docs/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://witness.zalize.com/zh/docs/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://witness.zalize.com/zh-hant/docs/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://witness.zalize.com/ja/docs/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://witness.zalize.com/docs/"/>
+    <lastmod>2026-11-13</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://witness.zalize.com/ja/docs/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://witness.zalize.com/docs/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://witness.zalize.com/zh/docs/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://witness.zalize.com/zh-hant/docs/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://witness.zalize.com/ja/docs/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://witness.zalize.com/docs/"/>
+    <lastmod>2026-11-13</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
+  </url>
+</urlset>

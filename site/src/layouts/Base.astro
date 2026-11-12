@@ -12,6 +12,29 @@ const nav = [["#how",t.nav.how],["#evidence",t.nav.evidence],["#mcp",t.nav.mcp],
   .map(([a, l]) => [(home || "/") + a, l]);
 nav.push([t.docsPath, t.nav.docs]);
 const f = t.footer;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const isHome = Astro.url.pathname === cur.path;
+const OG_LOCALE = { en: "en_US", zh: "zh_CN", "zh-hant": "zh_TW", ja: "ja_JP" };
+const strip = (s: string) => s.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+const ldApp = {
+  "@context": "https://schema.org", "@type": "SoftwareApplication",
+  name: "Witness", alternateName: "witness-recorder",
+  applicationCategory: "DeveloperApplication", operatingSystem: "Windows, macOS, Linux",
+  softwareVersion: "0.3.0", license: "https://opensource.org/licenses/MIT",
+  description: "Voice-anchored evidence recorder for AI coding agents. Records speech, clicks, requests, console errors and DOM state into a local causal evidence bundle that agents can fix from.",
+  url: "https://witness.zalize.com", codeRepository: GH,
+  downloadUrl: "https://github.com/wookat/witness",
+  author: { "@type": "Person", name: "zalize", url: "https://github.com/wookat" },
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  keywords: "MCP server, AI agent tools, bug reporting, session replay, voice recording, developer tools, CLI",
+};
+const ldFaq = isHome && {
+  "@context": "https://schema.org", "@type": "FAQPage",
+  mainEntity: t.faq.items.map(([q, a]: [string, string]) => ({
+    "@type": "Question", name: strip(q),
+    acceptedAnswer: { "@type": "Answer", text: strip(a) },
+  })),
+};
 const fcols = [
   [f.cols[0], [[home+"#how",f.product.how],[home+"#evidence",f.product.evidence],[home+"#mcp",f.product.mcp],[home+"#faq",f.product.faq],[home+"#install",f.product.install]]],
   [f.cols[1], [[t.docsPath,f.docs.usage],[GH,f.docs.readme],[GH+"/blob/main/VISION.md",f.docs.vision],[GH+"/releases",f.docs.releases]]],
@@ -27,11 +50,22 @@ const fcols = [
 <meta name="description" content={pageDesc}>
 {LANGS.map(l => <link rel="alternate" hreflang={l.htmlLang} href={new URL(l.path, Astro.site).href} />)}
 <link rel="alternate" hreflang="x-default" href={new URL("/", Astro.site).href} />
+<link rel="canonical" href={canonical}>
 <meta property="og:title" content="Witness — your voice, welded to the evidence">
 <meta property="og:description" content="Say what's wrong, point at it, keep going. One recording → a causal evidence package your AI coding agent can fix from.">
 <meta property="og:image" content="https://witness.zalize.com/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:type" content="website">
+<meta property="og:url" content={canonical}>
+<meta property="og:site_name" content="Witness">
+<meta property="og:locale" content={OG_LOCALE[cur.code]}>
+{LANGS.filter(l => l.code !== cur.code).map(l => <meta property="og:locale:alternate" content={OG_LOCALE[l.code]} />)}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Witness — your voice, welded to the evidence">
+<meta name="twitter:description" content="One recording → a causal evidence package your AI coding agent can fix from. Open source, MIT, local-first.">
+<meta name="twitter:image" content="https://witness.zalize.com/og.png">
+<script type="application/ld+json" set:html={JSON.stringify(ldApp)} />
+{ldFaq && <script type="application/ld+json" set:html={JSON.stringify(ldFaq)} />}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">

@@ -1,0 +1,46 @@
+# Witness
+
+> Voice-anchored evidence recorder for AI coding agents. A person uses the product normally and describes problems by voice; Witness welds every utterance to the clicks, requests, console errors, DOM state, screenshots and full DOM replay of that exact second, then hands the causal evidence bundle to an AI agent (files or MCP) to fix from. Open source (MIT), local-first, no account or API key required.
+
+Witness solves the gap between what a user sees ("this button does nothing", "the animation feels off") and what an AI coding agent can perceive. Screen recordings capture pixels; Witness captures causes — each spoken word is anchored to a ~1.8s causal burst of requests, responses, console errors, DOM mutations and snapshots around the nearest click.
+
+## Install & run
+
+- `npm i -g github:wookat/witness` (Node 18+, system Edge/Chrome preferred, bundled Chromium fallback; not yet on the npm registry — install from GitHub)
+- `wit start <url>` — opens a managed browser; use the page and speak
+- Stop with the ■ toolbar button, Alt+Shift+R, or Ctrl+C → a local bundle lands in `.witness/sessions/<timestamp>_<host>/`
+- `wit mcp [sessionDir]` — stdio MCP server exposing the evidence (12 tools)
+- Gestures: Ctrl+click mark · M inspect mode (hover-pick or drag-lasso) · N new issue boundary · P pause/resume · Esc leave inspect
+
+## Evidence bundle (English-first agent artifacts, verbatim user speech)
+
+- `PROMPT.md` — agent handoff: format spec, page vocabulary, fixing rules
+- `session.md` — causal timeline: every event with ms timestamps
+- `SEGMENTS.md` + `segments/NN.md` — speech-anchored issue bundles (verbatim SAY + suspect elements + shots + DOM refs)
+- `events.jsonl` — raw event stream (crash-safe, line-buffered)
+- `rrweb.jsonl` — full-DOM replay stream; `review.html` — human replay UI
+- `shots/` `dom/` `bodies/` `keyframes/` `audio.webm` `transcript.json`
+
+## MCP tools (12)
+
+session_overview · list_segments · segment_detail · list_says · session_md · events_around · get_errors · get_shot · get_dom_state · get_body · get_asr · set_asr
+
+## Speech pipeline
+
+Live captions: `auto` falls through doubao-web → doubao-ime → browser SpeechRecognition (`--asr sr|doubao-web|doubao-ime|off`, `WIT_ASR`, `wit config asr`). Final transcript: OpenAI whisper-1 with `OPENAI_API_KEY`, else free bcut fallback. Optional GLM correction/association with `ZHIPU_API_KEY` — display-layer only, raw speech is never rewritten or translated. `--lang <bcp47>` overrides recognition language (default: browser/OS).
+
+## Privacy
+
+Local-first: evidence stays in `.witness/sessions/` (gitignored). Password values masked across page events, DOM snapshots and screenshots; credential fields redacted in captured bodies; `WIT_NO_BODIES=1` drops response bodies; `P` freezes everything including the mic. Note: live ASR streams mic audio to the chosen provider — `--asr sr` uses the OS/browser recognizer, `--asr off` disables live captions.
+
+## Comparison position
+
+vs Jam (hosted capture + AI, account, closed source) — Witness is voice-anchored, local-first, MIT. vs Replay.io (deepest runtime time-travel, dedicated browser + cloud) — Witness is a lightweight feedback recorder, not a debugger. vs Loom (narrated video) — Witness emits structured technical evidence, not pixels. vs LogRocket/FullStory (SDK-instrumented SaaS session replay) — Witness needs zero instrumentation on the product side.
+
+## Links
+
+- Site: https://witness.zalize.com (en) · /zh/ (简体中文) · /zh-hant/ (繁體中文) · /ja/ (日本語)
+- Docs: https://witness.zalize.com/docs/
+- GitHub: https://github.com/wookat/witness
+- Issues: https://github.com/wookat/witness/issues
+- Contact: wookat@qq.com
