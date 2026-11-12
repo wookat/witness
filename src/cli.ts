@@ -24,7 +24,7 @@ program
   .option("-o, --out <dir>", "output base dir (default: <cwd>/.witness/sessions)")
   .option("--no-transcribe", "skip whisper transcription")
   .option("--duration <sec>", "auto-stop after N seconds")
-  .option("--lang <bcp47>", "speech recognition language", "zh-CN")
+  .option("--lang <bcp47>", "speech recognition language (default: browser/OS language)")
   .option("--correct", "LLM-polish SAY text via zhipu GLM (off by default — transcript stays verbatim)")
   .option("--associate", "LLM-pick relevant evidence per speech block (needs ZHIPU_API_KEY)", false)
   .option("--no-rr", "skip rrweb full-DOM replay capture")

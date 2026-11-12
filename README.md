@@ -42,6 +42,8 @@ npm i -g github:wookat/witness        # needs Node 18+ and system Edge/Chrome
 wit start http://localhost:5173       # managed browser opens — talk & click
 ```
 
+`rec` is an alias for `wit` — same binary, shorter to type.
+
 No downloads, no API keys. System Edge/Chrome is preferred; bundled Chromium is the fallback.
 
 ## During recording
@@ -53,7 +55,8 @@ No downloads, no API keys. System Edge/Chrome is preferred; bundled Chromium is 
 | `M` | Inspect mode: hover-highlight, click to mark; **drag to crop a region** |
 | `N` | Explicit boundary marker — `⏺ ISSUE #n` divider; a strong grouping hint for the agent |
 | `P` | Pause/resume — **all events and audio freeze** (privacy) |
-| `■` / `Ctrl+C` | Stop and finalize the evidence package |
+| `Esc` | Exit inspect mode |
+| `■` / `Alt+Shift+R` | Stop and finalize the evidence package |
 
 `events.jsonl` streams to disk as you go — kill the process and you lose only the last
 few hundred milliseconds. `wit recover` rebuilds everything.
@@ -84,6 +87,8 @@ wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
 
 ## The evidence package — `.witness/sessions/<ts>_<host>/`
 
+Agent-facing artifacts (PROMPT.md / SEGMENTS.md / session.md) are always generated in English — the most reliable corpus for LLMs; your words stay verbatim, never translated.
+
 ```
 SEGMENTS.md       # speech anchors: verbatim + suspects + shot/dom refs (agents read first)
 segments/*.md   # per-segment bundle: verbatim frags, dead clicks, errors, linked shots
@@ -98,7 +103,8 @@ rrweb.jsonl     # full DOM event stream (--no-rr to disable)
 dom/*.html      # DOM snapshots on nav/mark/30s
 assoc.json      # optional LLM evidence-association suggestions
 shots/*.jpg     # click/mark crops + periodic + spoken-segment frames (--shot-format webp for ~35% smaller)
-bodies/*.json   # response bodies ≤64KB
+bodies/*        # response bodies ≤64KB (.json for JSON, .txt otherwise)
+session.json    # meta: url, duration, asr engine, counts
 audio.webm / transcript.json
 ```
 

@@ -50,7 +50,7 @@ export default {
   demoSec: {
     k: "02 · 实录",
     h: "一次点击，全部后果归档。",
-    p: "这是一段真实录制——说话、标记、点了没反应的按钮、保存。下面的 Pay 按钮点了<b>什么都没发生</b>，而这个“没有发生”被如实记为证据。",
+    p: "一次录制的完整过程——说话、标记、点了没反应的按钮、保存。下面的 Pay 按钮点了<b>什么都没发生</b>，而这个“没有发生”被如实记为证据。",
   },
   stats: ["条记录线", "个 MCP 工具", "云端 key 依赖", "项测试通过", "开源协议"],
   how: {
@@ -149,7 +149,7 @@ Process in this order:
     c1t: "PROMPT.md → 粘贴",
     c1d: "每个 session 自带交接文件：格式说明、页面词表、修复规则。贴进任何会跑命令的 agent——它就知道该怎么读证据、先复述清单再动手。",
     c2t: "wit mcp → 接入",
-    c2d: "支持 MCP 的 agent 直接连 stdio server：12 个工具按需挖证据，不用把整包塞进上下文。Devin 还有原生 skill 驱动全流程。",
+    c2d: "支持 MCP 的 agent 直接连 stdio server：12 个工具按需挖证据，不用把整包塞进上下文。仓库还自带 SKILL.md——Devin 直接加载为原生 skill，其他 agent 可以当规则文件用。",
     works: "适配",
     agents: ["Devin", "Claude Code", "Cursor", "Codex", "Windsurf", "任何 MCP 客户端"],
   },
@@ -193,9 +193,9 @@ Process in this order:
     items: [
       ["需要装什么？", "Node 18+ 和系统 Edge/Chrome——优先用你机器上的真浏览器，找不到才装自带 chromium。<code>npm i -g github:wookat/witness</code>，完事。"],
       ["有什么数据会离开本机？", "证据包全部落在本地 <code>.witness/sessions/</code>（自动 gitignore）。实时字幕按你选的引擎流式发麦克风音频（默认 doubao-web）；<code>--asr sr</code> 走系统/浏览器识别，<code>--asr off</code> 直接不要实时字幕。终稿转写走 bcut（免费）或你自己的 OPENAI_API_KEY 走 whisper——<code>--no-transcribe</code> 可全跳过。LLM 纠错/关联只有显式传 flag 且有 key 才跑。"],
-      ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——12 个查询工具按需挖证据，而不是一次性塞全文。Devin 另有原生 skill 驱动录制全流程。"],
+      ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——12 个查询工具按需挖证据，而不是一次性塞全文。仓库自带的 SKILL.md 在 Devin 上是原生 skill，在其他 agent 上可当规则文件。"],
       ["密码出现在页面里怎么办？", "密码字段四通道打码；POST 体自动脱敏凭证字段；<code>P</code> 随时全冻结（含麦克风）；敏感应用设 <code>WIT_NO_BODIES=1</code> 直接不存响应体。"],
-      ["可以说什么语言？", "<code>--lang</code> 设识别语言（默认 zh-CN，如 en-US）。原话永远逐字落盘——识别错字保留可审计，LLM 纠错只是可选的展示层。"],
+      ["可以说什么语言？", "识别语言默认跟随浏览器/系统语言——<code>--lang &lt;bcp47&gt;</code>（如 en-US、ja-JP）按次覆盖。原话永远逐字落盘——识别错字保留可审计，LLM 纠错只是可选的展示层。"],
       ["只能录 localhost 吗？", "任何 URL——托管浏览器就是你的真实浏览器，登录照样用。不过在本地开发站上最锋利：agent 修的时候能同时看到源码。"],
       ["录到一半崩了 / 被我杀了，全没了吗？", "events.jsonl 逐行流式落盘，最多丢最后几百毫秒。<code>wit recover &lt;dir&gt;</code> 随时从事件流重建 session.md、review.html、PROMPT.md。"],
       ["收费吗？", "MIT 开源，无账号、无必需 key。免费 ASR 是默认链路；付费模型全是自带 key 的可选增强。"],

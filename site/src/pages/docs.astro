@@ -19,11 +19,11 @@ const chapters = [
 <section id="install2" class="alt"><div class="wrap">
   <div class="kicker">01 · Install</div>
   <h2 class="rv">You don't install it. Your agent does.</h2>
-  <p class="lede rv" data-d="60">The intended flow: <b>you give the instruction, the agent types the commands.</b> Witness is a CLI (<code>wit</code>) that drives your system Edge/Chrome — no browser download, no cloud account, no keys.</p>
+  <p class="lede rv" data-d="60">The intended flow: <b>you give the instruction, the agent types the commands.</b> Witness is a CLI (<code>wit</code>) that drives your installed Edge/Chrome (bundled Chromium only as fallback) — no cloud account, no keys.</p>
   <Term label="say this to your agent" d="80">Install witness: `npm i -g github:wookat/witness`,
 verify with `wit --version`. Requires Node 18+.</Term>
   <div class="grid g2" style="margin-top:24px">
-    <Card icon="box" title="What lands on your machine" d="0"><b>the <code>wit</code> CLI</b> — recorder, session renderer, transcriber, MCP server in one binary. Config at <code>~/.witness/config.json</code>, ASR creds at <code>~/.witness/doubao-creds.json</code>. Evidence always lands in the <b>current project's</b> <code>.witness/sessions/</code>.</Card>
+    <Card icon="box" title="What lands on your machine" d="0"><b>the <code>wit</code> CLI</b> — recorder, session renderer, transcriber, MCP server in one binary. Config persists to the project's <code>.witness/config.json</code>; the doubao-ime engine caches its token at <code>~/.witness/doubao-creds.json</code>. Evidence always lands in the <b>current project's</b> <code>.witness/sessions/</code>.</Card>
     <Card icon="file" title="Teach an agent that doesn't know it" d="60">The repo ships <code>skills/witness/SKILL.md</code> — a ready-made skill file. Drop it into <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code> and phrases like "record a session for me" trigger the whole workflow. <a href={GH + "/blob/main/skills/witness/SKILL.md"}>View it ↗</a></Card>
   </div>
   <Term label="what the agent actually runs" d="100"><span class="c-dim"># for transparency — under the hood your agent does:</span>
@@ -37,7 +37,7 @@ wit --version</Term>
   <div class="kicker">02 · Configure</div>
   <h2 class="rv">Zero-config by default; switches when you want them.</h2>
   <div class="grid g2" style="margin-top:34px">
-    <Card icon="mic" title="Live ASR engine" d="0"><code>wit config asr</code> persists to <code>~/.witness/config.json</code>; <code>--asr</code> / <code>WIT_ASR</code> override per run. Agents can flip it live via the <code>set_asr</code> MCP tool.<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
+    <Card icon="mic" title="Live ASR engine" d="0"><code>wit config asr</code> persists to the project's <code>.witness/config.json</code>; <code>--asr</code> / <code>WIT_ASR</code> override per run. Agents can flip it live via the <code>set_asr</code> MCP tool.<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
 doubao-web   best punctuation (default pick)
 doubao-ime   per-sentence timestamps, ITN digits
 sr           browser SpeechRecognition (offline)
@@ -78,7 +78,7 @@ wit correct &lt;dir&gt;      LLM polish (verbatim kept)
 wit associate &lt;dir&gt;    LLM picks evidence per SAY
 wit recover &lt;dir&gt;      rebuild after a crash
 wit mcp [dir]          serve evidence over MCP
-wit config asr …       engine: auto|doubao-web|ime|sr|off</pre></Card>
+wit config asr …       engine: auto|doubao-web|doubao-ime|sr|off</pre></Card>
   </div>
 </div></section>
 

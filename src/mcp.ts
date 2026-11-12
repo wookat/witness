@@ -46,7 +46,7 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
     return r;
   };
 
-  const server = new McpServer({ name: "witness", version: "0.2.0" });
+  const server = new McpServer({ name: "witness", version: "0.3.0" });
 
   server.registerTool("session_overview",
     { description: "Session metadata: app URL, duration, counts of says/marks/errors/requests, file list" },

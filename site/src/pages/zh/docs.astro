@@ -19,11 +19,11 @@ const chapters = [
 <section id="install2" class="alt"><div class="wrap">
   <div class="kicker">01 · 安装</div>
   <h2 class="rv">不用你装，让 agent 装。</h2>
-  <p class="lede rv" data-d="60">正确姿势是<b>你下指令，agent 敲命令</b>。Witness 本体是 CLI（<code>wit</code>），驱动你系统里的 Edge/Chrome——不下载浏览器、不需要云账号、不要 key。</p>
+  <p class="lede rv" data-d="60">正确姿势是<b>你下指令，agent 敲命令</b>。Witness 本体是 CLI（<code>wit</code>），驱动你系统里的 Edge/Chrome（没有时才回退到自带 Chromium）——不需要云账号、不要 key。</p>
   <Term label="对你的 agent 说一句" d="80">安装 witness：执行 `npm i -g github:wookat/witness`，
 用 `wit --version` 验证一下。需要 Node 18+。</Term>
   <div class="grid g2" style="margin-top:24px">
-    <Card icon="box" title="装到你机器上的是什么" d="0"><b><code>wit</code> 命令行</b>——录制器、session 渲染器、转写器、MCP server 四合一。配置在 <code>~/.witness/config.json</code>，ASR 凭证缓存 <code>~/.witness/doubao-creds.json</code>。证据永远落在<b>当前项目</b>的 <code>.witness/sessions/</code>。</Card>
+    <Card icon="box" title="装到你机器上的是什么" d="0"><b><code>wit</code> 命令行</b>——录制器、session 渲染器、转写器、MCP server 四合一。配置持久化到项目的 <code>.witness/config.json</code>；doubao-ime 引擎的凭证缓存在 <code>~/.witness/doubao-creds.json</code>。证据永远落在<b>当前项目</b>的 <code>.witness/sessions/</code>。</Card>
     <Card icon="file" title="教不认识它的 agent" d="60">仓库自带 <code>skills/witness/SKILL.md</code>——现成的技能文件，放进 <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code>，之后说"帮我录一段"就能触发整套流程。<a href={GH + "/blob/main/skills/witness/SKILL.md"}>查看 ↗</a></Card>
   </div>
   <Term label="agent 实际执行的命令" d="100"><span class="c-dim"># 透明起见——你的 agent 在背后敲的是：</span>
@@ -37,7 +37,7 @@ wit --version</Term>
   <div class="kicker">02 · 配置</div>
   <h2 class="rv">默认零配置；想调再调。</h2>
   <div class="grid g2" style="margin-top:34px">
-    <Card icon="mic" title="实时 ASR 引擎" d="0"><code>wit config asr</code> 持久化到 <code>~/.witness/config.json</code>；<code>--asr</code> / <code>WIT_ASR</code> 单次覆盖。agent 也能通过 <code>set_asr</code> MCP 工具自己切。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
+    <Card icon="mic" title="实时 ASR 引擎" d="0"><code>wit config asr</code> 持久化到项目的 <code>.witness/config.json</code>；<code>--asr</code> / <code>WIT_ASR</code> 单次覆盖。agent 也能通过 <code>set_asr</code> MCP 工具自己切。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
 doubao-web   标点最好（默认首选）
 doubao-ime   句级时间戳、数字 ITN 更好
 sr           浏览器 SpeechRecognition（离线兜底）
@@ -78,7 +78,7 @@ wit correct &lt;dir&gt;     LLM 润色（原文保留）
 wit associate &lt;dir&gt;   LLM 给每段话挑证据
 wit recover &lt;dir&gt;     崩溃重建
 wit mcp [dir]         MCP 服务拉证据
-wit config asr …      引擎：auto|doubao-web|ime|sr|off</pre></Card>
+wit config asr …      引擎：auto|doubao-web|doubao-ime|sr|off</pre></Card>
   </div>
 </div></section>
 

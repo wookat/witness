@@ -2,7 +2,7 @@
 // Self-contained IIFE — no imports, runs in page context.
 // Communicates with node via __witEmit (events) and __witAudio (base64 chunks).
 
-export const PAGE_SCRIPT = (lang = "zh-CN", opts: { sr?: boolean; pcm?: boolean } = {}) => `
+export const PAGE_SCRIPT = (lang?: string, opts: { sr?: boolean; pcm?: boolean } = {}) => `
 (function () {
   if (window.__wit) return;
   if (location.href === "about:blank") return;
@@ -483,7 +483,7 @@ export const PAGE_SCRIPT = (lang = "zh-CN", opts: { sr?: boolean; pcm?: boolean 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
     const r = new SR();
-    r.lang = ${JSON.stringify(lang)};
+    ${lang ? `r.lang = ${JSON.stringify(lang)};` : "/* lang unset — browser/OS default */"}
     r.continuous = true;
     r.interimResults = true;
     let segStart = null;

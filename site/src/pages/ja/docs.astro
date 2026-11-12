@@ -19,11 +19,11 @@ const chapters = [
 <section id="install2" class="alt"><div class="wrap">
   <div class="kicker">01 · インストール</div>
   <h2 class="rv">あなたが入れるのではなく、エージェントが入れます。</h2>
-  <p class="lede rv" data-d="60">基本の流れ：<b>あなたが指示し、エージェントがコマンドを叩きます</b>。Witness は CLI（<code>wit</code>）で、システムの Edge/Chrome を動かします——ブラウザのダウンロード不要、クラウドアカウント不要、キー不要。</p>
+  <p class="lede rv" data-d="60">基本の流れ：<b>あなたが指示し、エージェントがコマンドを叩きます</b>。Witness は CLI（<code>wit</code>）で、システムの Edge/Chrome を動かします（無い場合のみ同梱 Chromium にフォールバック）——クラウドアカウント不要、キー不要。</p>
   <Term label="エージェントにこう言う" d="80">witness をインストール：`npm i -g github:wookat/witness` を実行、
 `wit --version` で確認。Node 18+ が必要です。</Term>
   <div class="grid g2" style="margin-top:24px">
-    <Card icon="box" title="マシンに入るもの" d="0"><b><code>wit</code> CLI</b> —— レコーダー、session レンダラー、トランスクライバー、MCP server がひとつ。設定は <code>~/.witness/config.json</code>、ASR 認証情報は <code>~/.witness/doubao-creds.json</code>。エビデンスは常に<b>カレントプロジェクト</b>の <code>.witness/sessions/</code> に落ちます。</Card>
+    <Card icon="box" title="マシンに入るもの" d="0"><b><code>wit</code> CLI</b> —— レコーダー、session レンダラー、トランスクライバー、MCP server がひとつ。設定はプロジェクトの <code>.witness/config.json</code> に永続化；doubao-ime エンジンの認証情報は <code>~/.witness/doubao-creds.json</code> にキャッシュ。エビデンスは常に<b>カレントプロジェクト</b>の <code>.witness/sessions/</code> に落ちます。</Card>
     <Card icon="file" title="Witness を知らないエージェントに教える" d="60">リポジトリには <code>skills/witness/SKILL.md</code> が同梱——そのまま使える skill ファイル。<code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code> に入れれば、「録画して」の一言でワークフロー全体が起動します。<a href={GH + "/blob/main/skills/witness/SKILL.md"}>見る ↗</a></Card>
   </div>
   <Term label="エージェントが実際に実行するコマンド" d="100"><span class="c-dim"># 透明のために——内部でエージェントが叩くのは：</span>
@@ -37,7 +37,7 @@ wit --version</Term>
   <div class="kicker">02 · 設定</div>
   <h2 class="rv">既定はゼロ設定。必要な時だけ切替。</h2>
   <div class="grid g2" style="margin-top:34px">
-    <Card icon="mic" title="ライブ ASR エンジン" d="0"><code>wit config asr</code> は <code>~/.witness/config.json</code> に永続化；<code>--asr</code> / <code>WIT_ASR</code> でその場だけ上書き。エージェントは <code>set_asr</code> MCP ツールで自分でも切替可能。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
+    <Card icon="mic" title="ライブ ASR エンジン" d="0"><code>wit config asr</code> はプロジェクトの <code>.witness/config.json</code> に永続化；<code>--asr</code> / <code>WIT_ASR</code> でその場だけ上書き。エージェントは <code>set_asr</code> MCP ツールで自分でも切替可能。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
 doubao-web   句読点がいちばん良い（既定の選択）
 doubao-ime   文ごとのタイムスタンプ、数字 ITN が得意
 sr           ブラウザ SpeechRecognition（オフライン）
@@ -78,7 +78,7 @@ wit correct &lt;dir&gt;     LLM 仕上げ（原文は保持）
 wit associate &lt;dir&gt;   LLM が各 SAY にエビデンスを選択
 wit recover &lt;dir&gt;     クラッシュ後に再構築
 wit mcp [dir]         MCP 経由でエビデンスを提供
-wit config asr …      エンジン：auto|doubao-web|ime|sr|off</pre></Card>
+wit config asr …      エンジン：auto|doubao-web|doubao-ime|sr|off</pre></Card>
   </div>
 </div></section>
 

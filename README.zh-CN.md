@@ -35,6 +35,8 @@ npm i -g github:wookat/witness        # 需要 Node 18+ 和系统 Edge/Chrome
 wit start http://localhost:5173       # 托管浏览器打开——正常体验+说话
 ```
 
+`rec` 是 `wit` 的别名——同一个二进制，少敲三个字母。
+
 零下载、零 key。优先系统 Edge/Chrome，没有再装自带 chromium。
 
 ## 录制中
@@ -46,7 +48,8 @@ wit start http://localhost:5173       # 托管浏览器打开——正常体验+
 | `M` | Inspect：悬停高亮，点选标记；**拖拽圈选区域**截局部图 |
 | `N` | 显式边界标记——`⏺ ISSUE #n` 分隔，是给 agent 归组的强提示 |
 | `P` | 暂停/继续——暂停期**所有事件与录音都冻结**（隐私） |
-| `■` / `Ctrl+C` | 停止并生成证据包 |
+| `Esc` | 退出 inspect 模式 |
+| `■` / `Alt+Shift+R` | 停止并生成证据包 |
 
 events.jsonl 边录边落盘——进程被杀也只丢最后几百毫秒，`wit recover` 随时重建全部产物。
 
@@ -75,6 +78,8 @@ wit config asr <engine>           # 实时 ASR：auto|doubao-web|doubao-ime|sr|o
 
 ## 证据包 `.witness/sessions/<ts>_<host>/`
 
+面向 agent 的产物（PROMPT.md / SEGMENTS.md / session.md）一律以英文生成——LLM 最稳的语料；你的原话永远逐字保留，不翻译。
+
 ```
 SEGMENTS.md       # 语音段索引：原话+嫌疑元素+截图/DOM 引用（agent 先读；段≠问题，归组归 agent）
 segments/*.md     # 每段一包：逐段原话 + 死点击 + 报错 + 挂图
@@ -89,7 +94,8 @@ rrweb.jsonl     # rrweb DOM 事件流（--no-rr 关闭）
 dom/*.html      # DOM 快照（nav/mark/每30s）
 assoc.json      # （可选）LLM 证据关联建议
 shots/*.jpg     # click/mark 裁切 + 周期 + 说话段截图（--shot-format webp 省 ~35% 体积）
-bodies/*.json   # 响应体 ≤64KB
+bodies/*        # 响应体 ≤64KB（JSON 存 .json，其余 .txt）
+session.json    # 元数据：url/时长/ASR 引擎/计数
 audio.webm / transcript.json
 ```
 

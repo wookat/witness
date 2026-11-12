@@ -14,7 +14,7 @@ description: Record voice-anchored product evidence. Use when the user asks to r
 
 ```bash
 wit start <url>                    # wit installed globally (npm i -g github:wookat/witness or npm link)
-# common flags: --duration 60 (auto-stop) · --lang en-US (English pages) · --asr <engine> · --shot-interval 15000 · --no-transcribe
+# common flags: --duration 60 (auto-stop) · --lang en-US (recognition language, default: browser/OS) · --asr <engine> · --shot-interval 15000 · --no-transcribe
 ```
 
 - Derive the dev URL from package.json scripts / the vite port (usually `http://localhost:5173`)

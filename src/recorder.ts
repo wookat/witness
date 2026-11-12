@@ -25,7 +25,7 @@ export interface RecOptions {
   width?: number;
   height?: number;
   duration?: number;         // auto-stop after N seconds (testing / quick captures)
-  lang?: string;             // speech recognition language, default zh-CN
+  lang?: string;             // speech recognition language — unset = browser/OS default
   correct?: boolean;         // opt-in: LLM-polish SAY text (default off — keep verbatim)
   associate?: boolean;       // opt-in: LLM-pick relevant evidence per SAY (needs ZHIPU_API_KEY)
   rr?: boolean;              // default true: rrweb full-DOM replay capture → rrweb.jsonl + review.html player
@@ -178,7 +178,7 @@ export async function record(opts: RecOptions) {
       slimDOMOptions: { script: true, comment: true },
     });`);
   }
-  await ctx.addInitScript(PAGE_SCRIPT(opts.lang ?? "zh-CN", { sr: asrMode === "sr", pcm: asrMode !== "sr" && asrMode !== "off" }));
+  await ctx.addInitScript(PAGE_SCRIPT(opts.lang, { sr: asrMode === "sr", pcm: asrMode !== "sr" && asrMode !== "off" }));
 
   function wirePage(page: Page) {
     if (pages.has(page)) return;

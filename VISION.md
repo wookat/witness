@@ -70,7 +70,7 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 | 理想版能力 | V1 实现 | 差距 |
 |---|---|---|
 | 三条记录线全自动 | ✅ 录音+SR / 全操作事件 / DOM mutation 摘要 + **rrweb 全量 DOM 回放**（review.html "▶ 回放"） | ✅ 第三条线完全体已上线；另有 dom/*.html 快照供 MCP get_dom_state(t) 查 |
-| 因果爆发链 | ✅ 点击后的请求+body/响应/console/状态变化全记；session.md 渲染层把 ~1.8s 后果缩进归组 | ✅ "点了没反应"显式渲染为"无任何反应——这本身就是证据" |
+| 因果爆发链 | ✅ 点击后的请求+body/响应/console/状态变化全记；session.md 渲染层把 ~1.8s 后果缩进归组 | ✅ "点了没反应"显式渲染为证据（no page reaction — itself evidence） |
 | 语音锚点时间轴 | ✅ SAY 块 + 时间窗证据挂载 | ✅ 形态与设想一致 |
 | **按语义智能挑证据** | ✅ `--associate` / `wit associate`：LLM 从 ±5s 候选事件挑相关项→`assoc.json`，session.md 只显示命中、其余折叠；无 key 回退时间窗 | 已上线但属可选层；默认渲染仍是确定性时间窗（语义判断也可留给下游 agent） |
 | agent 主动查询证据 | ✅ `wit mcp`：stdio MCP server，12 个工具（list_segments/segment_detail/session_overview/list_says/session_md/events_around/get_errors/get_shot/get_dom_state/get_body/get_asr/set_asr） | ✅ 已上线 |
@@ -102,6 +102,7 @@ DOM/视觉状态随时间的连续变化，不只是静态截图。
 
 | 给人看 | 给 AI agent |
 |---|---|
+| 语言策略 | agent 面向产物（PROMPT.md/SEGMENTS.md/session.md/segments/）一律英文生成——LLM 最稳语料；SAY 原话逐字保留不翻译 |
 | review.html（语音卡片+截图+音频跳转+rrweb 回放） | SEGMENTS.md → segments/NN.md（语音锚点索引，先读） |
 | shots/*.jpg、audio.webm、keyframes/ | session.md（全量档案）· events.jsonl / transcript.json / bodies/ |
 | README.txt（目录导览） | PROMPT.md（入口+词表+规则）· shots/ · dom/ · session.json |

@@ -50,7 +50,7 @@ export default {
   demoSec: {
     k: "02 · 實錄",
     h: "一次點擊，全部後果歸檔。",
-    p: "這是一段真實錄製——說話、標記、點了沒反應的按鈕、儲存。下面的 Pay 按鈕點了<b>什麼都沒發生</b>，而這個「沒有發生」被如實記為證據。",
+    p: "一次錄製的完整過程——說話、標記、點了沒反應的按鈕、儲存。下面的 Pay 按鈕點了<b>什麼都沒發生</b>，而這個「沒有發生」被如實記為證據。",
   },
   stats: ["條記錄線", "個 MCP 工具", "雲端 key 依賴", "項測試通過", "開源授權"],
   how: {
@@ -149,7 +149,7 @@ Process in this order:
     c1t: "PROMPT.md → 貼上",
     c1d: "每個 session 自帶交接檔案：格式說明、頁面詞表、修復規則。貼進任何會跑命令的 agent——它就知道該怎麼讀證據、先複述清單再動手。",
     c2t: "wit mcp → 接入",
-    c2d: "支援 MCP 的 agent 直接連 stdio server：12 個工具按需挖證據，不用把整包塞進上下文。Devin 還有原生 skill 驅動全流程。",
+    c2d: "支援 MCP 的 agent 直接連 stdio server：12 個工具按需挖證據，不用把整包塞進上下文。倉庫還自帶 SKILL.md——Devin 直接載入為原生 skill，其他 agent 可以當規則檔用。",
     works: "支援",
     agents: ["Devin", "Claude Code", "Cursor", "Codex", "Windsurf", "任何 MCP 客戶端"],
   },
@@ -193,9 +193,9 @@ Process in this order:
     items: [
       ["需要裝什麼？", "Node 18+ 和系統 Edge/Chrome——優先用你機器上的真瀏覽器，找不到才裝內建 chromium。<code>npm i -g github:wookat/witness</code>，完事。"],
       ["有什麼資料會離開本機？", "證據包全部落在本地 <code>.witness/sessions/</code>（自動 gitignore）。即時字幕按你選的引擎串流麥克風音訊（預設 doubao-web）；<code>--asr sr</code> 走系統/瀏覽器辨識，<code>--asr off</code> 直接不要即時字幕。終稿轉寫走 bcut（免費）或你自己的 OPENAI_API_KEY 走 whisper——<code>--no-transcribe</code> 可全跳過。LLM 糾錯/關聯只有顯式傳 flag 且有 key 才跑。"],
-      ["支援哪些 agent？", "能跑 CLI 的 agent 就能讀 session.md + PROMPT.md。支援 MCP 的（Devin、Claude Code、Cursor、Codex……）直連 <code>wit mcp</code>——12 個查詢工具按需挖證據，而不是一次性塞全文。Devin 另有原生 skill 驅動錄製全流程。"],
+      ["支援哪些 agent？", "能跑 CLI 的 agent 就能讀 session.md + PROMPT.md。支援 MCP 的（Devin、Claude Code、Cursor、Codex……）直連 <code>wit mcp</code>——12 個查詢工具按需挖證據，而不是一次性塞全文。倉庫自帶的 SKILL.md 在 Devin 上是原生 skill，在其他 agent 上可當規則檔。"],
       ["密碼出現在頁面裡怎麼辦？", "密碼欄位四通道遮罩；POST 內容自動脫敏憑證欄位；<code>P</code> 隨時全凍結（含麥克風）；敏感應用設 <code>WIT_NO_BODIES=1</code> 直接不存回應內容。"],
-      ["可以說什麼語言？", "<code>--lang</code> 設辨識語言（預設 zh-CN，如 en-US、zh-TW）。原話永遠逐字寫入——辨識錯字保留可稽核，LLM 糾錯只是可選的展示層。"],
+      ["可以說什麼語言？", "辨識語言預設跟隨瀏覽器/系統語言——<code>--lang &lt;bcp47&gt;</code>（如 en-US、ja-JP）按次覆蓋。原話永遠逐字寫入——辨識錯字保留可稽核，LLM 糾錯只是可選的展示層。"],
       ["只能錄 localhost 嗎？", "任何 URL——託管瀏覽器就是你的真實瀏覽器，登入照樣用。不過在本地開發站上最鋒利：agent 修的時候能同時看到原始碼。"],
       ["錄到一半當機 / 被我結束了，全沒了嗎？", "events.jsonl 逐行串流寫入，最多丟最後幾百毫秒。<code>wit recover &lt;dir&gt;</code> 隨時從事件流重建 session.md、review.html、PROMPT.md。"],
       ["收費嗎？", "MIT 開源，無帳號、無必需 key。免費 ASR 是預設鏈路；付費模型全是自帶 key 的可選增強。"],
