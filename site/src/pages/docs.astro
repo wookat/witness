@@ -24,7 +24,7 @@ const chapters = [
 verify with `wit --version`. Requires Node 18+.</Term>
   <div class="grid g2" style="margin-top:24px">
     <Card icon="box" title="What lands on your machine" d="0"><b>the <code>wit</code> CLI</b> — recorder, session renderer, transcriber, MCP server in one binary. Config at <code>~/.witness/config.json</code>, ASR creds at <code>~/.witness/doubao-creds.json</code>. Evidence always lands in the <b>current project's</b> <code>.witness/sessions/</code>.</Card>
-    <Card icon="file" title="Teach an agent that doesn't know it" d="60">The repo ships <code>skills/witness/SKILL.md</code> — a ready-made skill file. Drop it into <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code> and phrases like "帮我录一段" trigger the whole workflow. <a href={GH + "/blob/main/skills/witness/SKILL.md"}>View it ↗</a></Card>
+    <Card icon="file" title="Teach an agent that doesn't know it" d="60">The repo ships <code>skills/witness/SKILL.md</code> — a ready-made skill file. Drop it into <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code> and phrases like "record a session for me" trigger the whole workflow. <a href={GH + "/blob/main/skills/witness/SKILL.md"}>View it ↗</a></Card>
   </div>
   <Term label="what the agent actually runs" d="100"><span class="c-dim"># for transparency — under the hood your agent does:</span>
 npm i -g github:wookat/witness
@@ -133,7 +133,7 @@ Read session.md and fix the issues."</pre></Card>
   <h2 class="rv">Record the demo page.</h2>
   <p class="lede rv" data-d="60">A tiny broken product ships with the site — it has a dead button, a console error and a bad API response waiting to be caught:</p>
   <Term label="terminal" d="80">wit start https://witness.zalize.com/demo-app.html --duration 60
-<span class="c-dim"># click the Pay button, say "点了没反应", stop → open review.html</span></Term>
+<span class="c-dim"># click the Pay button, say "it does nothing", stop → open review.html</span></Term>
   <div class="cta rv" data-d="140" style="display:flex;gap:12px;margin-top:30px">
     <a class="btn pri" href="/demo-app.html" target="_blank" rel="noopener">Open the demo app ↗</a>
     <a class="btn" href={GH}>GitHub ★</a>

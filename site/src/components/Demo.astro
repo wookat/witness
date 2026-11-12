@@ -15,7 +15,7 @@ const defaultSays = [
   {
     t: "00:34",
     quote: "the submit button does nothing",
-    ev: [["CLICK", "button#submit “提交” · @482,701", "ok"]],
+    ev: [["CLICK", "button#submit “Submit” · @482,701", "ok"]],
     note: "page showed no reaction for 1.8s after the click — that itself is evidence",
     ui: "btn",
   },
@@ -23,7 +23,7 @@ const defaultSays = [
     t: "01:02",
     quote: "the orders API returns wrong data",
     ev: [
-      ["CLICK", "a[href=\"/orders\"] “订单”", "ok"],
+      ["CLICK", "a[href=\"/orders\"] “Orders”", "ok"],
       ["NET →", "GET /api/orders?page=1", "dim"],
       ["NET ←", "200 /api/orders · items: []", "bad"],
     ],

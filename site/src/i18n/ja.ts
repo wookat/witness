@@ -9,7 +9,7 @@ export default {
     desc: "いつも通りプロダクトを触りながら、違和感を声にするだけ。Witness が音声・クリック・ネットワーク・エラー・DOM リプレイを記録し、AI エージェントがそのまま直せる因果エビデンスパケットを生成します。",
   },
   nav: { how: "仕組み", evidence: "エビデンス", mcp: "MCP", install: "インストール", faq: "FAQ", docs: "ドキュメント" },
-  docsPath: "/docs",
+  docsPath: "/ja/docs",
   footer: {
     tagline: "AI コーディングエージェントのための、音声アンカー型因果エビデンスレコーダー。ローカルファースト、MIT。",
     selfRec: "このサイト自身も Witness で録画済み",
@@ -29,7 +29,7 @@ export default {
     insthint: "↑ これを AI エージェントに渡すだけ——インストールから録画までやってくれます",
     instmeta: "wit CLI が入ります——録画 · レンダリング · MCP が一体 · Node 18+ · システムの Edge/Chrome · キー不要",
   },
-  video: { tag: "PLAYWRIGHT で実録 · ワンテイク" },
+  video: { tag: "PLAYWRIGHT で実録 · ワンテイク", say: "反応がない", vocab: "注文/送信/支払い" },
   convo: {
     you: "あなた",
     msgs: [
@@ -88,17 +88,46 @@ export default {
       },
       {
         t: "00:34", quote: "送信ボタンを押しても反応がない",
-        ev: [["CLICK", "button#submit “提交” · @482,701", "ok"]],
+        ev: [["CLICK", "button#submit “送信” · @482,701", "ok"]],
         note: "クリック後 1.8s ページは無反応——それ自体がエビデンス", ui: "btn",
       },
       {
         t: "01:02", quote: "注文 API の返り値がおかしい",
-        ev: [["CLICK", "a[href=\"/orders\"] “订单”", "ok"], ["NET →", "GET /api/orders?page=1", "dim"], ["NET ←", "200 /api/orders · items: []", "bad"]],
+        ev: [["CLICK", "a[href=\"/orders\"] “注文”", "ok"], ["NET →", "GET /api/orders?page=1", "dim"], ["NET ←", "200 /api/orders · items: []", "bad"]],
         note: "レスポンスボディを捕捉 → bodies/req_0041.json", ui: "api",
       },
     ],
   },
-  aud: { k: "05 · 2つの読者", h: "人にはリプレイを。エージェントには構造を。", labels: ["人間向け", "AI エージェント向け"] },
+  aud: {
+    k: "05 · 2つの読者", h: "人にはリプレイを。エージェントには構造を。", labels: ["人間向け", "AI エージェント向け"],
+    humans: [
+      ["review.html", "音声カード + 音声シーク + ショット", { img: "/sample/review.png", cap: "実際の review.html —— このサイト自身を録画したもの" }],
+      ["▶ DOM リプレイ", "rrweb プレイヤー内蔵、実際のページ状態", { img: "/sample/review.png", cap: "review.html 内蔵の rrweb 再生エリア" }],
+      ["film strip", "動画のように録画全体をスクラブ", { img: "/sample/review.png", cap: "下部フィルムストリップのスクラバー" }],
+      ["audio.webm", "元の録音", { img: "/sample/review.png", cap: "引用をクリックでその秒を再生" }],
+    ],
+    agents: [
+      ["PROMPT.md", "引き継ぎ書 + ページ語彙", { pre: `これは Witness で録画したプロダクト体験のフィードバック（音声 + クリック + ページの因果エビデンス）。
+
+次の順で処理してください：
+1. session.md を読む —— タイムライン：各発話（SAY）にその瞬間の click/mark/net/console/mut エビデンスがぶら下がっています
+2. 指摘された問題をいったんチェックリストに復唱し、確認を取ってから直してください——いきなり修正しない：
+   | # | 時刻 | 発話原文 | あなたの解釈 | 関連エビデンス |
+   各 SAY は最低1件の問題に帰属；1発話に複数問題なら 1a/1b に分割；解釈が曖昧なら ❓
+3. 確認後に1件ずつ修正：selector / コンポーネント名でコードを特定
+4. 直せないものは理由と必要な追加エビデンスを報告に明記`, cap: "PROMPT.md 抜粋——まず問題リストの復唱を求める" }],
+      ["session.md", "因果エビデンスのタイムライン", { pre: `### 00:17 · SAY
+> [00:17] "えっと、このページなんですが"
+> [00:19] "この操作というか"
+> [00:21] "このインタラクション、おかしいと思います"
+- 00:24 CLICK #install > div.term > pre "あなた → "witness をインストールして"…"
+  - 00:24 MUT #rot attr class: rot → rot out`, cap: "session.md 抜粋——各 SAY にその瞬間のエビデンス" }],
+      ["events.jsonl", "完全な生イベントストリーム、クラッシュ耐性", { pre: `{"kind":"req","id":1,"url":"https://witness.zalize.com/ja/","method":"GET","resType":"document","t":605}
+{"kind":"nav","url":"https://witness.zalize.com/ja/","t":1413}
+{"kind":"click","selector":"#install > div.term > pre","text":"あなた → witness をインストールして","x":1106,"y":595,"t":24483}`, cap: "events.jsonl は行ごとにストリーミング保存" }],
+      ["dom/ · bodies/ · shots/", "スナップショット・ペイロード・フレーム", { img: "/sample/shot.jpg", cap: "shots/ の実フレーム（録画中に自動取得）" }],
+    ],
+  },
   mcp: {
     k: "06 · プッシュではなくプル",
     h: "<code>wit mcp</code>——エビデンスを API に。",

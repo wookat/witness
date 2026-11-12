@@ -9,7 +9,7 @@ export default {
     desc: "像平時一樣體驗產品、用嘴說出哪裡不對。Witness 錄下語音、點擊、網路、錯誤與 DOM 回放，產出你的 AI agent 能直接動手的因果證據包。",
   },
   nav: { how: "原理", evidence: "證據", mcp: "MCP", install: "安裝", faq: "FAQ", docs: "文件" },
-  docsPath: "/zh/docs",
+  docsPath: "/zh-hant/docs",
   footer: {
     tagline: "語音錨定的因果證據記錄儀——為 AI 編碼 agent 設計。本機優先，MIT 開源。",
     selfRec: "本官網用 Witness 錄過自己",
@@ -29,7 +29,7 @@ export default {
     insthint: "↑ 丟給你的 AI agent——它裝完就能幫你錄",
     instmeta: "裝的是 wit CLI——錄製·渲染·MCP 一體 · Node 18+ · 系統 Edge/Chrome · 免 key",
   },
-  video: { tag: "PLAYWRIGHT 實錄 · 一鏡到底" },
+  video: { tag: "PLAYWRIGHT 實錄 · 一鏡到底", say: "點了沒反應", vocab: "訂單/提交/支付" },
   convo: {
     you: "你",
     msgs: [
@@ -93,12 +93,41 @@ export default {
       },
       {
         t: "01:02", quote: "訂單介面回傳的資料不對",
-        ev: [["CLICK", "a[href=\"/orders\"] “订单”", "ok"], ["NET →", "GET /api/orders?page=1", "dim"], ["NET ←", "200 /api/orders · items: []", "bad"]],
+        ev: [["CLICK", "a[href=\"/orders\"] “訂單”", "ok"], ["NET →", "GET /api/orders?page=1", "dim"], ["NET ←", "200 /api/orders · items: []", "bad"]],
         note: "回應內容已擷取 → bodies/req_0041.json", ui: "api",
       },
     ],
   },
-  aud: { k: "05 · 兩種受眾", h: "人看回放，Agent 讀結構。", labels: ["給人看", "給 AI agent"] },
+  aud: {
+    k: "05 · 兩種受眾", h: "人看回放，Agent 讀結構。", labels: ["給人看", "給 AI agent"],
+    humans: [
+      ["review.html", "語音卡片 + 音訊跳轉 + 截圖", { img: "/sample/review.png", cap: "真實的 review.html —— 就是錄這個官網產生的那次" }],
+      ["▶ DOM 回放", "內嵌 rrweb 播放器，真實頁面狀態", { img: "/sample/review.png", cap: "review.html 內建的 rrweb 回放區" }],
+      ["film strip", "像拖影片一樣刷整場錄製", { img: "/sample/review.png", cap: "底部膠片條 scrubber" }],
+      ["audio.webm", "原始錄音", { img: "/sample/review.png", cap: "語音卡片點哪句播哪句" }],
+    ],
+    agents: [
+      ["PROMPT.md", "交接說明 + 頁面詞表", { pre: `這是 Witness 錄製的一段產品體驗回饋（voice + click + 頁面實況證據鏈）。
+
+請按以下順序處理：
+1. 讀 session.md —— 時間軸：每段語音（SAY）下方掛該時刻的 click/mark/net/console/mut 證據
+2. 先把使用者指出的問題複述成清單，請使用者確認後再動手——不要直接開修：
+   | # | 時間 | 使用者原話 | 你的理解 | 關聯證據 |
+   每段 SAY 至少歸進一個問題；一句話含多個問題拆成 1a/1b；理解有歧義的標 ❓
+3. 使用者確認後逐條修復：用 selector/元件名在程式碼裡定位
+4. 修不了的在回報裡標注原因和需要的補充證據`, cap: "真實 PROMPT.md 節選——要求 agent 先複述清單再修" }],
+      ["session.md", "因果證據時間軸", { pre: `### 00:17 · SAY
+> [00:17] "就比如說這個頁面的話"
+> [00:19] "這個互動啊"
+> [00:21] "我覺得這個互動有問題"
+- 00:24 CLICK #install > div.term > pre "你 → "安裝 witness"…"
+  - 00:24 MUT #rot attr class: rot → rot out`, cap: "真實 session.md 節選——SAY 下掛該時刻的證據" }],
+      ["events.jsonl", "全量原始事件流，崩了也保住", { pre: `{"kind":"req","id":1,"url":"https://witness.zalize.com/zh-hant/","method":"GET","resType":"document","t":605}
+{"kind":"nav","url":"https://witness.zalize.com/zh-hant/","t":1413}
+{"kind":"click","selector":"#install > div.term > pre","text":"你 → 安裝 witness","x":1106,"y":595,"t":24483}`, cap: "events.jsonl 逐行流式落盤" }],
+      ["dom/ · bodies/ · shots/", "快照、回應體、截圖幀", { img: "/sample/shot.jpg", cap: "shots/ 裡的真實截圖幀（錄製中自動截取）" }],
+    ],
+  },
   mcp: {
     k: "06 · 拉取，不是推送",
     h: "<code>wit mcp</code>——把證據變成 API。",

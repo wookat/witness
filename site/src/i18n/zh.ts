@@ -29,7 +29,7 @@ export default {
     insthint: "↑ 丢给你的 AI agent——它装完就能帮你录",
     instmeta: "装的是 wit CLI——录制·渲染·MCP 一体 · Node 18+ · 系统 Edge/Chrome · 免 key",
   },
-  video: { tag: "PLAYWRIGHT 实录 · 一镜到底" },
+  video: { tag: "PLAYWRIGHT 实录 · 一镜到底", say: "点了没反应", vocab: "订单/提交/支付" },
   convo: {
     you: "你",
     msgs: [
@@ -98,7 +98,36 @@ export default {
       },
     ],
   },
-  aud: { k: "05 · 两种受众", h: "人看回放，Agent 读结构。", labels: ["给人看", "给 AI agent"] },
+  aud: {
+    k: "05 · 两种受众", h: "人看回放，Agent 读结构。", labels: ["给人看", "给 AI agent"],
+    humans: [
+      ["review.html", "语音卡片 + 音频跳转 + 截图", { img: "/sample/review.png", cap: "真实的 review.html —— 就是录这个官网产出的那次" }],
+      ["▶ DOM 回放", "内嵌 rrweb 播放器，真实页面状态", { img: "/sample/review.png", cap: "review.html 内置的 rrweb 回放区" }],
+      ["film strip", "像拖视频一样刷整场录制", { img: "/sample/review.png", cap: "底部胶片条 scrubber" }],
+      ["audio.webm", "原始录音", { img: "/sample/review.png", cap: "语音卡片点哪句播哪句" }],
+    ],
+    agents: [
+      ["PROMPT.md", "交接说明 + 页面词表", { pre: `这是 Witness 录制的一段产品体验反馈（voice + click + 页面实况证据链）。
+
+请按以下顺序处理：
+1. 读 session.md —— 时间轴：每段语音（SAY）下方挂该时刻的 click/mark/net/console/mut 证据
+2. 先把用户指出的问题复述成清单，请用户确认后再动手——不要直接开修：
+   | # | 时间 | 用户原话 | 你的理解 | 关联证据 |
+   每段 SAY 至少归进一个问题；一句话含多个问题拆成 1a/1b；理解有歧义的标 ❓
+3. 用户确认后逐条修复：用 selector/React 组件名在代码里定位
+4. 修不了的在汇报里标注原因和需要的补充证据`, cap: "真实 PROMPT.md 节选——要求 agent 先复述清单再修" }],
+      ["session.md", "因果证据时间轴", { pre: `### 00:17 · SAY
+> [00:17] "就比如说这个淋巴的话"
+> [00:19] "这个交互啊"
+> [00:21] "AI 硬件的交互我觉得有问题"
+- 00:24 CLICK #install > div.term > pre "你 → "安装 witness"…"
+  - 00:24 MUT #rot attr class: rot → rot out`, cap: "真实 session.md 节选——SAY 下挂该时刻的证据" }],
+      ["events.jsonl", "全量原始事件流，崩了也保住", { pre: `{"kind":"req","id":1,"url":"https://witness.zalize.com/zh/","method":"GET","resType":"document","t":605}
+{"kind":"nav","url":"https://witness.zalize.com/zh/","t":1413}
+{"kind":"click","selector":"#install > div.term > pre","text":"你 → 安装 witness","x":1106,"y":595,"t":24483}`, cap: "events.jsonl 逐行流式落盘" }],
+      ["dom/ · bodies/ · shots/", "快照、响应体、截图帧", { img: "/sample/shot.jpg", cap: "shots/ 里的真实截图帧（录制中自动截取）" }],
+    ],
+  },
   mcp: {
     k: "06 · 拉取，不是推送",
     h: "<code>wit mcp</code>——把证据变成 API。",

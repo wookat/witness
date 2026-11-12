@@ -1,0 +1,148 @@
+---
+import Base from "../../layouts/Base.astro";
+import Term from "../../components/Term.astro";
+import Card from "../../components/Card.astro";
+import DocsHead from "../../components/DocsHead.astro";
+const GH = "https://github.com/wookat/witness";
+const chapters = [
+  ["01","インストール","#install2"],["02","設定","#config"],["03","使い方","#use"],
+  ["04","パケット","#output"],["05","エージェントへ","#agent"],["06","試す","#try"],
+];
+---
+<Base lang="ja" title="Witness ドキュメント — インストール、録画、エビデンスをエージェントへ">
+<DocsHead lang="ja" title="あなたが話す。エージェントがコマンドを叩く。"
+  lede="リファレンスマニュアル——ストーリーはトップページ。ここではインストール、設定、使い方、エビデンスパケットの中身だけを扱います。"
+  chapters={chapters} />
+
+<div class="ruler"><b class="a">docs</b><i style="--x:4%"></i></div>
+
+<section id="install2" class="alt"><div class="wrap">
+  <div class="kicker">01 · インストール</div>
+  <h2 class="rv">あなたが入れるのではなく、エージェントが入れます。</h2>
+  <p class="lede rv" data-d="60">基本の流れ：<b>あなたが指示し、エージェントがコマンドを叩きます</b>。Witness は CLI（<code>wit</code>）で、システムの Edge/Chrome を動かします——ブラウザのダウンロード不要、クラウドアカウント不要、キー不要。</p>
+  <Term label="エージェントにこう言う" d="80">witness をインストール：`npm i -g github:wookat/witness` を実行、
+`wit --version` で確認。Node 18+ が必要です。</Term>
+  <div class="grid g2" style="margin-top:24px">
+    <Card icon="box" title="マシンに入るもの" d="0"><b><code>wit</code> CLI</b> —— レコーダー、session レンダラー、トランスクライバー、MCP server がひとつ。設定は <code>~/.witness/config.json</code>、ASR 認証情報は <code>~/.witness/doubao-creds.json</code>。エビデンスは常に<b>カレントプロジェクト</b>の <code>.witness/sessions/</code> に落ちます。</Card>
+    <Card icon="file" title="Witness を知らないエージェントに教える" d="60">リポジトリには <code>skills/witness/SKILL.md</code> が同梱——そのまま使える skill ファイル。<code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code> に入れれば、「録画して」の一言でワークフロー全体が起動します。<a href={GH + "/blob/main/skills/witness/SKILL.md"}>見る ↗</a></Card>
+  </div>
+  <Term label="エージェントが実際に実行するコマンド" d="100"><span class="c-dim"># 透明のために——内部でエージェントが叩くのは：</span>
+npm i -g github:wookat/witness
+wit --version</Term>
+</div></section>
+
+<div class="ruler"><b class="a">設定</b><i style="--x:36%"></i></div>
+
+<section id="config"><div class="wrap">
+  <div class="kicker">02 · 設定</div>
+  <h2 class="rv">既定はゼロ設定。必要な時だけ切替。</h2>
+  <div class="grid g2" style="margin-top:34px">
+    <Card icon="mic" title="ライブ ASR エンジン" d="0"><code>wit config asr</code> は <code>~/.witness/config.json</code> に永続化；<code>--asr</code> / <code>WIT_ASR</code> でその場だけ上書き。エージェントは <code>set_asr</code> MCP ツールで自分でも切替可能。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
+doubao-web   句読点がいちばん良い（既定の選択）
+doubao-ime   文ごとのタイムスタンプ、数字 ITN が得意
+sr           ブラウザ SpeechRecognition（オフライン）
+off          ライブ字幕なし（最終文字起こしのみ）</pre></Card>
+    <Card icon="shield" title="任意のキーと環境変数" d="60">全部なくても動きます——これらは必須ではなく強化オプション：<pre style="margin-top:10px;font:12px/1.8 var(--mono)">OPENAI_API_KEY   whisper-1 単語タイムスタンプ
+ZHIPU_API_KEY    GLM-4 発話訂正 + エビデンス関連付け
+WIT_ASR          その実行だけエンジン上書き
+WIT_NO_BODIES=1  レスポンスボディを取らない
+WIT_CDP=&lt;ポート&gt; CDP を開き、エージェントが録画中の
+                 ブラウザを運転してテスターになれる</pre></Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">録画</b><b class="b">● REC</b><i style="--x:52%"></i></div>
+
+<section id="use" class="alt"><div class="wrap">
+  <div class="kicker">03 · 使い方</div>
+  <h2 class="rv">3文。それがループの全部です。</h2>
+  <Term label="エージェントとの会話" d="60"><span class="c-say">あなた</span>   → "http://localhost:5173 を録画して"
+<span class="c-ok">agent</span> → <span class="c-dim">`wit start` を実行、管理ブラウザが開く</span>
+
+<span class="c-say">あなた</span>   → <span class="c-dim">普通にプロダクトを使い、気づいたことを話して問題をマーク</span>
+<span class="c-say">あなた</span>   → <span class="c-dim">ツールバーの ■（または「止めて」と伝える）</span>
+
+<span class="c-say">あなた</span>   → "さっきの録画の問題を直して"
+<span class="c-ok">agent</span> → <span class="c-dim">session.md を読み、エビデンスに沿って修正</span></Term>
+  <div class="grid g2" style="margin-top:30px">
+    <Card icon="eye" n="あなたの役目 —— ブラウザ内" title="話す + 指す" d="0"><pre style="font:12.5px/2 var(--mono)">話す         すべての気づき → タイムスタンプ付き SAY
+Ctrl+クリック 要素をマーク（selector + ショット + DOM）
+M            inspect モード：ホバー選択 / ドラッグで範囲
+N            新しい問題の境界（任意）
+P            一時停止/再開——エビデンスもマイクも凍結
+■ / Alt+Shift+R   停止</pre></Card>
+    <Card icon="file" n="エージェントの役目 —— 実行しうるコマンド" title="CLI の全面" d="60"><pre style="font:12.5px/2 var(--mono)">wit start &lt;url&gt;       録画開始（エージェントが起動）
+wit list / open       session を閲覧
+wit transcribe &lt;dir&gt;  文字起こしを再実行
+wit correct &lt;dir&gt;     LLM 仕上げ（原文は保持）
+wit associate &lt;dir&gt;   LLM が各 SAY にエビデンスを選択
+wit recover &lt;dir&gt;     クラッシュ後に再構築
+wit mcp [dir]         MCP 経由でエビデンスを提供
+wit config asr …      エンジン：auto|doubao-web|ime|sr|off</pre></Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">パケット</b><i style="--x:70%"></i></div>
+
+<section id="output"><div class="wrap">
+  <div class="kicker">04 · 得られるもの</div>
+  <h2 class="rv">ひとつのパケット、ふたつの読者。</h2>
+  <p class="lede rv" data-d="60"><b>あなたへ</b>：ビジュアルなリプレイ。<b>エージェントへ</b>：そのまま直せる構造化された引き継ぎ。</p>
+  <Term label=".witness/sessions/&lt;タイムスタンプ&gt;/" d="80">├─ <span class="c-acc">review.html</span>      <span class="c-dim">→ 人間向け —— タイムラインリプレイ：音声+ショット+イベント、クリックでシーク</span>
+├─ <span class="c-ok">SEGMENTS.md</span>        <span class="c-dim">→ エージェント向け —— 発話セグメント索引：逐語+容疑要素+ショット参照（最初に読む。セグメント≠問題、グループ化はエージェント）</span>
+├─ <span class="c-ok">keyframes/</span>   <span class="c-dim">→ セグメントごとの rrweb レンダリング再生フレーム（wit keyframes）</span>
+├─ <span class="c-ok">segments/NN.md</span>     <span class="c-dim">→ エージェント向け —— セグメント別バンドル：逐語+無反応クリック+エラー+ショット</span>
+├─ <span class="c-ok">PROMPT.md</span>        <span class="c-dim">→ エージェント向け —— 引き継ぎ文書：このエビデンスの読み方</span>
+├─ <span class="c-ok">session.md</span>       <span class="c-dim">→ エージェント向け —— 完全なタイムライン記録（掘り下げ用）</span>
+├─ events.jsonl     <span class="c-dim">→ 生イベントストリーム（実録で 1189 件）</span>
+├─ transcript.json  <span class="c-dim">→ 最終文字起こし、セグメントタイムスタンプ付き</span>
+├─ audio.webm       <span class="c-dim">→ 録音本体、シーク可能</span>
+├─ shots/           <span class="c-dim">→ スクリーンショット——マークは赤枠、範囲選択は切り抜き</span>
+├─ bodies/          <span class="c-dim">→ リクエスト/レスポンスのペイロード</span>
+├─ dom/             <span class="c-dim">→ 重要な瞬間の DOM スナップショット</span>
+├─ rrweb.jsonl      <span class="c-dim">→ 完全なリプレイストリーム</span>
+└─ session.json     <span class="c-dim">→ メタ：url、時間、ASR エンジン、件数</span></Term>
+  <div class="grid g3" style="margin-top:30px">
+    <Card icon="file" title="PROMPT.md" d="0">エージェントに貼るための文書。フォーマットを教えます：因果インデント、「無反応もエビデンス」、コンポーネントチェーン、SAY なしに意図を推測しない。</Card>
+    <Card icon="clock" title="session.md" d="40">エビデンスのタイムライン本体。各 <code>SAY</code> ブロックにあなたの逐語と、その秒にページで起きた全部が載ります。</Card>
+    <Card icon="api" title="wit mcp" d="80">セッションを stdio MCP server として提供——12 ツール：<code>list_segments</code> · <code>segment_detail</code> · <code>session_overview</code> · <code>list_says</code> · <code>session_md</code> · <code>events_around</code> · <code>get_errors</code> · <code>get_shot</code> · <code>get_dom_state</code> · <code>get_body</code> · <code>get_asr</code> · <code>set_asr</code>。</Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">引き継ぎ</b><i style="--x:86%"></i></div>
+
+<section id="agent" class="alt"><div class="wrap">
+  <div class="kicker">05 · エージェントへの伝え方</div>
+  <h2 class="rv">エビデンスを渡す3つの方法。</h2>
+  <div class="grid g3" style="margin-top:34px">
+    <Card icon="terminal" n="いちばん簡単" title="ディレクトリを指す" d="0"><pre style="font:12px/1.8 var(--mono)">"録画しました。エビデンスは
+.witness/sessions/&lt;ts&gt; にあります。
+session.md を読んで問題を直してください。"</pre></Card>
+    <Card icon="file" n="どんなエージェントにも" title="PROMPT.md を貼る" d="40">ファイル自体が読み方のガイド。内容とディレクトリパスを貼れば、Witness を知らないエージェントでも動きます。</Card>
+    <Card icon="api" n="常設" title="MCP を配線" d="80"><pre style="font:12px/1.8 var(--mono)">&#123; "mcpServers": &#123; "witness": &#123;
+  "command": "wit", "args": ["mcp"]
+&#125; &#125; &#125;</pre>エージェントが必要な時だけエビデンスを取得——ASR エンジンの切替も自分でできます。</Card>
+  </div>
+  <p class="lede rv" data-d="120" style="margin-top:26px">エージェントに<b>録画させる</b>には：<code>"witness で http://localhost:5173 を録画して。問題は口頭で指摘します"</code>。<code>WIT_CDP</code> を設定すれば、エージェントは録画中のブラウザ内で<b>テスター本人</b>になることもできます。</p>
+</div></section>
+
+<div class="ruler"><b class="a">デモ</b><b class="b">■ STOP</b><i style="--x:96%"></i></div>
+
+<section id="try"><div class="wrap">
+  <div class="kicker">06 · 2分で試す</div>
+  <h2 class="rv">デモページを録画する。</h2>
+  <p class="lede rv" data-d="60">サイトにはわざと壊れた小さなプロダクトが同梱——無反応ボタン、console エラー、壊れた API レスポンスが待っています：</p>
+  <Term label="terminal" d="80">wit start https://witness.zalize.com/demo-app.html --duration 60
+<span class="c-dim"># Pay ボタンを押して「反応しない」と言う → 停止 → wit open で再生</span></Term>
+  <div class="cta rv" data-d="140" style="display:flex;gap:12px;margin-top:30px">
+    <a class="btn pri" href="/demo-app.html" target="_blank" rel="noopener">デモアプリを開く ↗</a>
+    <a class="btn" href={GH}>GitHub ★</a>
+    <a class="btn" href="/ja/">← トップへ戻る</a>
+  </div>
+</div></section>
+</Base>
+<style>
+  section{padding:52px 0}
+  h2{font-size:clamp(22px,3vw,30px);margin-bottom:12px}
+  .lede{font-size:15px;max-width:600px}
+</style>

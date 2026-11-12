@@ -30,7 +30,7 @@ export default {
     insthint: "↑ hand this to your AI agent — it installs and records for you",
     instmeta: "installs the wit CLI — recorder · renderer · MCP in one · Node 18+ · system Edge/Chrome · no keys",
   },
-  video: { tag: "RECORDED WITH PLAYWRIGHT · ONE TAKE" },
+  video: { tag: "RECORDED WITH PLAYWRIGHT · ONE TAKE", say: "does nothing", vocab: "orders/submit/pay" },
   convo: {
     you: "you",
     msgs: [
@@ -89,17 +89,46 @@ export default {
       },
       {
         t: "00:34", quote: "the submit button does nothing",
-        ev: [["CLICK", "button#submit “提交” · @482,701", "ok"]],
+        ev: [["CLICK", "button#submit “Submit” · @482,701", "ok"]],
         note: "page showed no reaction for 1.8s after the click — that itself is evidence", ui: "btn",
       },
       {
         t: "01:02", quote: "the orders API returns wrong data",
-        ev: [["CLICK", "a[href=\"/orders\"] “订单”", "ok"], ["NET →", "GET /api/orders?page=1", "dim"], ["NET ←", "200 /api/orders · items: []", "bad"]],
+        ev: [["CLICK", "a[href=\"/orders\"] “Orders”", "ok"], ["NET →", "GET /api/orders?page=1", "dim"], ["NET ←", "200 /api/orders · items: []", "bad"]],
         note: "response body captured → bodies/req_0041.json", ui: "api",
       },
     ],
   },
-  aud: { k: "05 · Two audiences", h: "Humans get a replay. Agents get a structure.", labels: ["For humans", "For AI agents"] },
+  aud: {
+    k: "05 · Two audiences", h: "Humans get a replay. Agents get a structure.", labels: ["For humans", "For AI agents"],
+    humans: [
+      ["review.html", "voice cards + audio seek + shots", { img: "/sample/review.png", cap: "a real review.html — produced while recording this very site" }],
+      ["▶ DOM replay", "embedded rrweb player, real page state", { img: "/sample/review.png", cap: "the rrweb replay built into review.html" }],
+      ["film strip", "scrub the whole session like video", { img: "/sample/review.png", cap: "the bottom filmstrip scrubber" }],
+      ["audio.webm", "the raw recording", { img: "/sample/review.png", cap: "click any quote to play that second" }],
+    ],
+    agents: [
+      ["PROMPT.md", "handoff doc + page vocabulary", { pre: `This is a product-feedback session recorded by Witness (voice + clicks + live page evidence).
+
+Process in this order:
+1. Read session.md — the timeline: each speech segment (SAY) carries that moment's click/mark/net/console/mut evidence
+2. Restate the reported issues as a checklist and confirm with the user BEFORE fixing:
+   | # | time | verbatim | your reading | linked evidence |
+   Every SAY belongs to at least one issue; an utterance with several issues splits into 1a/1b; mark ambiguity with ❓
+3. After confirmation, fix each item — locate in code via selector / component name
+4. For anything unfixable, state why and what extra evidence you need`, cap: "a PROMPT.md excerpt — tells the agent to confirm a list first" }],
+      ["session.md", "causal evidence timeline", { pre: `### 00:17 · SAY
+> [00:17] "so like, on this page"
+> [00:19] "this interaction thing"
+> [00:21] "I think this interaction is broken"
+- 00:24 CLICK #install > div.term > pre "you → "install witness"…"
+  - 00:24 MUT #rot attr class: rot → rot out`, cap: "a session.md excerpt — each SAY carries that moment's evidence" }],
+      ["events.jsonl", "complete raw event stream, crash-safe", { pre: `{"kind":"req","id":1,"url":"https://witness.zalize.com/","method":"GET","resType":"document","t":605}
+{"kind":"nav","url":"https://witness.zalize.com/","t":1413}
+{"kind":"click","selector":"#install > div.term > pre","text":"you → install witness","x":1106,"y":595,"t":24483}`, cap: "events.jsonl streams line-by-line to disk" }],
+      ["dom/ · bodies/ · shots/", "snapshots, payloads, frames", { img: "/sample/shot.jpg", cap: "a real frame from shots/ (auto-captured mid-recording)" }],
+    ],
+  },
   mcp: {
     k: "06 · Pull, don't push",
     h: "<code>wit mcp</code> — evidence as an API.",

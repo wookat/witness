@@ -1,0 +1,148 @@
+---
+import Base from "../../layouts/Base.astro";
+import Term from "../../components/Term.astro";
+import Card from "../../components/Card.astro";
+import DocsHead from "../../components/DocsHead.astro";
+const GH = "https://github.com/wookat/witness";
+const chapters = [
+  ["01","安裝","#install2"],["02","配置","#config"],["03","使用","#use"],
+  ["04","證據包","#output"],["05","交給 AI","#agent"],["06","演示","#try"],
+];
+---
+<Base lang="zh-hant" title="Witness 文件 — 安裝、錄製、把證據交給 agent">
+<DocsHead lang="zh-hant" title="你動嘴，命令讓 agent 去敲。"
+  lede="操作手冊——故事在首頁。這裡只管：怎麼裝、怎麼配、怎麼用、證據包裡有什麼。"
+  chapters={chapters} />
+
+<div class="ruler"><b class="a">docs</b><i style="--x:4%"></i></div>
+
+<section id="install2" class="alt"><div class="wrap">
+  <div class="kicker">01 · 安裝</div>
+  <h2 class="rv">不用你裝，讓 agent 裝。</h2>
+  <p class="lede rv" data-d="60">正確姿勢是<b>你下指令，agent 敲命令</b>。Witness 本體是 CLI（<code>wit</code>），驅動你系統裡的 Edge/Chrome——不下載瀏覽器、不需要雲端帳號、不要 key。</p>
+  <Term label="對你的 agent 說一句" d="80">安裝 witness：執行 `npm i -g github:wookat/witness`，
+用 `wit --version` 驗證一下。需要 Node 18+。</Term>
+  <div class="grid g2" style="margin-top:24px">
+    <Card icon="box" title="裝到你機器上的是什麼" d="0"><b><code>wit</code> 命令列</b>——錄製器、session 渲染器、轉寫器、MCP server 四合一。配置在 <code>~/.witness/config.json</code>，ASR 憑證快取 <code>~/.witness/doubao-creds.json</code>。證據永遠落在<b>當前專案</b>的 <code>.witness/sessions/</code>。</Card>
+    <Card icon="file" title="教不認識它的 agent" d="60">倉庫自帶 <code>skills/witness/SKILL.md</code>——現成的技能檔案，放進 <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code>，之後說「幫我錄一段」就能觸發整套流程。<a href={GH + "/blob/main/skills/witness/SKILL.md"}>查看 ↗</a></Card>
+  </div>
+  <Term label="agent 實際執行的命令" d="100"><span class="c-dim"># 透明起見——你的 agent 在背後敲的是：</span>
+npm i -g github:wookat/witness
+wit --version</Term>
+</div></section>
+
+<div class="ruler"><b class="a">配置</b><i style="--x:36%"></i></div>
+
+<section id="config"><div class="wrap">
+  <div class="kicker">02 · 配置</div>
+  <h2 class="rv">預設零配置；想調再調。</h2>
+  <div class="grid g2" style="margin-top:34px">
+    <Card icon="mic" title="即時 ASR 引擎" d="0"><code>wit config asr</code> 持久化到 <code>~/.witness/config.json</code>；<code>--asr</code> / <code>WIT_ASR</code> 單次覆蓋。agent 也能透過 <code>set_asr</code> MCP 工具自己切。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
+doubao-web   標點最好（預設首選）
+doubao-ime   句級時間戳、數字 ITN 更好
+sr           瀏覽器 SpeechRecognition（離線備援）
+off          不要即時字幕（只出終稿）</pre></Card>
+    <Card icon="shield" title="可選 key 與環境變數" d="60">一個都不配也能跑——這些是增強項不是必需項：<pre style="margin-top:10px;font:12px/1.8 var(--mono)">OPENAI_API_KEY   whisper-1 詞級時間戳
+ZHIPU_API_KEY    GLM-4 糾錯 + 語義證據關聯
+WIT_ASR          單次錄製覆蓋引擎
+WIT_NO_BODIES=1  不抓回應體（敏感應用）
+WIT_CDP=&lt;埠&gt;    開 CDP 口，agent 可接管錄製中的
+                 瀏覽器親自當測試者</pre></Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">錄製</b><b class="b">● REC</b><i style="--x:52%"></i></div>
+
+<section id="use" class="alt"><div class="wrap">
+  <div class="kicker">03 · 使用</div>
+  <h2 class="rv">三句話，就是完整閉環。</h2>
+  <Term label="你和 agent 的對話" d="60"><span class="c-say">你</span>    → "幫我錄一段 http://localhost:5173"
+<span class="c-ok">agent</span> → <span class="c-dim">執行 `wit start`，託管瀏覽器彈出</span>
+
+<span class="c-say">你</span>    → <span class="c-dim">正常使用產品，看到什麼說什麼，順手標記問題</span>
+<span class="c-say">你</span>    → <span class="c-dim">點工具列 ■（或對 agent 說「停了」）</span>
+
+<span class="c-say">你</span>    → "按剛才錄的把問題修了"
+<span class="c-ok">agent</span> → <span class="c-dim">讀 session.md，照證據動手</span></Term>
+  <div class="grid g2" style="margin-top:30px">
+    <Card icon="eye" n="你的部分 —— 在瀏覽器裡" title="說 + 指" d="0"><pre style="font:12.5px/2 var(--mono)">說話         每句觀察 → 帶時間戳的 SAY
+Ctrl+點擊    標記元素（selector + 截圖 + DOM 快照）
+M            檢視模式：懸停點選 / 拖曳圈選區域
+N            切分新問題邊界（可選）
+P            暫停/繼續——證據和麥克風一起凍結
+■ / Alt+Shift+R   停止</pre></Card>
+    <Card icon="file" n="agent 的部分 —— 它會跑的命令" title="CLI 全表面" d="60"><pre style="font:12.5px/2 var(--mono)">wit start &lt;url&gt;       開錄（由 agent 發起）
+wit list / open       瀏覽 session
+wit transcribe &lt;dir&gt;  重跑轉寫
+wit correct &lt;dir&gt;     LLM 潤飾（原文保留）
+wit associate &lt;dir&gt;   LLM 給每段話挑證據
+wit recover &lt;dir&gt;     崩潰重建
+wit mcp [dir]         MCP 服務拉證據
+wit config asr …      引擎：auto|doubao-web|ime|sr|off</pre></Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">證據包</b><i style="--x:70%"></i></div>
+
+<section id="output"><div class="wrap">
+  <div class="kicker">04 · 你得到什麼</div>
+  <h2 class="rv">一個證據包，兩種讀者。</h2>
+  <p class="lede rv" data-d="60"><b>給人</b>：可視化回放。<b>給 agent</b>：能直接修問題的結構化交接。</p>
+  <Term label=".witness/sessions/&lt;時間戳&gt;/" d="80">├─ <span class="c-acc">review.html</span>      <span class="c-dim">→ 給人看 —— 時間軸回放：語音+截圖+事件對齊，點哪跳哪</span>
+├─ <span class="c-ok">SEGMENTS.md</span>        <span class="c-dim">→ 給 agent —— 語音段索引：原話+嫌疑元素+掛圖（先讀；段≠問題，歸組歸 agent）</span>
+├─ <span class="c-ok">keyframes/</span>   <span class="c-dim">→ rrweb 回放渲染的每段關鍵幀（wit keyframes）</span>
+├─ <span class="c-ok">segments/NN.md</span>     <span class="c-dim">→ 給 agent —— 每段一包：逐段原話+死點擊+報錯+截圖引用</span>
+├─ <span class="c-ok">PROMPT.md</span>        <span class="c-dim">→ 給 agent —— 交接文件：教它怎麼讀這份證據</span>
+├─ <span class="c-ok">session.md</span>       <span class="c-dim">→ 給 agent —— 全量時間軸檔案（深挖時用）</span>
+├─ events.jsonl     <span class="c-dim">→ 原始事件流（真實一次錄製 1189 條）</span>
+├─ transcript.json  <span class="c-dim">→ 終稿轉寫，帶句級時間戳</span>
+├─ audio.webm       <span class="c-dim">→ 錄音本體，可 seek</span>
+├─ shots/           <span class="c-dim">→ 截圖——標記元素帶紅框、圈選是裁切圖</span>
+├─ bodies/          <span class="c-dim">→ 請求/回應體</span>
+├─ dom/             <span class="c-dim">→ 關鍵時刻的 DOM 快照</span>
+├─ rrweb.jsonl      <span class="c-dim">→ 全量回放流</span>
+└─ session.json     <span class="c-dim">→ 元資料：url、時長、ASR 引擎、事件數</span></Term>
+  <div class="grid g3" style="margin-top:30px">
+    <Card icon="file" title="PROMPT.md" d="0">給不認識 Witness 的 agent 的說明書。教它讀格式：因果縮排、「無反應也是證據」、元件鏈定位、沒有 SAY 不許猜意圖。</Card>
+    <Card icon="clock" title="session.md" d="40">證據時間軸本體。每個 <code>SAY</code> 區塊帶你的原話 + 那一秒頁面發生的一切。</Card>
+    <Card icon="api" title="wit mcp" d="80">把 session 變成 stdio MCP server，12 個工具：<code>list_segments</code> · <code>segment_detail</code> · <code>session_overview</code> · <code>list_says</code> · <code>session_md</code> · <code>events_around</code> · <code>get_errors</code> · <code>get_shot</code> · <code>get_dom_state</code> · <code>get_body</code> · <code>get_asr</code> · <code>set_asr</code>。</Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">交接</b><i style="--x:86%"></i></div>
+
+<section id="agent" class="alt"><div class="wrap">
+  <div class="kicker">05 · 怎麼對 AI 說</div>
+  <h2 class="rv">三種方式把證據交出去。</h2>
+  <div class="grid g3" style="margin-top:34px">
+    <Card icon="terminal" n="最省事" title="指個路徑" d="0"><pre style="font:12px/1.8 var(--mono)">"我錄了一段，證據在
+.witness/sessions/&lt;ts&gt;，
+讀 session.md 把裡面的問題修了。"</pre></Card>
+    <Card icon="file" n="對任意 agent" title="貼 PROMPT.md" d="40">這個檔案自帶閱讀指南——把內容連同目錄路徑一起貼給任何 agent，不需要它認識 Witness。</Card>
+    <Card icon="api" n="常駐用法" title="配 MCP" d="80"><pre style="font:12px/1.8 var(--mono)">&#123; "mcpServers": &#123; "witness": &#123;
+  "command": "wit", "args": ["mcp"]
+&#125; &#125; &#125;</pre>agent 按需拉證據，還能自己切 ASR 引擎。</Card>
+  </div>
+  <p class="lede rv" data-d="120" style="margin-top:26px">反過來讓 agent <b>去錄</b>：<code>"用 witness 錄一下 http://localhost:5173，我會邊說邊指出問題"</code>。開了 <code>WIT_CDP</code> 之後，agent 甚至可以<b>親自當測試者</b>在錄製中的瀏覽器裡操作。</p>
+</div></section>
+
+<div class="ruler"><b class="a">演示</b><b class="b">■ STOP</b><i style="--x:96%"></i></div>
+
+<section id="try"><div class="wrap">
+  <div class="kicker">06 · 兩分鐘上手</div>
+  <h2 class="rv">拿演示頁開錄。</h2>
+  <p class="lede rv" data-d="60">官網自帶一個故意做壞的小產品——死按鈕、console 報錯、錯誤回應，全都等著被抓：</p>
+  <Term label="terminal" d="80">wit start https://witness.zalize.com/demo-app.html --duration 60
+<span class="c-dim"># 點一下 Pay 按鈕，說一句「點了沒反應」，停 → wit open 看回放</span></Term>
+  <div class="cta rv" data-d="140" style="display:flex;gap:12px;margin-top:30px">
+    <a class="btn pri" href="/demo-app.html" target="_blank" rel="noopener">打開演示頁 ↗</a>
+    <a class="btn" href={GH}>GitHub ★</a>
+    <a class="btn" href="/zh-hant/">← 回首頁</a>
+  </div>
+</div></section>
+</Base>
+<style>
+  section{padding:52px 0}
+  h2{font-size:clamp(22px,3vw,30px);margin-bottom:12px}
+  .lede{font-size:15px;max-width:600px}
+</style>

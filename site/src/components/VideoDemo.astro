@@ -18,14 +18,14 @@ const t = ui(lang).video;
 
   <div class="fp fp-md" aria-hidden="true">
     <div class="fp-h"><Icon name="file" size={13} /><b>session.md</b></div>
-    <code><span class="k say">00:34 SAY</span> “点了没反应”<br/>
+    <code><span class="k say">00:34 SAY</span> “{t.say}”<br/>
     <span class="k ok">CLICK</span> button.pay<br/>
     <span class="k dim">NET — · MUT —</span><br/>
     <span class="k rec">└─ no reaction = evidence</span></code>
   </div>
   <div class="fp fp-pr" aria-hidden="true">
     <div class="fp-h"><Icon name="box" size={13} /><b>PROMPT.md</b></div>
-    <code># handoff → agent<br/>vocab: 订单/提交/支付<br/>issues: 2 · events: 41</code>
+    <code># handoff → agent<br/>vocab: {t.vocab}<br/>issues: 2 · events: 41</code>
   </div>
   <div class="fp fp-rec" aria-hidden="true"><i></i>REC</div>
 </div>
