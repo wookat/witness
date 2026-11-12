@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://witness.zalize.com"><img src="docs/og.png" alt="Witness — 你开口，Witness 补全证据。" width="760"></a>
+  <a href="https://witness.zalize.com"><img src="docs/og-zh.png" alt="Witness — 你开口，Witness 补全证据。" width="760"></a>
   <br><br>
   <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
