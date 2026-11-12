@@ -6,7 +6,7 @@ Witness solves the gap between what a user sees ("this button does nothing", "th
 
 ## Install & run
 
-- `npm i -g github:wookat/witness` (Node 18+, system Edge/Chrome preferred, bundled Chromium fallback; not yet on the npm registry — install from GitHub)
+- `npm i -g witness-recorder` (Node 18+, system Edge/Chrome preferred, bundled Chromium fallback)
 - `wit start <url>` — opens a managed browser; use the page and speak
 - Stop with the ■ toolbar button, Alt+Shift+R, or Ctrl+C → a local bundle lands in `.witness/sessions/<timestamp>_<host>/`
 - `wit mcp [sessionDir]` — stdio MCP server exposing the evidence (12 tools)

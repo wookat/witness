@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.wookat/witness",
+  "title": "Witness",
+  "description": "Voice-anchored evidence recorder for AI coding agents. A human speaks while using a product; each utterance is welded to the clicks, requests, console errors, DOM state and rrweb replay of that second — the causal bundle is served over 12 stdio MCP tools.",
+  "version": "0.3.0",
+  "websiteUrl": "https://witness.zalize.com",
+  "repository": {
+    "url": "https://github.com/wookat/witness",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "witness-recorder",
+      "version": "0.3.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": ["mcp"],
+      "environmentVariables": []
+    }
+  ]
+}

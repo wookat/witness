@@ -20,6 +20,12 @@
     "wit": "dist/cli.js",
     "rec": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "skills",
+    "docs",
+    "README*.md"
+  ],
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",

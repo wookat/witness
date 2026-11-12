@@ -34,7 +34,7 @@ export default {
     you: "你",
     msgs: [
       ["y", "安装 witness"],
-      ["a", "npm i -g github:wookat/witness", "ok"],
+      ["a", "npm i -g witness-recorder", "ok"],
       ["y", "帮我录一段 http://localhost:5173"],
       ["a", "wit start ✓ · 托管浏览器弹出，等你说问题", "ok"],
       ["n", "你正常使用产品——看到什么说什么，标记问题，点 ■"],
@@ -203,7 +203,7 @@ Process in this order:
     k: "11 · 常见问题",
     h: "你想问的，先答了。",
     items: [
-      ["需要装什么？", "Node 18+ 和系统 Edge/Chrome——优先用你机器上的真浏览器，找不到才装自带 chromium。<code>npm i -g github:wookat/witness</code>，完事。"],
+      ["需要装什么？", "Node 18+ 和系统 Edge/Chrome——优先用你机器上的真浏览器，找不到才装自带 chromium。<code>npm i -g witness-recorder</code>，完事。"],
       ["有什么数据会离开本机？", "证据包全部落在本地 <code>.witness/sessions/</code>（自动 gitignore）。实时字幕按你选的引擎流式发麦克风音频（默认 doubao-web）；<code>--asr sr</code> 走系统/浏览器识别，<code>--asr off</code> 直接不要实时字幕。终稿转写走 bcut（免费）或你自己的 OPENAI_API_KEY 走 whisper——<code>--no-transcribe</code> 可全跳过。LLM 纠错/关联只有显式传 flag 且有 key 才跑。"],
       ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——12 个查询工具按需挖证据，而不是一次性塞全文。仓库自带的 SKILL.md 在支持 skill 的 agent 上原生加载，其余可当规则文件。"],
       ["密码出现在页面里怎么办？", "密码字段四通道打码；POST 体自动脱敏凭证字段；<code>P</code> 随时全冻结（含麦克风）；敏感应用设 <code>WIT_NO_BODIES=1</code> 直接不存响应体。"],

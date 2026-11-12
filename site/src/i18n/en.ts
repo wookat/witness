@@ -35,7 +35,7 @@ export default {
     you: "you",
     msgs: [
       ["y", "install witness"],
-      ["a", "npm i -g github:wookat/witness", "ok"],
+      ["a", "npm i -g witness-recorder", "ok"],
       ["y", "record http://localhost:5173 for me"],
       ["a", "wit start ✓ · managed browser opens, waiting on you", "ok"],
       ["n", "you use the product — say what you see, mark problems, press ■"],
@@ -204,7 +204,7 @@ Process in this order:
     k: "11 · FAQ",
     h: "Asked before you did.",
     items: [
-      ["What do I need installed?", "Node 18+ and a system Edge or Chrome — Witness prefers your real browser and only falls back to bundled chromium. <code>npm i -g github:wookat/witness</code>, done."],
+      ["What do I need installed?", "Node 18+ and a system Edge or Chrome — Witness prefers your real browser and only falls back to bundled chromium. <code>npm i -g witness-recorder</code>, done."],
       ["Does anything leave my machine?", "The evidence packet stays in <code>.witness/sessions/</code> on your disk, gitignored by default. Live captions stream mic audio to the ASR engine you pick (doubao-web by default); <code>--asr sr</code> uses the OS/browser recognizer, <code>--asr off</code> skips live text entirely. The final transcript goes to bcut (free) or whisper with your own OPENAI_API_KEY — <code>--no-transcribe</code> skips that too. Optional LLM layers (correction, association) only run when you pass the flag and set a key."],
       ["Which agents does it work with?", "Any agent that can run a CLI can read session.md + PROMPT.md. MCP-capable ones (Devin, Claude Code, Cursor, Codex…) connect to <code>wit mcp</code> — 12 tools to query evidence on demand instead of one static dump. A bundled SKILL.md loads natively in skill-aware agents and works as a rules file elsewhere."],
       ["What if a password is on screen?", "Password fields are masked across four channels, POST bodies redact credential fields, <code>P</code> freezes everything mid-session including the mic, and <code>WIT_NO_BODIES=1</code> drops response capture entirely for sensitive apps."],

@@ -31,7 +31,7 @@ AI agent 看不到你眼睛看到的：视觉 bug、jank、“点了没反应”
 ## 安装
 
 ```bash
-npm i -g github:wookat/witness        # 需要 Node 18+ 和系统 Edge/Chrome
+npm i -g witness-recorder        # 需要 Node 18+ 和系统 Edge/Chrome
 wit start http://localhost:5173       # 托管浏览器打开——正常体验+说话
 ```
 

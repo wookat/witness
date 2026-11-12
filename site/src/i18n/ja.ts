@@ -34,7 +34,7 @@ export default {
     you: "あなた",
     msgs: [
       ["y", "witness をインストールして"],
-      ["a", "npm i -g github:wookat/witness", "ok"],
+      ["a", "npm i -g witness-recorder", "ok"],
       ["y", "http://localhost:5173 を録画して"],
       ["a", "wit start ✓ · 管理ブラウザが開きます。報告を待っています", "ok"],
       ["n", "普通にプロダクトを触って、気づいたことを話して、問題をマークして ■ を押す"],
@@ -203,7 +203,7 @@ Process in this order:
     k: "11 · FAQ",
     h: "聞かれる前に、答えておきます。",
     items: [
-      ["何をインストールすればいい？", "Node 18+ とシステムの Edge/Chrome——まず実際のブラウザを使い、無ければ同梱 chromium にフォールバック。<code>npm i -g github:wookat/witness</code> で終わりです。"],
+      ["何をインストールすればいい？", "Node 18+ とシステムの Edge/Chrome——まず実際のブラウザを使い、無ければ同梱 chromium にフォールバック。<code>npm i -g witness-recorder</code> で終わりです。"],
       ["何かがマシンの外に出ますか？", "エビデンスパケットはローカルの <code>.witness/sessions/</code> に残り、既定で gitignore されます。ライブ字幕は選んだ ASR エンジンにマイク音声をストリーミングします（既定 doubao-web）。<code>--asr sr</code> で OS/ブラウザの認識、<code>--asr off</code> でライブ字幕なし。最終文字起こしは bcut（無料）か自分の OPENAI_API_KEY で whisper——<code>--no-transcribe</code> で丸ごと省略可。LLM レイヤー（訂正・関連付け）は flag とキーを渡した時だけ動きます。"],
       ["どのエージェントに対応？", "CLI を実行できるエージェントなら session.md + PROMPT.md を読めます。MCP 対応（Devin、Claude Code、Cursor、Codex…）は <code>wit mcp</code> に直結——静的ダンプではなく12のクエリツール。同梱の SKILL.md は skill 対応エージェントでネイティブに読み込まれ、他ではルールファイルとして使えます。"],
       ["画面にパスワードが映ったら？", "パスワード欄は4チャンネルでマスク、POST ボディは認証フィールドを自動マスク、<code>P</code> でマイクごと全停止、敏感なアプリは <code>WIT_NO_BODIES=1</code> でレスポンス自体を残しません。"],

@@ -26,7 +26,7 @@ const t = ui(lang).hero;
       <a class="btn pri" href={GH}>{t.cta1}<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <a class="btn" href="#how">{t.cta2} ↓</a>
     </div>
-    <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g github:wookat/witness')">⧉</button></div>
+    <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g witness-recorder')">⧉</button></div>
     <div class="insthint rv" data-d="380">{t.insthint}</div>
     <div class="instmeta rv" data-d="420">{t.instmeta}</div>
     <Tape />
@@ -91,7 +91,7 @@ const t = ui(lang).hero;
       requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("in")));
     }, 320);
   }, 2600);
-  const cmd = "npm i -g github:wookat/witness";
+  const cmd = "npm i -g witness-recorder";
   const tp = document.getElementById("typed");
   if (tp && !reduced) {
     let i = 0;

@@ -20,14 +20,14 @@ const chapters = [
   <div class="kicker">01 · 安裝</div>
   <h2 class="rv">不用你裝，讓 agent 裝。</h2>
   <p class="lede rv" data-d="60">正確姿勢是<b>你下指令，agent 敲命令</b>。Witness 本體是 CLI（<code>wit</code>），驅動你系統裡的 Edge/Chrome（沒有時才回退到內建 Chromium）——不需要雲端帳號、不要 key。</p>
-  <Term label="對你的 agent 說一句" d="80">安裝 witness：執行 `npm i -g github:wookat/witness`，
+  <Term label="對你的 agent 說一句" d="80">安裝 witness：執行 `npm i -g witness-recorder`，
 用 `wit --version` 驗證一下。需要 Node 18+。</Term>
   <div class="grid g2" style="margin-top:24px">
     <Card icon="box" title="裝到你機器上的是什麼" d="0"><b><code>wit</code> 命令列</b>——錄製器、session 渲染器、轉寫器、MCP server 四合一。配置持久化到專案的 <code>.witness/config.json</code>；doubao-ime 引擎的憑證快取在 <code>~/.witness/doubao-creds.json</code>。證據永遠落在<b>當前專案</b>的 <code>.witness/sessions/</code>。</Card>
     <Card icon="file" title="教不認識它的 agent" d="60">倉庫自帶 <code>skills/witness/SKILL.md</code>——現成的技能檔案，放進 <code>CLAUDE.md</code> / <code>.cursor/rules/</code> / <code>AGENTS.md</code>，之後說「幫我錄一段」就能觸發整套流程。<a href={GH + "/blob/main/skills/witness/SKILL.md"}>查看 ↗</a></Card>
   </div>
   <Term label="agent 實際執行的命令" d="100"><span class="c-dim"># 透明起見——你的 agent 在背後敲的是：</span>
-npm i -g github:wookat/witness
+npm i -g witness-recorder
 wit --version</Term>
 </div></section>
 

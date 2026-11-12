@@ -13,7 +13,7 @@ description: Record voice-anchored product evidence. Use when the user asks to r
 ## Start a recording (the user must be present to speak)
 
 ```bash
-wit start <url>                    # wit installed globally (npm i -g github:wookat/witness or npm link)
+wit start <url>                    # wit installed globally (npm i -g witness-recorder or npm link)
 # common flags: --duration 60 (auto-stop) · --lang en-US (recognition language, default: browser/OS) · --asr <engine> · --shot-interval 15000 · --no-transcribe
 ```
 

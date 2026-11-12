@@ -38,7 +38,7 @@ Three streams run in parallel the moment `wit start` opens a managed browser:
 ## Install
 
 ```bash
-npm i -g github:wookat/witness        # needs Node 18+ and system Edge/Chrome
+npm i -g witness-recorder        # needs Node 18+ and system Edge/Chrome
 wit start http://localhost:5173       # managed browser opens — talk & click
 ```
 
