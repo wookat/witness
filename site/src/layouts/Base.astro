@@ -247,6 +247,17 @@ const fcols = [
 </style>
 
 <script>
+  // Anonymous pageview ping — no cookies, no fingerprint, no PII.
+  // Endpoint is our own Cloudflare Worker, not a third party.
+  try {
+    fetch("https://witness-stats.mxd79b86.workers.dev/e", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ e: "pv", b: [location.pathname, document.documentElement.lang || "", document.referrer ? new URL(document.referrer).hostname : "", ""], d: 1 }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
+
   const nav = document.getElementById("nav");
   addEventListener("scroll", () => nav.classList.toggle("sc", scrollY > 8), { passive: true });
   const io = new IntersectionObserver(es => es.forEach(e => {

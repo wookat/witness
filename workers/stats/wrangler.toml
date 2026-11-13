@@ -1,0 +1,12 @@
+name = "witness-stats"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+account_id = "583090ace6fb9a02db3f2625487ed865"
+
+# Anonymous product stats — no cookies, no PII.
+# Serves POST /e (event ingest) and GET /health.
+# Events land in the witness_events Analytics Engine dataset.
+
+[[analytics_engine_datasets]]
+binding = "WITNESS_EVENTS"
+dataset = "witness_events"

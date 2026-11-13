@@ -1,6 +1,9 @@
 <div align="center">
   <a href="https://witness.zalize.com"><img src="docs/og-zh.png" alt="Witness — 你开口，Witness 补全证据。" width="760"></a>
   <br><br>
+  <a href="https://www.npmjs.com/package/witness-recorder"><img src="https://img.shields.io/npm/v/witness-recorder?style=flat-square&color=cb3837" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/witness-recorder"><img src="https://img.shields.io/npm/dt/witness-recorder?style=flat-square&color=17181c" alt="npm downloads"></a>
+  <a href="https://glama.ai/mcp/servers/wookat/witness"><img src="https://glama.ai/mcp/servers/wookat/witness/badges/score.svg" alt="Glama score"></a>
   <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A518-17181c?style=flat-square" alt="Node ≥ 18">
@@ -113,6 +116,7 @@ audio.webm / transcript.json
 - **证据 ≠ 意图**——没有语音锚点的行为不会被当成 bug 汇报。
 - **本地优先**——默认确定性记录；实时字幕走免费云端流式 ASR（`auto` = doubao-web → doubao-ime → 浏览器 SR 兜底，`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）；LLM 全是可选层。
 - **隐私内置**——密码四通道打码；POST 体凭证字段脱敏；`WIT_NO_BODIES=1` 关响应体；`P` 全冻结；`.witness/` 自动 gitignore。
+- **匿名使用统计**——CLI 每条命令发一次匿名 ping（命令名、版本、系统架构、Node 主版本；绝不含 URL、路径或录制内容），走自己的 Cloudflare Worker，不经过任何第三方分析服务。`WIT_TELEMETRY=0` 可关。
 
 ## 开发
 

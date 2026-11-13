@@ -13,12 +13,20 @@ import { writeSessionFiles } from "./session.js";
 import { correctSays, hasCorrector } from "./correct.js";
 import { associateSays, hasAssociator } from "./associate.js";
 import { loadSession } from "./store-read.js";
+import { track } from "./telemetry.js";
 
 config({ path: [join(process.cwd(), ".env"), join(import.meta.dirname, "..", ".env")] });
 
 const program = new Command();
 const { version } = createRequire(import.meta.url)("../package.json");
 program.name("wit").description("witness — voice-anchored evidence recorder for AI agents").version(version);
+
+// Anonymous usage stats (WIT_TELEMETRY=0 to disable). Never includes
+// URLs, session content, file paths or any recorded data.
+program.hook("preAction", (_this, cmd) => {
+  const o = cmd.opts?.() ?? {};
+  track(cmd.name(), cmd.name() === "start" ? { asr: o.asr ?? "auto", lang: o.lang ?? "auto" } : {});
+});
 
 program
   .command("start <url>")

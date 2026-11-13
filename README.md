@@ -1,6 +1,9 @@
 <div align="center">
   <a href="https://witness.zalize.com"><img src="docs/og.png" alt="Witness — You say it. Witness proves it." width="760"></a>
   <br><br>
+  <a href="https://www.npmjs.com/package/witness-recorder"><img src="https://img.shields.io/npm/v/witness-recorder?style=flat-square&color=cb3837" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/witness-recorder"><img src="https://img.shields.io/npm/dt/witness-recorder?style=flat-square&color=17181c" alt="npm downloads"></a>
+  <a href="https://glama.ai/mcp/servers/wookat/witness"><img src="https://glama.ai/mcp/servers/wookat/witness/badges/score.svg" alt="Glama score"></a>
   <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A518-17181c?style=flat-square" alt="Node ≥ 18">
@@ -126,6 +129,8 @@ audio.webm / transcript.json
   when no OPENAI key is set. LLM layers are optional.
 - **Privacy engineered in** — password fields masked across four channels, credential fields redacted in POST bodies,
   `WIT_NO_BODIES=1` disables body capture, `P` freezes everything, `.witness/` is auto-gitignored.
+- **Anonymous usage stats** — the CLI sends one ping per command (command name, version, OS/arch, Node major; never URLs,
+  paths or session data) to our own Cloudflare Worker — no third-party analytics, no cookies. Disable with `WIT_TELEMETRY=0`.
 
 ## Development
 
