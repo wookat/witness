@@ -7,6 +7,9 @@ import { arch, platform, release } from "node:os";
 const ENDPOINT = process.env.WIT_TELEMETRY_URL
   ?? "https://witness-stats.mxd79b86.workers.dev/e";
 
+// Honor HTTP(S)_PROXY env vars for fetch (Node ≥20.18); no-op elsewhere.
+process.env.NODE_USE_ENV_PROXY ??= "1";
+
 export function telemetryEnabled(): boolean {
   const v = (process.env.WIT_TELEMETRY ?? "").toLowerCase();
   if (["0", "off", "false", "no"].includes(v)) return false;
