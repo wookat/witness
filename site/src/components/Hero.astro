@@ -28,7 +28,7 @@ const t = ui(lang).hero;
     </div>
     <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g witness-recorder')">⧉</button></div>
     <div class="insthint rv" data-d="380">{t.insthint}</div>
-    <div class="instmeta rv" data-d="420">{t.instmeta}</div>
+    <div class="instmeta rv" data-d="420">{t.instmeta}<span id="npmdl" hidden></span></div>
     <Tape />
   </div>
 </header>
@@ -98,4 +98,18 @@ const t = ui(lang).hero;
     const tick = () => { tp.textContent = cmd.slice(0, ++i); if (i < cmd.length) setTimeout(tick, 34 + Math.random() * 46); };
     setTimeout(tick, 700);
   } else if (tp) tp.textContent = cmd;
+
+  // live npm download count — official api.npmjs.org, CORS-open
+  (async () => {
+    const el = document.getElementById("npmdl");
+    if (!el) return;
+    const fmt = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? (n / 1e3).toFixed(1) + "k" : String(n);
+    try {
+      const d = await fetch("https://api.npmjs.org/downloads/point/last-month/witness-recorder", { signal: AbortSignal.timeout(5000) }).then(r => r.json());
+      if (typeof d.downloads === "number") {
+        el.textContent = " · " + fmt(d.downloads) + " npm downloads/mo";
+        el.hidden = false;
+      }
+    } catch {}
+  })();
 </script>
