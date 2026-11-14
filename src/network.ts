@@ -42,20 +42,26 @@ export function wireNetwork(page: Page, store: EventStore) {
     pending.delete(id);
     const timing = t0 ? Date.now() - t0 : undefined;
     let bodyPath: string | undefined;
+    let bodyTrunc = false;
     try {
       const ct = (r.headers()["content-type"] || "").toLowerCase();
       // WIT_NO_BODIES=1 opts out of response-body capture entirely (sensitive apps)
       if (!process.env.WIT_NO_BODIES &&
           (ct.includes("json") || ct.includes("text") || ct.includes("javascript") || ct.includes("xml"))) {
         const buf = await r.body();
+        const name = `req_${String(id).padStart(4, "0")}.${ct.includes("json") ? "json" : "txt"}`;
+        const rel = `bodies/${name}`;
         if (buf.length <= BODY_CAP) {
-          const name = `req_${String(id).padStart(4, "0")}.${ct.includes("json") ? "json" : "txt"}`;
-          bodyPath = `bodies/${name}`;
-          await writeFile(join(store.dir, bodyPath), buf);
+          await writeFile(join(store.dir, rel), buf);
+        } else {
+          // keep the head — a truncated body beats no body for debugging
+          await writeFile(join(store.dir, rel), buf.subarray(0, BODY_CAP));
+          bodyTrunc = true;
         }
+        bodyPath = rel;
       }
     } catch { /* redirect/no-body — skip */ }
-    store.push({ kind: "res", id, url: r.url(), status: r.status(), timing, bodyPath });
+    store.push({ kind: "res", id, url: r.url(), status: r.status(), timing, bodyPath, bodyTrunc: bodyTrunc || undefined });
   });
 
   page.on("requestfailed", (r) => {

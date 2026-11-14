@@ -72,13 +72,13 @@ program
     const audioPath = join(dir, "audio.webm");
     const eventsPath = join(dir, "events.jsonl");
     if (!existsSync(audioPath) || !existsSync(eventsPath)) { console.log("missing audio.webm or events.jsonl in " + dir); return; }
+    const s = await loadSession(dir);
     const useWhisper = hasTranscriber();
     console.log(`transcribing (${useWhisper ? "whisper" : "bcut"})…`);
-    const t = useWhisper ? await transcribe(audioPath) : await (await import("./bcut.js")).transcribeBcut(audioPath);
+    const t = useWhisper ? await transcribe(audioPath, { language: s.meta.lang }) : await (await import("./bcut.js")).transcribeBcut(audioPath);
     console.log(`  ${t.segments.length} segments`);
-    const s = await loadSession(dir);
     // audio t=0 is mic-arm, not nav — shift into session time
-    const bias = (s.events.find(e => e.kind === "note" && /mic recording/i.test(e.text ?? ""))?.t ?? 0) / 1000;
+    const bias = (s.events.find(e => e.kind === "note" && ((e as { tag?: string }).tag === "mic-start" || /mic recording/i.test(e.text ?? "")))?.t ?? 0) / 1000;
     const segs = bias ? t.segments.map(x => ({ ...x, start: x.start + bias, end: x.end + bias })) : t.segments;
     const aligned = align(s.events, segs);
     await writeSessionFiles(s.dir, aligned, s.meta, { ...t, segments: segs });
@@ -168,6 +168,11 @@ program
     }
     console.log(`unknown key "${key}" — supported: asr`);
   });
+
+program
+  .command("doctor")
+  .description("preflight checks: browser, live-ASR reachability, transcription keys, sessions dir")
+  .action(async () => { const { doctor } = await import("./doctor.js"); await doctor(); });
 
 program
   .command("mcp [sessionDir]")

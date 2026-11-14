@@ -102,12 +102,12 @@ function unmarshalResp(data: Buffer): Resp {
 }
 
 /** Stream WAV/PCM through Doubao Seed-ASR. onPartial(cumulativeText). speed>1 paces file input faster than realtime. */
-export async function doubaoStt(file: string, onPartial?: (t: string) => void, speed = 2): Promise<AsrSeg[]> {
+export async function doubaoStt(file: string, onPartial?: (t: string) => void, speed = 2, lang?: string): Promise<AsrSeg[]> {
   let wav = file.endsWith(".wav") ? readFileSync(file) : await webmToWav(file);
   wav = wav.subarray(44);
   let lastErr: Error = new Error("doubao failed");
   for (let attempt = 0; attempt < 3; attempt++) {
-    try { return await doubaoSession(wav, onPartial, speed); }
+    try { return await doubaoSession(wav, onPartial, speed, lang); }
     catch (e) { lastErr = e as Error; if (!text0) continue; break; }
   }
   throw lastErr;
@@ -124,7 +124,7 @@ export interface LiveIme {
   onSentence(cb: (s: { text: string; start: number; end: number }) => void): void;
 }
 
-export async function openLiveIme(): Promise<LiveIme> {
+export async function openLiveIme(lang?: string): Promise<LiveIme> {
   const creds = await credentials();
   const rid = randomUUID().replace(/-/g, "");
   const { WebSocket } = await import("undici" as any).catch(() => ({ WebSocket: globalThis.WebSocket } as any)) as any;
@@ -182,6 +182,7 @@ export async function openLiveIme(): Promise<LiveIme> {
         ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "StartSession", rid, payload: JSON.stringify({
           audio_info: { channel: 1, format: "raw", sample_rate: 16000 },
           enable_punctuation: true, enable_speech_rejection: false,
+          ...(lang?.split("-")[0] ? { language: lang.split("-")[0].toLowerCase() } : {}),
           extra: { app_name: "com.android.chrome", cell_compress_rate: 8, did: creds.deviceId, input_mode: "tool",
             enable_asr_threepass: true, enable_asr_twopass: true, use_twopass_retry: true, strong_ddc: true,
             remove_space_between_han_num: true, remove_space_between_han_eng: true, enable_print_chinese: false,
@@ -225,7 +226,7 @@ export async function openLiveIme(): Promise<LiveIme> {
   };
 }
 
-async function doubaoSession(wav: Buffer, onPartial: ((t: string) => void) | undefined, SPEED: number): Promise<AsrSeg[]> {
+async function doubaoSession(wav: Buffer, onPartial: ((t: string) => void) | undefined, SPEED: number, lang?: string): Promise<AsrSeg[]> {
   const creds = await credentials();
   const rid = randomUUID().replace(/-/g, "");
 
@@ -265,6 +266,7 @@ async function doubaoSession(wav: Buffer, onPartial: ((t: string) => void) | und
         ws.send(marshalReq({ token: creds.token, svc: "ASR", method: "StartSession", rid, payload: JSON.stringify({
           audio_info: { channel: 1, format: "raw", sample_rate: 16000 },
           enable_punctuation: true, enable_speech_rejection: false,
+          ...(lang?.split("-")[0] ? { language: lang.split("-")[0].toLowerCase() } : {}),
           extra: { app_name: "com.android.chrome", cell_compress_rate: 8, did: creds.deviceId, input_mode: "tool",
             enable_asr_threepass: true, enable_asr_twopass: true, use_twopass_retry: true, strong_ddc: true,
             remove_space_between_han_num: true, remove_space_between_han_eng: true, enable_print_chinese: false,

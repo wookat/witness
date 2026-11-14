@@ -25,13 +25,13 @@ function wrap(s: LiveVg | LiveIme, name: LiveAsrSession["name"]): LiveAsrSession
 }
 
 /** Open a live ASR session. "auto" tries doubao-web → doubao-ime; throws if all fail. */
-export async function openLiveAsr(choice: Exclude<AsrChoice, "sr" | "off">): Promise<LiveAsrSession> {
-  if (choice === "doubao-web") return wrap(await openLiveVg(), "doubao-web");
-  if (choice === "doubao-ime") return wrap(await openLiveIme(), "doubao-ime");
+export async function openLiveAsr(choice: Exclude<AsrChoice, "sr" | "off">, lang?: string): Promise<LiveAsrSession> {
+  if (choice === "doubao-web") return wrap(await openLiveVg(lang), "doubao-web");
+  if (choice === "doubao-ime") return wrap(await openLiveIme(lang), "doubao-ime");
   // auto
-  try { return wrap(await openLiveVg(), "doubao-web"); }
+  try { return wrap(await openLiveVg(lang), "doubao-web"); }
   catch (e1) {
-    try { return wrap(await openLiveIme(), "doubao-ime"); }
+    try { return wrap(await openLiveIme(lang), "doubao-ime"); }
     catch (e2) {
       throw new Error(`auto asr failed — doubao-web: ${(e1 as Error).message} | doubao-ime: ${(e2 as Error).message}`);
     }

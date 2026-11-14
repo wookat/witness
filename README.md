@@ -7,7 +7,7 @@
   <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A518-17181c?style=flat-square" alt="Node ≥ 18">
-  <img src="https://img.shields.io/badge/MCP-12%20tools-17181c?style=flat-square" alt="12 MCP tools">
+  <img src="https://img.shields.io/badge/MCP-14%20tools-17181c?style=flat-square" alt="14 MCP tools">
   <br>
   <b>English</b> · <a href="README.zh-CN.md">中文</a> · <a href="https://witness.zalize.com">witness.zalize.com</a> · <a href="VISION.md">VISION.md</a>
 </div>
@@ -61,6 +61,9 @@ No downloads, no API keys. System Edge/Chrome is preferred; bundled Chromium is 
 | `Esc` | Exit inspect mode |
 | `■` / `Alt+Shift+R` | Stop and finalize the evidence package |
 
+Non-password input values are captured verbatim (160 chars) — "I typed X and it broke" keeps X.
+WebSocket text frames are sampled for realtime apps; responses over 64KB keep their head (truncated, flagged).
+
 `events.jsonl` streams to disk as you go — kill the process and you lose only the last
 few hundred milliseconds. `wit recover` rebuilds everything.
 
@@ -84,6 +87,7 @@ wit associate <dir>               # LLM picks relevant evidence per SAY (ZHIPU_A
 wit recover <dir>                 # rebuild artifacts after a crash
 wit segments <dir>                # regenerate speech-anchor index + bundles
 wit keyframes <dir>               # render rrweb → per-segment keyframe jpgs
+wit doctor                        # preflight: browser / live-ASR / keys / dirs
 wit mcp [dir]                     # stdio MCP server over the evidence
 wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
 ```
@@ -117,7 +121,7 @@ audio.webm / transcript.json
 (Claude Code, Cursor, Devin) at it and it pulls exactly what it needs:
 
 `list_segments` · `segment_detail(n)` · `session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
-`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_asr` · `set_asr`
+`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_transcript` · `search_events` · `get_asr` · `set_asr`
 
 ## Principles
 
@@ -127,8 +131,9 @@ audio.webm / transcript.json
   (`auto` = doubao-web → doubao-ime → browser SR fallback — pick via `wit config asr`, `--asr`, `WIT_ASR`, or the
   `get_asr`/`set_asr` MCP tools); final transcript falls back to bcut (bilibili editor ASR, no key needed)
   when no OPENAI key is set. LLM layers are optional.
-- **Privacy engineered in** — password fields masked across four channels, credential fields redacted in POST bodies,
+- **Privacy engineered in** — password/OTP/credit-card fields masked across four channels, credential fields redacted in POST bodies,
   `WIT_NO_BODIES=1` disables body capture, `P` freezes everything, `.witness/` is auto-gitignored.
+  `--lang` now reaches every ASR stage (browser SR, doubao live, whisper post-session).
 - **Anonymous usage stats** — the CLI sends one ping per command (command name, version, OS/arch, Node major; never URLs,
   paths or session data) to our own Cloudflare Worker — no third-party analytics, no cookies. Disable with `WIT_TELEMETRY=0`.
 

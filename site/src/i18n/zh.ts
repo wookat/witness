@@ -140,7 +140,7 @@ Process in this order:
       ["api", "<code>session_md</code>", "要全文时返回渲染好的时间轴。"],
       ["mic", "<code>get_asr / set_asr</code>", "agent 自己查、自己切语音引擎——配置环里不需要人。"],
     ],
-    mcap: "……共 12 个注册工具——session 是可查询的 API，不是一坨死文件。",
+    mcap: "……共 14 个注册工具——session 是可查询的 API，不是一坨死文件。",
   },
   agents: {
     k: "07 · 接入你的 agent",
@@ -149,7 +149,7 @@ Process in this order:
     c1t: "PROMPT.md → 粘贴",
     c1d: "每个 session 自带交接文件：格式说明、页面词表、修复规则。贴进任何会跑命令的 agent——它就知道该怎么读证据、先复述清单再动手。",
     c2t: "wit mcp → 接入",
-    c2d: "支持 MCP 的 agent 直接连 stdio server：12 个工具按需挖证据，不用把整包塞进上下文。仓库还自带 SKILL.md——支持 skill 的 agent 原生加载，其他可以当规则文件用。",
+    c2d: "支持 MCP 的 agent 直接连 stdio server：14 个工具按需挖证据，不用把整包塞进上下文。仓库还自带 SKILL.md——支持 skill 的 agent 原生加载，其他可以当规则文件用。",
     works: "适配",
     agents: ["Devin", "Claude Code", "Cursor", "Codex", "Windsurf", "任何 MCP 客户端"],
   },
@@ -180,7 +180,7 @@ Process in this order:
     pcols: ["", "Jam", "Replay.io", "Loom", "Replay SaaS*", "Witness"],
     prows: [
       ["语音 → 锚定证据", "◐ 视频配音", "—", "◐ 旁白", "—", "原话逐字，焊进事件"],
-      ["为 AI agent 而造", "◐ AI 生成 repro + MCP", "✓ MCP + 时间旅行", "—", "—", "session.md + PROMPT.md + 12 工具 MCP"],
+      ["为 AI agent 而造", "◐ AI 生成 repro + MCP", "✓ MCP + 时间旅行", "—", "—", "session.md + PROMPT.md + 14 工具 MCP"],
       ["console / 网络", "✓", "✓ runtime 级", "—", "✓", "✓ + 因果爆发链、死点击"],
       ["回放深度", "视频 · 2 分钟 DOM", "runtime 时间旅行——最深", "视频", "✓ DOM 回放", "✓ rrweb 全量 DOM"],
       ["留在你磁盘上", "— 上传 + 要账号", "— 上传", "— 上传", "— SaaS", "✓ .witness/sessions，零账号"],
@@ -205,7 +205,7 @@ Process in this order:
     items: [
       ["需要装什么？", "Node 18+ 和系统 Edge/Chrome——优先用你机器上的真浏览器，找不到才装自带 chromium。<code>npm i -g witness-recorder</code>，完事。"],
       ["有什么数据会离开本机？", "证据包全部落在本地 <code>.witness/sessions/</code>（自动 gitignore）。实时字幕按你选的引擎流式发麦克风音频（默认 doubao-web）；<code>--asr sr</code> 走系统/浏览器识别，<code>--asr off</code> 直接不要实时字幕。终稿转写走 bcut（免费）或你自己的 OPENAI_API_KEY 走 whisper——<code>--no-transcribe</code> 可全跳过。LLM 纠错/关联只有显式传 flag 且有 key 才跑。"],
-      ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——12 个查询工具按需挖证据，而不是一次性塞全文。仓库自带的 SKILL.md 在支持 skill 的 agent 上原生加载，其余可当规则文件。"],
+      ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——14 个查询工具按需挖证据，而不是一次性塞全文。仓库自带的 SKILL.md 在支持 skill 的 agent 上原生加载，其余可当规则文件。"],
       ["密码出现在页面里怎么办？", "密码字段四通道打码；POST 体自动脱敏凭证字段；<code>P</code> 随时全冻结（含麦克风）；敏感应用设 <code>WIT_NO_BODIES=1</code> 直接不存响应体。"],
       ["可以说什么语言？", "识别语言默认跟随浏览器/系统语言——<code>--lang &lt;bcp47&gt;</code>（如 en-US、ja-JP）按次覆盖。原话永远逐字落盘——识别错字保留可审计，LLM 纠错只是可选的展示层。"],
       ["只能录 localhost 吗？", "任何 URL——托管浏览器就是你的真实浏览器，登录照样用。不过在本地开发站上最锋利：agent 修的时候能同时看到源码。"],

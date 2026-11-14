@@ -5,7 +5,7 @@ export type Ev =
   | { t: number; kind: "dom"; path: string }
   | { t: number; kind: "say"; text: string; segStart: number; segEnd: number }
   | { t: number; kind: "click"; sel: string; x: number; y: number; text?: string; kbd?: boolean; box?: Box; shot?: string }
-  | { t: number; kind: "input"; sel: string; masked: boolean; len: number }
+  | { t: number; kind: "input"; sel: string; masked: boolean; len: number; value?: string }
   | { t: number; kind: "nav"; url: string; title?: string }
   | { t: number; kind: "scroll"; sel?: string; y: number }
   | { t: number; kind: "key"; key: string; sel?: string }
@@ -13,11 +13,12 @@ export type Ev =
   | { t: number; kind: "console"; level: string; text: string; stack?: string }
   | { t: number; kind: "error"; message: string; stack?: string }
   | { t: number; kind: "req"; id: number; url: string; method: string; resType: string; postData?: string }
-  | { t: number; kind: "res"; id: number; url: string; status: number; timing?: number; bodyPath?: string }
+  | { t: number; kind: "res"; id: number; url: string; status: number; timing?: number; bodyPath?: string; bodyTrunc?: boolean }
   | { t: number; kind: "mut"; sel: string; summary: string; n?: number }
+  | { t: number; kind: "ws"; url: string; dir: "in" | "out"; data: string }
   | { t: number; kind: "shot"; path: string }
   | { t: number; kind: "issue"; n: number }
-  | { t: number; kind: "note"; text: string }
+  | { t: number; kind: "note"; text: string; tag?: string }
   | { t: number; kind: "_ui"; action: string };
 
 export interface Box { x: number; y: number; w: number; h: number }

@@ -15,6 +15,8 @@ export interface Meta {
   durationMs: number;
   viewport?: { width: number; height: number };
   title?: string;
+  lang?: string;      // speech recognition language hint, if user set one
+  audio?: boolean;    // audio.webm captured at all (mic may still be silent)
 }
 
 const esc = (s?: string) => (s ?? "").replace(/</g, "&lt;").slice(0, 400);
@@ -41,7 +43,7 @@ function line(e: Ev): string | null {
   switch (e.kind) {
     case "nav": return `- \`${fmt(e.t)}\` **NAV** ${e.url}${e.title ? ` · “${esc(e.title)}”` : ""}`;
     case "click": return `- \`${fmt(e.t)}\` **CLICK** \`${e.sel}\`${e.text ? ` “${esc(e.text)}”` : ""} · @${e.x},${e.y}${e.shot ? ` · [shot](${e.shot})` : ""}`;
-    case "input": return `- \`${fmt(e.t)}\` **INPUT** \`${e.sel}\` · ${e.masked ? "🔒masked" : `${e.len} chars`}`;
+    case "input": return `- \`${fmt(e.t)}\` **INPUT** \`${e.sel}\` · ${e.masked ? "🔒masked" : e.value != null ? `“${esc(e.value)}” (${e.len} chars)` : `${e.len} chars`}`;
     case "scroll": return `- \`${fmt(e.t)}\` **SCROLL** y=${e.y}`;
     case "key": return `- \`${fmt(e.t)}\` **KEY** ${e.key}${e.sel ? ` on \`${e.sel}\`` : ""}`;
     case "console": return `- \`${fmt(e.t)}\` **CONSOLE ${e.level.toUpperCase()}** ${esc(e.text)}${e.stack ? `\n  \`\`\`\n  ${e.stack.slice(0, 600)}\n  \`\`\`` : ""}`;
@@ -50,12 +52,13 @@ function line(e: Ev): string | null {
       const r = resOfReq?.get(e);
       if (!r) return `- \`${fmt(e.t)}\` **NET →** ${e.method} ${e.url} (${e.resType})`;
       const bad = r.status === 0 || r.status >= 400;
-      return `- \`${fmt(e.t)}\` **NET** ${e.method} ${e.url} → ${r.status === 0 ? "FAILED" : `**${r.status}**`}${r.timing != null ? ` · ${r.timing}ms` : ""}${r.bodyPath ? ` · [body](${r.bodyPath})` : ""}${bad ? " ⚠️" : ""}`;
+      return `- \`${fmt(e.t)}\` **NET** ${e.method} ${e.url} → ${r.status === 0 ? "FAILED" : `**${r.status}**`}${r.timing != null ? ` · ${r.timing}ms` : ""}${r.bodyPath ? ` · [body${r.bodyTrunc ? ", truncated" : ""}](${r.bodyPath})` : ""}${bad ? " ⚠️" : ""}`;
     }
     case "res": {
       const bad = e.status === 0 || e.status >= 400;
-      return `- \`${fmt(e.t)}\` **NET ←** ${e.status === 0 ? "FAILED" : `**${e.status}**`} ${e.url}${e.timing != null ? ` · ${e.timing}ms` : ""}${e.bodyPath ? ` · [body](${e.bodyPath})` : ""}${bad ? " ⚠️" : ""}`;
+      return `- \`${fmt(e.t)}\` **NET ←** ${e.status === 0 ? "FAILED" : `**${e.status}**`} ${e.url}${e.timing != null ? ` · ${e.timing}ms` : ""}${e.bodyPath ? ` · [body${e.bodyTrunc ? ", truncated" : ""}](${e.bodyPath})` : ""}${bad ? " ⚠️" : ""}`;
     }
+    case "ws": return `- \`${fmt(e.t)}\` **WS ${e.dir === "in" ? "←" : "→"}** ${esc(e.url)} ${esc(e.data)}`;
     case "mark": {
       const comp = e.react?.length ? ` · Comp: \`${e.react.join(" › ")}\`` : "";
       const reg = e.region ? ` · region ${e.region.w}×${e.region.h} @${e.region.x},${e.region.y}` : "";
@@ -128,7 +131,7 @@ function groupBlocks(events: Ev[]): Block[] {
 // page consequences (requests, errors, dom changes, nav) belong to it ----
 const BURST_MS = 1800;
 const BURST_KINDS = new Set(["req", "res", "console", "error", "nav", "mut"]);
-const NO_BREAK = new Set(["shot", "note", "scroll", "dom", "_ui"]); // ambient: don't close a burst
+const NO_BREAK = new Set(["shot", "note", "scroll", "dom", "_ui", "ws"]); // ambient: don't close a burst
 const isTrigger = (e: Ev) => e.kind === "click" || (e.kind === "key" && e.key === "Enter");
 
 interface Row { lead: Ev; burst: Ev[] }
@@ -162,7 +165,27 @@ export function renderMarkdown(events: Ev[], meta: Meta, transcript?: Transcript
     }
   }
 
-  // pair each res with the nearest earlier unmatched req on the same url → one NET line
+  // collapse ws frame floods: same socket+direction within 2.5s → one ×n line
+  const WS_KINDS = new Set(["click", "key", "input", "nav", "mark", "issue", "say"]);
+  const wsDrop = new Set<Ev>();
+  const wsRun = new Map<Ev, { url: string; dir: string; n: number; sample: string }>();
+  {
+    let cur: { first: Ev; url: string; dir: string; n: number; sample: string; lastT: number } | null = null;
+    for (const e of events) {
+      if (e.kind === "ws") {
+        const w = e as { url: string; dir: string; data: string };
+        if (cur && e.t - cur.lastT <= 2500 && w.url === cur.url && w.dir === cur.dir) {
+          cur.n++; cur.lastT = e.t; wsDrop.add(e);
+        } else {
+          cur = { first: e, url: w.url, dir: w.dir, n: 1, sample: w.data.slice(0, 80), lastT: e.t };
+          wsRun.set(e, cur);
+        }
+      } else if (WS_KINDS.has(e.kind)) cur = null;
+    }
+  }
+
+  // pair each res with its req — by request id when both have one, else nearest
+  // earlier unmatched req on the same url → one NET line
   const pairedRes = new Set<Ev>();
   resOfReq = new Map();
   {
@@ -170,8 +193,11 @@ export function renderMarkdown(events: Ev[], meta: Meta, transcript?: Transcript
     for (const e of events) {
       if (e.kind === "req") open.push(e);
       else if (e.kind === "res") {
+        const rid = (e as { id?: number }).id;
         for (let i = open.length - 1; i >= 0; i--) {
-          if ((open[i] as { url: string }).url === e.url) { resOfReq.set(open[i], e); open.splice(i, 1); pairedRes.add(e); break; }
+          const q = open[i] as { id?: number; url: string };
+          const match = rid != null && q.id != null ? q.id === rid : q.url === e.url;
+          if (match) { resOfReq.set(open[i], e); open.splice(i, 1); pairedRes.add(e); break; }
         }
       }
     }
@@ -180,8 +206,11 @@ export function renderMarkdown(events: Ev[], meta: Meta, transcript?: Transcript
   const parts: string[] = [
     `# Witness Session — ${new Date(meta.startedAt).toISOString().replace("T", " ").slice(0, 19)}`,
     `- **App:** ${meta.url}${meta.title ? ` · ${meta.title}` : ""}`,
-    `- **Duration:** ${fmt(meta.durationMs)}${meta.viewport ? ` · **Viewport:** ${meta.viewport.width}×${meta.viewport.height}` : ""}`,
+    `- **Duration:** ${fmt(meta.durationMs)}${meta.viewport ? ` · **Viewport:** ${meta.viewport.width}×${meta.viewport.height}` : ""}${meta.lang ? ` · **Lang:** ${meta.lang}` : ""}`,
     `- **Files:** \`events.jsonl\` raw · \`shots/\` · \`bodies/\` · \`audio.webm\` · \`transcript.json\``,
+    ...(meta.audio && !events.some(e => e.kind === "say")
+      ? ["", "> ⚠ **audio.webm exists but zero speech was recognized** — the mic may have been silent/denied or ASR failed. Verify before treating missing SAY blocks as 'user said nothing'."]
+      : []),
     "",
     "---",
     "",
@@ -205,7 +234,7 @@ export function renderMarkdown(events: Ev[], meta: Meta, transcript?: Transcript
     const useAssoc = assoc != null && saysIn.some(s => assoc.has(s));
     const uniqTitles = [...new Set(titles)];
     if (uniqTitles.length) parts.push(`**→ ${uniqTitles.join(" · ")}**`);
-    const vis = b.evs.filter(e => !noisy(e) && !pairedRes.has(e) && !scrollDrop.has(e) && e.kind !== "shot" && e.kind !== "_ui")
+    const vis = b.evs.filter(e => !noisy(e) && !pairedRes.has(e) && !scrollDrop.has(e) && !wsDrop.has(e) && e.kind !== "shot" && e.kind !== "_ui")
       .filter((e, i, a) => !(e.kind === "nav" && a[i - 1]?.kind === "nav" && (a[i - 1] as any).url === e.url))
       .filter(e => !useAssoc || e.kind === "say" || hits.has(e));
     const hidden = b.evs.length - vis.length;
@@ -213,6 +242,12 @@ export function renderMarkdown(events: Ev[], meta: Meta, transcript?: Transcript
     const rows = burstRows(vis);
     for (let ri = 0; ri < rows.length; ri++) {
       const r = rows[ri];
+      // ws lead of a run → url dir ×n (payload sample kept)
+      if (r.lead.kind === "ws" && wsRun.has(r.lead)) {
+        const w = wsRun.get(r.lead)!;
+        lines.push(`- \`${fmt(r.lead.t)}\` **WS ${w.dir === "in" ? "←" : "→"}** ${w.url} ×${w.n} — e.g. ${esc(w.sample)}`);
+        continue;
+      }
       // scroll lead of a run → y=a→b ×n (run info computed above)
       if (r.lead.kind === "scroll" && scrollRun.has(r.lead)) {
         const s = scrollRun.get(r.lead)!;
@@ -434,9 +469,9 @@ const fmt=ms=>{const s=Math.max(0,Math.round(ms/1000));return String(Math.floor(
 const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const dur=D.meta.durationMs||1;
 /* audio clock bias: session t=0 is nav; audio.webm starts when mic arm fires (~1-2s later) */
-const _mic=D.evs.find(e=>e.kind==='note'&&/mic recording|microphone/i.test(e.text||''));
+const _mic=D.evs.find(e=>e.kind==='note'&&(e.tag==='mic-start'||/mic recording|microphone/i.test(e.text||'')));
 const bias=_mic?_mic.t:0;
-const KC={say:'#8b5cf6',nav:'#3b82f6',click:'#0891b2',mark:'#ec4899',note:'#f59e0b',key:'#f59e0b',input:'#64748b',scroll:'#cbd5e1',mut:'#cbd5e1',shot:'#94a3b8',req:'#a5b4fc',res:'#a5b4fc',console:'#f59e0b',error:'#ef4444',err:'#ef4444',issue:'#ff4f00',_ui:'#e2e8f0'};
+const KC={say:'#8b5cf6',nav:'#3b82f6',click:'#0891b2',mark:'#ec4899',note:'#f59e0b',key:'#f59e0b',input:'#64748b',scroll:'#cbd5e1',mut:'#cbd5e1',shot:'#94a3b8',req:'#a5b4fc',res:'#a5b4fc',ws:'#38bdf8',console:'#f59e0b',error:'#ef4444',err:'#ef4444',issue:'#ff4f00',_ui:'#e2e8f0'};
 const LNAMES=[['say','speech'],['nav','nav'],['click','clicks'],['mark','marks'],['note','notes'],['console','console'],['error','errors'],['res','failed reqs']];
 const isBad=e=>e.kind==='error'||e.kind==='err'||(e.kind==='res'&&(e.status===0||e.status>=400))||(e.kind==='console'&&(e.level==='error'||e.level==='warning'));
 const kcol=e=>isBad(e)?'#ef4444':(KC[e.kind]||'#cbd5e1');
@@ -450,6 +485,7 @@ const desc=e=>{
     case 'error':case 'err':return 'error: '+esc((e.message||e.text||'').slice(0,140));
     case 'req':return 'req '+e.method+' '+esc((e.url||'').slice(0,110));
     case 'res':return 'res '+e.status+' '+esc((e.url||'').slice(0,110));
+    case 'ws':return 'ws '+e.dir+' '+esc((e.url||'').slice(0,80))+' '+esc((e.data||'').slice(0,100));
     case 'mut':return 'DOM '+esc(e.sel)+' '+esc((e.summary||'').slice(0,64));
     case 'scroll':return 'scroll y='+e.y;
     case 'input':return 'input '+esc(e.sel)+(e.masked?' 🔒':'');

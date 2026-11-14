@@ -123,7 +123,9 @@ export async function record(opts: RecOptions) {
   let liveAsr: LiveAsrSession | null = null;
   let srFallback = false; // cloud asr failed → lazily start browser SR on each nav
   const engineSays = new Set<string>(); // emitted sentence texts, for dedupe at end()
-  const micBiasMs = () => (store.events.find(e => e.kind === "note" && /mic recording/i.test(e.text ?? ""))?.t ?? 0);
+  // audio t=0 anchor: the page emits a tagged "mic-start" note when MediaRecorder arms;
+  // fall back to the legacy text match for sessions recorded before the tag existed
+  const micBiasMs = () => (store.events.find(e => e.kind === "note" && ((e as { tag?: string }).tag === "mic-start" || /mic recording/i.test(e.text ?? "")))?.t ?? 0);
 
   await ctx.exposeBinding("__witEmit", async (src, e: any) => {
     const page = src.page ?? lastPage; // the page that emitted — never the wrong tab
@@ -190,6 +192,19 @@ export async function record(opts: RecOptions) {
       store.push({ kind: "console", level: m.type(), text: m.text().slice(0, 1500), stack: loc ? `${loc.url}:${loc.lineNumber}:${loc.columnNumber}` : undefined });
     });
     page.on("pageerror", e => store.push({ kind: "error", message: String(e.message || e).slice(0, 1500), stack: e.stack?.slice(0, 1500) }));
+    // websocket frames — realtime apps (collab editors, chat, live dashboards) otherwise leave no evidence
+    let wsCount = 0;
+    page.on("websocket", ws => {
+      const push = (dir: "in" | "out") => (f: { payload: string | Buffer }) => {
+        if (wsCount >= 3000 || paused) return;
+        wsCount++;
+        const p = f.payload;
+        const data = typeof p === "string" ? p.slice(0, 1500) : `[binary ${p?.length ?? 0}B]`;
+        store.push({ kind: "ws", url: ws.url().slice(0, 300), dir, data });
+      };
+      ws.on("framereceived", push("in"));
+      ws.on("framesent", push("out"));
+    });
     let lastNav = "";
     page.on("framenavigated", f => {
       if (f === page.mainFrame()) {
@@ -254,14 +269,15 @@ export async function record(opts: RecOptions) {
 
     if (opts.transcribe !== false && audio.hasAudio) {
       try {
+        const t0 = Date.now();
         if (hasTranscriber()) {
           console.log("  transcribing (whisper)…");
-          transcript = await transcribe(audio.path);
+          transcript = await transcribe(audio.path, { language: opts.lang });
         } else {
           console.log("  transcribing (bcut)…");
           transcript = await transcribeBcut(audio.path);
         }
-        console.log(`  transcript: ${transcript.segments.length} segments`);
+        console.log(`  transcript: ${transcript.segments.length} segments (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
       } catch (e) {
         console.log(`  transcription failed: ${(e as Error).message}${engineSegs.length ? " — using live-asr segments" : ""}`);
         if (engineSegs.length)
@@ -270,7 +286,7 @@ export async function record(opts: RecOptions) {
     }
 
     // audio t=0 is the mic-arm moment, not nav — shift transcript into session time
-    const micBias = (store.events.find(e => e.kind === "note" && /mic recording/i.test(e.text ?? ""))?.t ?? 0) / 1000;
+    const micBias = micBiasMs() / 1000;
     if (transcript && micBias) {
       transcript = { ...transcript, segments: transcript.segments.map(s => ({ ...s, start: s.start + micBias, end: s.end + micBias })) };
     }
@@ -291,6 +307,8 @@ export async function record(opts: RecOptions) {
       startedAt: store.startTime,
       durationMs: store.now(),
       viewport: { width: opts.width ?? 1560, height: opts.height ?? 960 },
+      lang: opts.lang,
+      audio: audio.hasAudio,
       asr: liveAsr?.name ?? (asrMode === "sr" ? "edge-sr" : asrMode),
     };
     await writeSessionFiles(dir, events, meta, transcript, assoc);
@@ -333,7 +351,7 @@ export async function record(opts: RecOptions) {
   if (asrMode !== "sr" && asrMode !== "off") {
     void (async () => {
       try {
-        const s = await openLiveAsr(asrMode === "auto" ? "auto" : asrMode);
+        const s = await openLiveAsr(asrMode === "auto" ? "auto" : asrMode, opts.lang);
         if (stopping) { void s.end().catch(() => {}); return; }
         liveAsr = s;
         store.push({ kind: "note", text: `live asr: ${s.name}` });

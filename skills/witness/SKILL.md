@@ -25,12 +25,14 @@ wit start <url>                    # wit installed globally (npm i -g witness-re
 
 - Live captions: cloud streaming ASR. `auto` falls through **doubao-web (default, best punctuation) → doubao-ime (sentence-level timestamps + ITN digits) → browser SR**. say events land on the timeline with segStart/segEnd.
 - Engine switch (three equivalent ways): `wit config asr auto|doubao-web|doubao-ime|sr|off` (persistent) · `--asr <engine>` / `WIT_ASR` (one-off) · MCP `get_asr`/`set_asr` (an agent can check/switch itself). `off` = no live captions; the final transcript still renders.
-- On stop, final transcript chain: OPENAI_API_KEY → whisper-1 word-level timestamps; without a key it falls back to bcut (bilibili's free endpoint, no key needed).
+- On stop, final transcript chain: OPENAI_API_KEY → whisper-1 word-level timestamps; without a key it falls back to bcut (bilibili's free endpoint, no key needed, zh-tuned).
+- `--lang <bcp47>` propagates end-to-end: browser SR, doubao live ASR payload, and whisper post-session transcription.
 - `ZHIPU_API_KEY` (free at bigmodel.cn) → on stop, GLM-4-Flash corrects homophones/phrasing against the page-element vocabulary (display layer only — raw evidence is never rewritten).
 - `wit transcribe <sessionDir>` / `wit correct <sessionDir>`: re-run transcription/correction on a recorded session.
 - `wit associate <sessionDir>` (needs ZHIPU_API_KEY): an LLM links each SAY to its related evidence → `assoc.json`; session.md then shows only hit events and collapses the rest. `wit start --associate` runs it automatically on stop.
 - `wit recover <sessionDir>`: rebuild session.md/review.html/PROMPT.md from events.jsonl after a crash/interruption.
-- `wit mcp [sessionDir]`: stdio MCP server — point an agent's MCP client at it to query evidence on demand; 12 tools: `list_segments`/`segment_detail`/`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_asr`/`set_asr`
+- `wit mcp [sessionDir]`: stdio MCP server — point an agent's MCP client at it to query evidence on demand; 14 tools: `list_segments`/`segment_detail`/`session_overview`/`list_says`/`session_md`/`events_around`/`get_errors`/`get_shot`/`get_dom_state`/`get_body`/`get_transcript`/`search_events`/`get_asr`/`set_asr`
+- `wit doctor`: preflight diagnostics — browser found, live-ASR reachability, transcription keys, sessions dir writable
 - `WIT_CDP=<port>` (env): opens a CDP port on the managed browser — an agent can attach to the recording page and act as the tester itself (drive clicks/marks, all captured).
 
 ## Consuming evidence (fixing issues) — follow this algorithm

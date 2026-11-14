@@ -141,7 +141,7 @@ Process in this order:
       ["api", "<code>session_md</code>", "The rendered timeline when the agent wants it all."],
       ["mic", "<code>get_asr / set_asr</code>", "The agent checks and flips the live speech engine itself — no human in the config loop."],
     ],
-    mcap: "…of 12 registered tools — the session is a queryable API, not a dump.",
+    mcap: "…of 14 registered tools — the session is a queryable API, not a dump.",
   },
   agents: {
     k: "07 · Works with your agent",
@@ -150,7 +150,7 @@ Process in this order:
     c1t: "PROMPT.md → paste",
     c1d: "Every session ships a handoff file: format spec, page vocabulary, fixing rules. Paste it into any agent that can run commands — it knows how to read the evidence and echo before it fixes.",
     c2t: "wit mcp → plug",
-    c2d: "MCP-capable agents connect to the stdio server: 12 tools to query evidence on demand, no context stuffing. The repo also ships a ready-made SKILL.md — skill-aware agents load it natively; anywhere else it works as a rules file.",
+    c2d: "MCP-capable agents connect to the stdio server: 14 tools to query evidence on demand, no context stuffing. The repo also ships a ready-made SKILL.md — skill-aware agents load it natively; anywhere else it works as a rules file.",
     works: "works with",
     agents: ["Devin", "Claude Code", "Cursor", "Codex", "Windsurf", "any MCP client"],
   },
@@ -181,7 +181,7 @@ Process in this order:
     pcols: ["", "Jam", "Replay.io", "Loom", "Replay SaaS*", "Witness"],
     prows: [
       ["Speech → anchored evidence", "◐ voiceover on video", "—", "◐ narration", "—", "verbatim speech, welded to events"],
-      ["Built for AI agents", "◐ AI repro + MCP", "✓ MCP + time-travel", "—", "—", "session.md + PROMPT.md + 12-tool MCP"],
+      ["Built for AI agents", "◐ AI repro + MCP", "✓ MCP + time-travel", "—", "—", "session.md + PROMPT.md + 14-tool MCP"],
       ["Console / network", "✓", "✓ runtime-level", "—", "✓", "✓ + causal bursts, dead clicks"],
       ["Replay depth", "video · 2-min DOM", "runtime time-travel — deepest", "video", "✓ DOM replay", "✓ rrweb full-DOM"],
       ["Stays on your disk", "— uploads + account", "— uploads", "— uploads", "— SaaS", "✓ .witness/sessions, no account"],
@@ -206,7 +206,7 @@ Process in this order:
     items: [
       ["What do I need installed?", "Node 18+ and a system Edge or Chrome — Witness prefers your real browser and only falls back to bundled chromium. <code>npm i -g witness-recorder</code>, done."],
       ["Does anything leave my machine?", "The evidence packet stays in <code>.witness/sessions/</code> on your disk, gitignored by default. Live captions stream mic audio to the ASR engine you pick (doubao-web by default); <code>--asr sr</code> uses the OS/browser recognizer, <code>--asr off</code> skips live text entirely. The final transcript goes to bcut (free) or whisper with your own OPENAI_API_KEY — <code>--no-transcribe</code> skips that too. Optional LLM layers (correction, association) only run when you pass the flag and set a key."],
-      ["Which agents does it work with?", "Any agent that can run a CLI can read session.md + PROMPT.md. MCP-capable ones (Devin, Claude Code, Cursor, Codex…) connect to <code>wit mcp</code> — 12 tools to query evidence on demand instead of one static dump. A bundled SKILL.md loads natively in skill-aware agents and works as a rules file elsewhere."],
+      ["Which agents does it work with?", "Any agent that can run a CLI can read session.md + PROMPT.md. MCP-capable ones (Devin, Claude Code, Cursor, Codex…) connect to <code>wit mcp</code> — 14 tools to query evidence on demand instead of one static dump. A bundled SKILL.md loads natively in skill-aware agents and works as a rules file elsewhere."],
       ["What if a password is on screen?", "Password fields are masked across four channels, POST bodies redact credential fields, <code>P</code> freezes everything mid-session including the mic, and <code>WIT_NO_BODIES=1</code> drops response capture entirely for sensitive apps."],
       ["What languages can I speak?", "Speech recognition follows your browser/OS language by default — <code>--lang &lt;bcp47&gt;</code> (en-US, ja-JP…) overrides per session. Your words always land verbatim — ASR mistakes stay auditable; LLM correction is an opt-in display layer."],
       ["Only localhost, or any site?", "Any URL — it's a real managed browser you drive normally, so logins work. It's sharpest on local dev, where the agent can see the source while it fixes."],

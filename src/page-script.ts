@@ -299,8 +299,11 @@ export const PAGE_SCRIPT = (lang?: string, opts: { sr?: boolean; pcm?: boolean }
 
   document.addEventListener("input", (e) => {
     const el = e.target;
-    const masked = el.type === "password" || el.getAttribute?.("type") === "password";
-    W.emit({ kind: "input", sel: sel(el), masked, len: (el.value || "").length });
+    const ac = (el.getAttribute && el.getAttribute("autocomplete")) || "";
+    const masked = el.type === "password" || /password|one-time-code|cc-|credit/i.test(ac);
+    // evidence value: what the user actually typed — masked fields keep length only
+    const value = masked ? undefined : clip(el.value || "", 160);
+    W.emit({ kind: "input", sel: sel(el), masked, len: (el.value || "").length, value });
   }, true);
 
   let scrT = 0;
@@ -413,7 +416,7 @@ export const PAGE_SCRIPT = (lang?: string, opts: { sr?: boolean; pcm?: boolean }
       };
       rec.start(800);
       W.recorder = rec;
-      W.emit({ kind: "note", text: "mic recording" });
+      W.emit({ kind: "note", text: "mic recording", tag: "mic-start" });
       // ---------- raw PCM tap for node-side cloud ASR ----------
       if (${opts.pcm ? "true" : "false"}) (function startPcmTap() {
         try {
@@ -471,7 +474,7 @@ export const PAGE_SCRIPT = (lang?: string, opts: { sr?: boolean; pcm?: boolean }
       })();
     } catch (e) {
       W.muted = true;
-      W.emit({ kind: "note", text: "mic denied: " + clip(e && e.message, 80) });
+      W.emit({ kind: "note", text: "mic denied: " + clip(e && e.message, 80), tag: "mic-denied" });
     }
   }
   if (!W.muted) startMic();

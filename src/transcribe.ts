@@ -4,7 +4,7 @@ import OpenAI from "openai";
 
 export interface Word { word: string; start: number; end: number }
 export interface Segment { start: number; end: number; text: string }
-export interface Transcript { segments: Segment[]; words: Word[]; text: string; model: string }
+export interface Transcript { segments: Segment[]; words: Word[]; text: string; model: string; lang?: string }
 
 const GAP = 0.9;        // split on silence > this (s)
 const MAX_SEG = 14;     // force split long segments (s)
@@ -12,7 +12,7 @@ const MAX_SEG = 14;     // force split long segments (s)
 export const hasTranscriber = () =>
   !!(process.env.WHISPER_BASE_URL || process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY);
 
-export async function transcribe(audioPath: string): Promise<Transcript> {
+export async function transcribe(audioPath: string, opts: { language?: string } = {}): Promise<Transcript> {
   // WHISPER_BASE_URL points at any OpenAI-compatible /audio/transcriptions
   // endpoint — local whisper.cpp server, vLLM, or a provider proxy.
   const custom = process.env.WHISPER_BASE_URL;
@@ -25,16 +25,19 @@ export async function transcribe(audioPath: string): Promise<Transcript> {
   const model = process.env.WHISPER_MODEL ?? (groq ? "whisper-large-v3-turbo" : "whisper-1");
   const buf = await readFile(audioPath);
   const file = new File([buf], basename(audioPath), { type: "audio/webm" });
+  // whisper wants ISO-639-1 ("en"), not BCP-47 ("en-US")
+  const language = opts.language?.split("-")[0].toLowerCase();
   const res = await client.audio.transcriptions.create({
     model,
     file,
     response_format: "verbose_json",
     timestamp_granularities: ["word"],
+    ...(language ? { language } : {}),
   } as any);
   const r = res as any;
   const words: Word[] = (r.words || []).map((w: any) => ({ word: w.word, start: w.start, end: w.end }));
   const segments = segment(words.length ? words : (r.segments || []).flatMap((s: any) => [{ word: s.text, start: s.start, end: s.end }]));
-  return { segments, words, text: r.text || "", model };
+  return { segments, words, text: r.text || "", model, lang: language };
 }
 
 function segment(words: Word[]): Segment[] {

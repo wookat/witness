@@ -154,6 +154,60 @@ test("assoc: featured hits only; title rendered; raw stays in jsonl", () => {
   assert.ok(md.includes("1 other events hidden"));
 });
 
+// ---------- v0.4.0: input values, id pairing, ws collapse, audio warning ----------
+
+test("input: non-masked value renders verbatim, masked stays hidden", () => {
+  const md = renderMarkdown([
+    { kind: "input", t: 100, sel: "#q", masked: false, len: 5, value: "hello" },
+    { kind: "input", t: 200, sel: "#pw", masked: true, len: 8 },
+    say(5000, "嗯", 5000, 5500),
+  ], meta);
+  assert.ok(md.includes("“hello” (5 chars)"));
+  assert.ok(md.includes("🔒masked"));
+  assert.ok(!md.includes("8 chars”"));
+});
+
+test("net: req/res pair by id even when urls collide", () => {
+  const md = renderMarkdown([
+    { kind: "req", t: 100, id: 1, method: "GET", url: "http://x/api/a", resType: "fetch" },
+    { kind: "req", t: 110, id: 2, method: "POST", url: "http://x/api/a", resType: "fetch" },
+    { kind: "res", t: 200, id: 2, url: "http://x/api/a", status: 500 },
+    { kind: "res", t: 210, id: 1, url: "http://x/api/a", status: 200 },
+    say(5000, "嗯", 5000, 5500),
+  ], meta);
+  // the POST (id 2) must show **500**, GET (id 1) **200** — url-only pairing would swap them
+  assert.ok(md.includes("POST http://x/api/a → **500**"));
+  assert.ok(md.includes("GET http://x/api/a → **200**"));
+});
+
+test("net: truncated body is flagged", () => {
+  const md = renderMarkdown([
+    { kind: "req", t: 100, id: 1, method: "GET", url: "http://x/api/big", resType: "fetch" },
+    { kind: "res", t: 200, id: 1, url: "http://x/api/big", status: 200, bodyPath: "bodies/r1.json", bodyTrunc: true },
+    say(5000, "嗯", 5000, 5500),
+  ], meta);
+  assert.ok(md.includes("body, truncated](bodies/r1.json)"));
+});
+
+test("ws: frame floods collapse into one ×n line", () => {
+  const md = renderMarkdown([
+    say(1000, "嗯", 1000, 1500),
+    { kind: "ws", t: 5000, url: "wss://x/chat", dir: "in", data: "{\"m\":1}" },
+    { kind: "ws", t: 5100, url: "wss://x/chat", dir: "in", data: "{\"m\":2}" },
+    { kind: "ws", t: 5200, url: "wss://x/chat", dir: "in", data: "{\"m\":3}" },
+  ], meta);
+  assert.ok(md.includes("WS ←"));
+  assert.ok(md.includes("×3"));
+  assert.equal((md.match(/WS ←/g) ?? []).length, 1);
+});
+
+test("header: audio captured but zero says → explicit warning", () => {
+  const md = renderMarkdown([click(5000)], { ...meta, audio: true });
+  assert.ok(md.includes("zero speech was recognized"));
+  const md2 = renderMarkdown([say(5000, "有说话", 5000, 5500)], { ...meta, audio: true });
+  assert.ok(!md2.includes("zero speech was recognized"));
+});
+
 // ---------- renderPrompt: vocab + rules ----------
 
 test("prompt: carries page vocab and the no-inference rule", () => {

@@ -7,7 +7,7 @@
   <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A518-17181c?style=flat-square" alt="Node ≥ 18">
-  <img src="https://img.shields.io/badge/MCP-12%20tools-17181c?style=flat-square" alt="12 个 MCP 工具">
+  <img src="https://img.shields.io/badge/MCP-14%20tools-17181c?style=flat-square" alt="14 个 MCP 工具">
   <br>
   <a href="README.md">English</a> · <b>中文</b> · <a href="https://witness.zalize.com">witness.zalize.com</a> · <a href="VISION.md">愿景与路线 VISION.md</a>
 </div>
@@ -54,6 +54,9 @@ wit start http://localhost:5173       # 托管浏览器打开——正常体验+
 | `Esc` | 退出 inspect 模式 |
 | `■` / `Alt+Shift+R` | 停止并生成证据包 |
 
+非密码输入框的内容会逐字记录（截断 160 字符）——"我输入了 X 然后崩了"里的 X 不再丢失。
+WebSocket 文本帧会采样记录（实时应用）；超过 64KB 的响应体保留前段并标记 truncated。
+
 events.jsonl 边录边落盘——进程被杀也只丢最后几百毫秒，`wit recover` 随时重建全部产物。
 
 ## agent 读到什么
@@ -75,6 +78,7 @@ wit associate <dir>               # LLM 给每段语音挑相关证据（需 ZHI
 wit recover <dir>                 # 崩溃后从 events.jsonl 重建产物
 wit segments <dir>                # 重建语音段索引 + 每段证据包
 wit keyframes <dir>               # rrweb → 每段关键帧 jpg（agent 可读的回放）
+wit doctor                        # 体检：浏览器/实时ASR/密钥/目录可写性
 wit mcp [dir]                     # stdio MCP server
 wit config asr <engine>           # 实时 ASR：auto|doubao-web|doubao-ime|sr|off
 ```
@@ -108,14 +112,14 @@ audio.webm / transcript.json
 它按需查询而不是吞全文：
 
 `list_segments` · `segment_detail(n)` · `session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
-`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_asr` · `set_asr`
+`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_transcript` · `search_events` · `get_asr` · `set_asr`
 
 ## 原则
 
 - **证据不改写**——原话原样落盘；合并/纠错/关联只是展示层建议。
 - **证据 ≠ 意图**——没有语音锚点的行为不会被当成 bug 汇报。
 - **本地优先**——默认确定性记录；实时字幕走免费云端流式 ASR（`auto` = doubao-web → doubao-ime → 浏览器 SR 兜底，`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）；LLM 全是可选层。
-- **隐私内置**——密码四通道打码；POST 体凭证字段脱敏；`WIT_NO_BODIES=1` 关响应体；`P` 全冻结；`.witness/` 自动 gitignore。
+- **隐私内置**——密码/OTP/信用卡字段四通道打码；POST 体凭证字段脱敏；`WIT_NO_BODIES=1` 关响应体；`P` 全冻结；`.witness/` 自动 gitignore。`--lang` 现已贯通全部 ASR 环节（浏览器 SR、豆包实时、whisper 后转写）。
 - **匿名使用统计**——CLI 每条命令发一次匿名 ping（命令名、版本、系统架构、Node 主版本；绝不含 URL、路径或录制内容），走自己的 Cloudflare Worker，不经过任何第三方分析服务。`WIT_TELEMETRY=0` 可关。
 
 ## 开发

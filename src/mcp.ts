@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -17,15 +18,17 @@ const brief = (e: Ev) => {
   const a = e as any;
   const base = { t: e.t, kind: e.kind };
   switch (e.kind) {
-    case "click": case "mark": case "input": return { ...base, sel: a.sel, text: a.text };
+    case "click": case "mark": return { ...base, sel: a.sel, text: a.text };
+    case "input": return { ...base, sel: a.sel, masked: a.masked, len: a.len, value: a.value };
     case "req": return { ...base, method: a.method, url: a.url };
-    case "res": return { ...base, status: a.status, url: a.url, body: a.bodyPath };
+    case "res": return { ...base, status: a.status, url: a.url, body: a.bodyPath, bodyTrunc: a.bodyTrunc };
     case "console": return { ...base, level: a.level, text: a.text };
     case "error": return { ...base, text: a.text ?? a.message };
     case "mut": return { ...base, label: a.label, attr: a.attr, prev: a.prev, val: a.val };
     case "nav": return { ...base, url: a.url };
     case "say": return { ...base, text: a.text, segStart: a.segStart, segEnd: a.segEnd };
     case "shot": return { ...base, path: a.path };
+    case "ws": return { ...base, url: a.url, dir: a.dir, data: a.data };
     case "scroll": return { ...base, y: a.y };
     default: return { ...base, ...a };
   }
@@ -47,17 +50,22 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
     return r;
   };
 
-  const server = new McpServer({ name: "witness", version: "0.3.0" });
+  const { version: pkgVersion } = createRequire(import.meta.url)("../package.json") as { version: string };
+  const server = new McpServer({ name: "witness", version: pkgVersion });
 
   server.registerTool("session_overview",
-    { description: "Session metadata: app URL, duration, counts of says/marks/errors/requests, file list" },
+    { description: "Session metadata: app URL, duration, lang, audio captured, ASR engine, counts of says/marks/errors/requests/ws frames, file list" },
     async () => {
       const s = await load();
       const c = (k: string) => s.events.filter(e => e.kind === k).length;
+      const sj = await readFile(join(s.dir, "session.json"), "utf8").then(JSON.parse).catch(() => ({}));
       return text(JSON.stringify({
-        dir: s.dir, url: s.meta.url, durationMs: s.meta.durationMs,
-        says: c("say"), clicks: c("click"), marks: c("mark"), navs: c("nav"),
-        requests: c("req"), consoleErrors: s.events.filter(e => e.kind === "console" && (e as any).level === "error").length,
+        dir: s.dir, url: s.meta.url, durationMs: s.meta.durationMs, lang: s.meta.lang,
+        audioCaptured: s.audio ?? sj.audio, asrEngine: sj.asr,
+        transcriptModel: s.transcript?.model,
+        says: c("say"), clicks: c("click"), marks: c("mark"), inputs: c("input"), navs: c("nav"),
+        requests: c("req"), wsFrames: c("ws"),
+        consoleErrors: s.events.filter(e => e.kind === "console" && (e as any).level === "error").length,
         pageErrors: c("error"),
         files: ["SEGMENTS.md", "segments/", "session.md", "PROMPT.md", "events.jsonl", "transcript.json", "assoc.json", "shots/", "bodies/", "audio.webm", "review.html"],
       }, null, 1));
@@ -98,12 +106,24 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
     });
 
   server.registerTool("session_md",
-    { description: "The rendered evidence timeline (SAY blocks + attached events)" },
-    async () => { const s = await load(); return text(renderMarkdown(s.events, s.meta, s.transcript)); });
+    {
+      description: "The rendered evidence timeline (SAY blocks + attached events). Capped at ~80k chars — for long sessions prefer list_segments/segment_detail first, then events_around for raw precision",
+      inputSchema: { offset: z.number().optional() },
+    },
+    async ({ offset }) => {
+      const s = await load();
+      const md = renderMarkdown(s.events, s.meta, s.transcript);
+      const CAP = 80_000;
+      if (md.length <= CAP && !offset) return text(md);
+      const from = offset ?? 0;
+      const slice = md.slice(from, from + CAP);
+      const more = from + CAP < md.length;
+      return text(slice + (more ? `\n\n…[truncated at char ${from + CAP}/${md.length} — call again with offset=${from + CAP}, or use list_segments/events_around for targeted reads]` : ""));
+    });
 
   server.registerTool("events_around",
     {
-      description: "Raw events within a time window. t_ms = timeline ms, radius_ms default 3000, kinds = comma list (click,req,res,console,error,mut,mark,nav,say,scroll,shot)",
+      description: "Raw events within a time window. t_ms = timeline ms, radius_ms default 3000, kinds = comma list (click,input,req,res,ws,console,error,mut,mark,nav,say,scroll,shot,note,issue,dom,key)",
       inputSchema: { t_ms: z.number(), radius_ms: z.number().optional(), kinds: z.string().optional() },
     },
     async ({ t_ms, radius_ms, kinds }) => {
@@ -132,21 +152,24 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
     },
     async ({ path }) => {
       const buf = await readFile(safe(path));
-      return { content: [{ type: "image" as const, data: buf.toString("base64"), mimeType: "image/jpeg" }] };
+      const mime = /\.webp$/i.test(path) ? "image/webp" : /\.png$/i.test(path) ? "image/png" : "image/jpeg";
+      return { content: [{ type: "image" as const, data: buf.toString("base64"), mimeType: mime }] };
     });
 
   server.registerTool("get_dom_state",
     {
-      description: "DOM snapshot HTML nearest to a timeline ms (snapshots at nav/mark/every 30s). Returns path + html",
-      inputSchema: { t_ms: z.number() },
+      description: "DOM snapshot HTML nearest to a timeline ms (snapshots at nav/mark/every 30s). Returns path + html, capped — pass max_chars for more. For visuals prefer get_shot/keyframes",
+      inputSchema: { t_ms: z.number(), max_chars: z.number().optional() },
     },
-    async ({ t_ms }) => {
+    async ({ t_ms, max_chars }) => {
       const s = await load();
       const doms = s.events.filter(e => e.kind === "dom").sort((a, b) => a.t - b.t);
       if (!doms.length) return text("(no dom snapshots in this session)");
       const best = doms.filter(d => d.t <= t_ms).at(-1) ?? doms[0];
       const html = await readFile(safe((best as any).path), "utf8");
-      return text(`# ${(best as any).path} @${best.t}ms\n${html.slice(0, 300_000)}`);
+      const cap = Math.min(max_chars ?? 120_000, 400_000);
+      const trunc = html.length > cap ? `\n…[html truncated at ${cap}/${html.length} chars — narrow with CSS selectors via get_shot or ask for a specific region]` : "";
+      return text(`# ${(best as any).path} @${best.t}ms\n${html.slice(0, cap)}${trunc}`);
     });
 
   server.registerTool("get_body",
@@ -155,6 +178,45 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
       inputSchema: { path: z.string() },
     },
     async ({ path }) => text(await readFile(safe(path), "utf8")));
+
+  server.registerTool("get_transcript",
+    {
+      description: "Speech recognition output: full transcript text + segments with timestamps (engine/model/lang recorded). Returns say events if no transcript.json exists",
+    },
+    async () => {
+      const s = await load();
+      if (s.transcript) {
+        const { words, ...rest } = s.transcript as any;
+        return text(JSON.stringify({ ...rest, wordCount: words?.length ?? 0, segments: (rest.segments ?? []).slice(0, 500) }, null, 1));
+      }
+      const says = s.events.filter(e => e.kind === "say").map(e => ({ t: (e as any).segStart, text: (e as any).text }));
+      return text(says.length ? JSON.stringify({ engine: "live-say-events", segments: says }, null, 1) : "(no transcript and no say events in this session)");
+    });
+
+  server.registerTool("search_events",
+    {
+      description: "Full-text search across event fields (say text, console, errors, urls, selectors, input values, ws payloads). Case-insensitive substring. Returns matching events as JSON, oldest first",
+      inputSchema: {
+        query: z.string(),
+        kinds: z.string().optional(),
+        limit: z.number().optional(),
+      },
+    },
+    async ({ query, kinds, limit }) => {
+      const s = await load();
+      const q = query.toLowerCase();
+      const ks = kinds ? new Set(kinds.split(",").map(k => k.trim())) : undefined;
+      const hay = (e: Ev): string => {
+        const a = e as any;
+        return [a.text, a.message, a.url, a.sel, a.summary, a.data, a.value, a.postData, a.outerHTML]
+          .filter(Boolean).join(" ").toLowerCase();
+      };
+      const out = s.events
+        .filter(e => (!ks || ks.has(e.kind)) && hay(e).includes(q))
+        .slice(0, Math.min(limit ?? 50, 200))
+        .map(brief);
+      return text(out.length ? JSON.stringify(out, null, 1) : `(no events matching "${query}")`);
+    });
 
   server.registerTool("get_asr",
     { description: "Current live speech-recognition engine for future recordings (auto|doubao-web|doubao-ime|sr|off)" },

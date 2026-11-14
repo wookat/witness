@@ -22,6 +22,7 @@ export interface LoadedSession {
   events: Ev[];
   meta: Meta;
   transcript?: Transcript;
+  audio?: boolean;
 }
 
 export async function loadSession(sessionDir: string): Promise<LoadedSession> {
@@ -33,13 +34,17 @@ export async function loadSession(sessionDir: string): Promise<LoadedSession> {
     .map(l => JSON.parse(l) as Ev);
   const navUrl = (events.find(e => e.kind === "nav") as { url?: string } | undefined)?.url;
   let meta: Meta;
+  let audio: boolean | undefined;
   try {
     const m = JSON.parse(await readFile(join(dir, "session.json"), "utf8"));
     meta = {
       url: m.url ?? navUrl ?? "unknown",
       startedAt: m.startedAt ?? Date.now(),
       durationMs: m.durationMs ?? events.at(-1)?.t ?? 0,
+      lang: m.lang,
     };
+    audio = !!m.audio;
+    meta.audio = audio;
   } catch {
     meta = {
       url: navUrl ?? "unknown",
@@ -49,5 +54,5 @@ export async function loadSession(sessionDir: string): Promise<LoadedSession> {
   }
   let transcript: Transcript | undefined;
   try { transcript = JSON.parse(await readFile(join(dir, "transcript.json"), "utf8")); } catch {}
-  return { dir, events, meta, transcript };
+  return { dir, events, meta, transcript, audio };
 }

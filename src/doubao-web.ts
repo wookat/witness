@@ -15,9 +15,9 @@ const DEVICE_ID = "7706602184038204971";
 const WEB_ID = "7706602180723263017";
 const FRAME = 640; // 20ms @16kHz mono s16le
 
-const wsUrl = (tab: string) =>
+const wsUrl = (tab: string, lang?: string) =>
   `wss://${HOST}/api/v2/sami/voicegenie?api_app_key=${APP_KEY}&namespace=VoiceGenie` +
-  `&version_code=20800&language=zh&device_platform=web&pkg_type=release_version&pc_version=3.45.1` +
+  `&version_code=20800&language=${lang ?? "zh"}&device_platform=web&pkg_type=release_version&pc_version=3.45.1` +
   `&region=CN&sys_region=CN&samantha_web=1&use-olympus-account=1&doubao_device_platform=web` +
   `&aid=497858&real_aid=497858&device_id=${DEVICE_ID}&doubao_pc_version=3.45.1` +
   `&web_id=${WEB_ID}&tea_uuid=${WEB_ID}&web_platform=browser&web_tab_id=${tab}`;
@@ -54,14 +54,14 @@ function unmarshalResp(data: Buffer): Resp {
 }
 
 // CDN IPs rotate and half of them never finish the WSS upgrade — pick by real open
-async function openWs(): Promise<WebSocket> {
+async function openWs(lang?: string): Promise<WebSocket> {
   const ips = await dns.promises.resolve4(HOST).catch(() => [] as string[]);
   const cands = ips.length ? ips : [HOST];
   let lastErr: unknown = new Error("dns failed");
   for (const ip of cands) {
     try {
       return await new Promise<WebSocket>((resolve, reject) => {
-        const ws = new WebSocket(wsUrl(randomUUID()), {
+        const ws = new WebSocket(wsUrl(randomUUID(), lang), {
           headers: { Origin: "https://www.doubao.com", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/158" },
           createConnection: () => tls.connect({ host: ip, servername: HOST, port: 443 }),
           handshakeTimeout: 8000,
@@ -84,9 +84,12 @@ export interface LiveVg {
   onSentence(cb: (s: { text: string; start: number; end: number }) => void): void;
 }
 
+/** BCP-47 → the short tag VoiceGenie expects ("en-US" → "en"). */
+export const langTag = (l?: string) => l ? l.split("-")[0].toLowerCase() : undefined;
+
 /** Open a VoiceGenie session and stream whatever PCM you push, at realtime pace. */
-export async function openLiveVg(): Promise<LiveVg> {
-  const ws = await openWs();
+export async function openLiveVg(lang?: string): Promise<LiveVg> {
+  const ws = await openWs(langTag(lang));
   const rid = randomUUID();
   const q: Buffer[] = [];
   let carry = Buffer.alloc(0);
@@ -136,6 +139,7 @@ export async function openLiveVg(): Promise<LiveVg> {
           business: 1, enable_audio_input: true, query_mode: 2, interrupt_type: 0, request_type: 3,
           chat: { bot_id: "7234781073513644036", message_id: "", uid: "279691410283040", conversation_id: "local_" + Date.now(), is_conf_fetched: false, is_dora_onboarding: false, new_conversation: false, question_id: "" },
           asr: { audio_info: { channel: 1, format: "raw", sample_rate: 16000 }, enable_punctuation: true,
+            ...(langTag(lang) ? { language: langTag(lang) } : {}),
             extra: { use_vad: true, use_itn: true, use_ddc: true, strong_ddc: true, enable_asr_twopass: true, disable_user_words: true } },
         }) }));
         return;
@@ -199,10 +203,10 @@ export async function openLiveVg(): Promise<LiveVg> {
  * Backend runs near-realtime VAD — audio must be paced at ≤ ~1× realtime.
  * onPartial(cumulativeText, isFinal) fires for every interim/final result.
  */
-export async function doubaoWebStt(file: string, onPartial?: (t: string, isFinal: boolean) => void, speed = 1): Promise<AsrSeg[]> {
+export async function doubaoWebStt(file: string, onPartial?: (t: string, isFinal: boolean) => void, speed = 1, lang?: string): Promise<AsrSeg[]> {
   let wav = file.endsWith(".wav") ? readFileSync(file) : await webmToWav(file);
   wav = wav.subarray(44);
-  const ws = await openWs();
+  const ws = await openWs(langTag(lang));
   const rid = randomUUID();
 
   return await new Promise<AsrSeg[]>((resolve, reject) => {
@@ -231,6 +235,7 @@ export async function doubaoWebStt(file: string, onPartial?: (t: string, isFinal
           business: 1, enable_audio_input: true, query_mode: 2, interrupt_type: 0, request_type: 3,
           chat: { bot_id: "7234781073513644036", message_id: "", uid: "279691410283040", conversation_id: "local_" + Date.now(), is_conf_fetched: false, is_dora_onboarding: false, new_conversation: false, question_id: "" },
           asr: { audio_info: { channel: 1, format: "raw", sample_rate: 16000 }, enable_punctuation: true,
+            ...(langTag(lang) ? { language: langTag(lang) } : {}),
             extra: { use_vad: true, use_itn: true, use_ddc: true, strong_ddc: true, enable_asr_twopass: true, disable_user_words: true } },
         }) }));
         return;
