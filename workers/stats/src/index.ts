@@ -10,6 +10,13 @@ const EVENTS: Record<string, number> = {
   install: 2,  // future use
 };
 
+// blob1 allowlists — the endpoint is public, so reject fuzzed payloads.
+const CLI_COMMANDS = new Set([
+  "start", "transcribe", "correct", "recover", "associate",
+  "segments", "keyframes", "config", "mcp", "list", "open",
+]);
+const PATH_RE = /^\/[a-zA-Z0-9\-_/.]{0,120}$/;
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -37,6 +44,12 @@ export default {
     if (!spec) return new Response("bad event", { status: 400, headers: CORS });
 
     const blobs = (body.b ?? []).map(String).slice(0, spec);
+    if (body.e === "cli" && !CLI_COMMANDS.has(blobs[0] ?? "")) {
+      return new Response("bad event", { status: 400, headers: CORS });
+    }
+    if (body.e === "pv" && !PATH_RE.test(blobs[0] ?? "")) {
+      return new Response("bad event", { status: 400, headers: CORS });
+    }
     env.WITNESS_EVENTS.writeDataPoint({
       indexes: [body.e],
       blobs,
