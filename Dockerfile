@@ -11,5 +11,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/local-asr ./local-asr
 COPY --from=build /app/package.json ./
 CMD ["node", "dist/cli.js", "mcp"]

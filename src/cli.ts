@@ -7,7 +7,7 @@ import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { Command } from "commander";
 import { record } from "./recorder.js";
-import { transcribe, hasTranscriber } from "./transcribe.js";
+import { transcribe } from "./transcribe.js";
 import { align } from "./align.js";
 import { writeSessionFiles } from "./session.js";
 import { correctSays, hasCorrector } from "./correct.js";
@@ -73,9 +73,18 @@ program
     const eventsPath = join(dir, "events.jsonl");
     if (!existsSync(audioPath) || !existsSync(eventsPath)) { console.log("missing audio.webm or events.jsonl in " + dir); return; }
     const s = await loadSession(dir);
-    const useWhisper = hasTranscriber();
-    console.log(`transcribing (${useWhisper ? "whisper" : "bcut"})…`);
-    const t = useWhisper ? await transcribe(audioPath, { language: s.meta.lang }) : await (await import("./bcut.js")).transcribeBcut(audioPath);
+    const { hasTranscriber, shouldUseBcut } = await import("./transcribe.js");
+    let t;
+    if (hasTranscriber()) {
+      console.log("transcribing (whisper chain)…");
+      t = await transcribe(audioPath, { language: s.meta.lang });
+    } else if (shouldUseBcut(s.meta.lang)) {
+      console.log("transcribing (bcut)…");
+      t = await (await import("./bcut.js")).transcribeBcut(audioPath);
+    } else {
+      console.log(`no backend for lang=${s.meta.lang} — run \`wit setup local-asr\` or set WHISPER_BASE_URL/GROQ_API_KEY/OPENAI_API_KEY`);
+      return;
+    }
     console.log(`  ${t.segments.length} segments`);
     // audio t=0 is mic-arm, not nav — shift into session time
     const bias = (s.events.find(e => e.kind === "note" && ((e as { tag?: string }).tag === "mic-start" || /mic recording/i.test(e.text ?? "")))?.t ?? 0) / 1000;
@@ -156,6 +165,8 @@ program
     if (!key) {
       const c = readConfig();
       console.log("asr =", c.asr ?? "auto", " (default)");
+      const la = c.localAsr;
+      console.log("local-asr =", la ? `${la.model ?? "small"} @ ${la.baseUrl ?? `127.0.0.1:${la.port ?? 8791}`} ${la.enabled === false ? "(disabled)" : "(enabled)"}` : "not configured — `wit setup local-asr`");
       console.log("engines:", ASR_ENGINES.join(" | "));
       console.log("set: wit config asr <engine>  ·  one-off: wit start --asr <engine>  ·  env: WIT_ASR");
       return;
@@ -167,6 +178,93 @@ program
       return;
     }
     console.log(`unknown key "${key}" — supported: asr`);
+  });
+
+program
+  .command("setup")
+  .description("one-time environment setup")
+  .command("local-asr")
+  .description("install + configure a local whisper transcription backend (offline, private, multilingual)")
+  .option("--model <preset>", "tiny|base|small|medium|large|turbo or a faster-whisper HF repo id", "small")
+  .option("--port <n>", "server port", "8791")
+  .option("--skip-download", "write config only — model downloads on first transcription")
+  .action(async o => {
+    const la = await import("./local-asr.js");
+    const { setConfig } = await import("./config.js");
+    const model = la.resolveModelPreset(o.model);
+    const port = Number(o.port);
+    console.log(`\n\x1b[36mwit setup local-asr\x1b[0m — local whisper backend\n`);
+    console.log(`  model : ${model}`);
+    console.log(`  port  : ${port} (127.0.0.1 only)`);
+    console.log(`  runtime: uv-managed python + faster-whisper (one-time ~1-2GB deps + model download)\n`);
+    const uv = await la.ensureUv();
+    const cfg: import("./local-asr.js").LocalAsrCfg = { enabled: true, port, model };
+    if (!o.skipDownload) {
+      try {
+        await la.warmLocalAsrModel(uv, model);
+      } catch (e) {
+        const msg = (e as Error).message;
+        if (la.looksLikeHubNetworkError(msg) && !process.env.HF_ENDPOINT) {
+          console.log(`  ! huggingface.co unreachable — retrying via hf-mirror.com…`);
+          try {
+            await la.warmLocalAsrModel(uv, model, console.log, la.HF_MIRROR);
+            cfg.hfEndpoint = la.HF_MIRROR;
+            console.log(`  ✓ model ready via mirror`);
+          } catch (e2) {
+            console.log(`  ! warm-up failed: ${(e2 as Error).message} — will retry on first use`);
+          }
+        } else {
+          console.log(`  ! warm-up failed: ${msg} — will retry on first use`);
+        }
+      }
+    }
+    setConfig("localAsr", cfg);
+    console.log(`\n✔ configured → .witness/config.json`);
+    console.log(`  start server : wit local-asr start`);
+    console.log(`  check status : wit local-asr status`);
+    console.log(`  once running, every \`wit start\` / \`wit transcribe\` uses it automatically (falls back to keys/bcut if down)`);
+    console.log(`  hotwords     : set WIT_ASR_PROMPT="product names, error codes" to bias recognition\n`);
+  });
+
+program
+  .command("local-asr <action>")
+  .description("manage the local ASR server: start | stop | status")
+  .option("--port <n>", "override port (start)")
+  .option("--model <preset>", "override model preset/id (start)")
+  .action(async (action, o) => {
+    const la = await import("./local-asr.js");
+    if (action === "start") {
+      console.log("starting local ASR… (first run downloads python deps + model — be patient)\n");
+      const r = await la.startLocalAsr({ port: o.port ? Number(o.port) : undefined, model: o.model });
+      console.log(`\n✔ local ASR ready → ${r.baseURL} (pid ${r.pid})`);
+      console.log(`  logs: ${join(process.cwd(), ".witness", "local-asr.log")}`);
+      console.log(`  transcription picks it up automatically — no restart of wit needed`);
+      return;
+    }
+    if (action === "stop") {
+      console.log(la.stopLocalAsr() ? "✔ local ASR stopped" : "not running");
+      return;
+    }
+    if (action === "status") {
+      const cfg = la.localAsrConfig();
+      const configured = !!(cfg.baseUrl || cfg.port || cfg.model || cfg.enabled);
+      if (!configured) {
+        console.log("local-asr: not configured — run `wit setup local-asr`");
+        return;
+      }
+      const pid = la.localAsrPid();
+      const pidAlive = la.localAsrPidAlive();
+      const port = cfg.port ?? la.LOCAL_ASR_DEFAULT_PORT;
+      const isCustom = !!cfg.baseUrl;
+      const base = cfg.baseUrl ?? `http://127.0.0.1:${port}/v1`;
+      // bundled server exposes /health; remote OpenAI-compat servers only /v1/models
+      const h = isCustom ? { ok: await la.probeEndpoint(base) } : await la.probeHealth(base);
+      console.log(`config : ${cfg.model ?? la.LOCAL_ASR_DEFAULT_MODEL} @ ${base}${cfg.enabled === false ? " (disabled)" : ""}`);
+      console.log(`process: ${pidAlive ? `running (pid ${pid})` : "not running"}`);
+      console.log(`server : ${h.ok ? "reachable" : "unreachable — start with: wit local-asr start"}`);
+      return;
+    }
+    console.log("usage: wit local-asr start|stop|status");
   });
 
 program

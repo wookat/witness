@@ -204,7 +204,7 @@ Process in this order:
     h: "聞かれる前に、答えておきます。",
     items: [
       ["何をインストールすればいい？", "Node 18+ とシステムの Edge/Chrome——まず実際のブラウザを使い、無ければ同梱 chromium にフォールバック。<code>npm i -g witness-recorder</code> で終わりです。"],
-      ["何かがマシンの外に出ますか？", "エビデンスパケットはローカルの <code>.witness/sessions/</code> に残り、既定で gitignore されます。ライブ字幕は選んだ ASR エンジンにマイク音声をストリーミングします（既定 doubao-web）。<code>--asr sr</code> で OS/ブラウザの認識、<code>--asr off</code> でライブ字幕なし。最終文字起こしは bcut（無料）か自分の OPENAI_API_KEY で whisper——<code>--no-transcribe</code> で丸ごと省略可。LLM レイヤー（訂正・関連付け）は flag とキーを渡した時だけ動きます。"],
+      ["何かがマシンの外に出ますか？", "エビデンスパケットはローカルの <code>.witness/sessions/</code> に残り、既定で gitignore されます。ライブ字幕は選んだ ASR エンジンにマイク音声をストリーミングします（既定 doubao-web）。<code>--asr sr</code> で OS/ブラウザの認識、<code>--asr off</code> でライブ字幕なし。最終文字起こしチェーン：WHISPER_BASE_URL → ローカル ASR（<code>wit setup local-asr</code>、完全オフライン）→ Groq → OpenAI → bcut（zh/auto セッションのみ、無料）——<code>--no-transcribe</code> で丸ごと省略可。LLM レイヤー（訂正・関連付け）は flag とキーを渡した時だけ動きます。"],
       ["どのエージェントに対応？", "CLI を実行できるエージェントなら session.md + PROMPT.md を読めます。MCP 対応（Devin、Claude Code、Cursor、Codex…）は <code>wit mcp</code> に直結——静的ダンプではなく14のクエリツール。同梱の SKILL.md は skill 対応エージェントでネイティブに読み込まれ、他ではルールファイルとして使えます。"],
       ["画面にパスワードが映ったら？", "パスワード欄は4チャンネルでマスク、POST ボディは認証フィールドを自動マスク、<code>P</code> でマイクごと全停止、敏感なアプリは <code>WIT_NO_BODIES=1</code> でレスポンス自体を残しません。"],
       ["何語で話せますか？", "認識言語は既定でブラウザ/OS の言語に従います——<code>--lang &lt;bcp47&gt;</code>（en-US、ja-JP など）で回ごとに上書き可能。発話は常に逐語で保存——ASR の誤字は監査可能なまま残り、LLM 訂正は任意の表示レイヤーです。"],

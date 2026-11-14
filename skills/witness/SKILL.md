@@ -25,7 +25,8 @@ wit start <url>                    # wit installed globally (npm i -g witness-re
 
 - Live captions: cloud streaming ASR. `auto` falls through **doubao-web (default, best punctuation) → doubao-ime (sentence-level timestamps + ITN digits) → browser SR**. say events land on the timeline with segStart/segEnd.
 - Engine switch (three equivalent ways): `wit config asr auto|doubao-web|doubao-ime|sr|off` (persistent) · `--asr <engine>` / `WIT_ASR` (one-off) · MCP `get_asr`/`set_asr` (an agent can check/switch itself). `off` = no live captions; the final transcript still renders.
-- On stop, final transcript chain: OPENAI_API_KEY → whisper-1 word-level timestamps; without a key it falls back to bcut (bilibili's free endpoint, no key needed, zh-tuned).
+- On stop, final transcript chain: `WHISPER_BASE_URL` → **local ASR** (`wit setup local-asr`, offline multilingual whisper) → GROQ_API_KEY → OPENAI_API_KEY → bcut (zh/auto sessions only, free zh-tuned endpoint). Unreachable backends are skipped automatically.
+- `wit setup local-asr [--model tiny|base|small|medium|large|turbo|<hf-repo>] [--port 8791]` installs the bundled faster-whisper server (uv-managed, one-time ~1-2GB); `wit local-asr start|stop|status` manages it. `WIT_ASR_PROMPT="…"` adds hotword bias. `config.localAsr.baseUrl` can point at any OpenAI-compatible server instead.
 - `--lang <bcp47>` propagates end-to-end: browser SR, doubao live ASR payload, and whisper post-session transcription.
 - `ZHIPU_API_KEY` (free at bigmodel.cn) → on stop, GLM-4-Flash corrects homophones/phrasing against the page-element vocabulary (display layer only — raw evidence is never rewritten).
 - `wit transcribe <sessionDir>` / `wit correct <sessionDir>`: re-run transcription/correction on a recorded session.

@@ -7,7 +7,7 @@ import { PAGE_SCRIPT } from "./page-script.js";
 import { AudioSink } from "./audio.js";
 import { Shots } from "./shots.js";
 import { wireNetwork } from "./network.js";
-import { transcribe, hasTranscriber, type Transcript } from "./transcribe.js";
+import { transcribe, hasTranscriber, shouldUseBcut, type Transcript } from "./transcribe.js";
 import { transcribeBcut } from "./bcut.js";
 import { openLiveAsr, type LiveAsrSession, type AsrChoice } from "./live-asr.js";
 import { resolveAsr } from "./config.js";
@@ -268,20 +268,29 @@ export async function record(opts: RecOptions) {
     await store.close();
 
     if (opts.transcribe !== false && audio.hasAudio) {
+      const t0 = Date.now();
       try {
-        const t0 = Date.now();
         if (hasTranscriber()) {
-          console.log("  transcribing (whisper)…");
+          console.log("  transcribing (whisper chain)…");
           transcript = await transcribe(audio.path, { language: opts.lang });
-        } else {
+        } else if (shouldUseBcut(opts.lang)) {
           console.log("  transcribing (bcut)…");
           transcript = await transcribeBcut(audio.path);
+        } else {
+          console.log(`  skipping bcut — lang=${opts.lang} is non-zh and no whisper backend configured (wit setup local-asr / WHISPER_BASE_URL / GROQ_API_KEY / OPENAI_API_KEY)`);
         }
-        console.log(`  transcript: ${transcript.segments.length} segments (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+        if (transcript) console.log(`  transcript: ${transcript.segments.length} segments (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
       } catch (e) {
-        console.log(`  transcription failed: ${(e as Error).message}${engineSegs.length ? " — using live-asr segments" : ""}`);
-        if (engineSegs.length)
+        console.log(`  transcription failed: ${(e as Error).message}`);
+        // last resort for zh/auto sessions: free bcut endpoint
+        if (!transcript && shouldUseBcut(opts.lang)) {
+          try { transcript = await transcribeBcut(audio.path); console.log(`  transcript: ${transcript.segments.length} segments (bcut fallback)`); }
+          catch (e2) { console.log(`  bcut fallback failed: ${(e2 as Error).message}`); }
+        }
+        if (!transcript && engineSegs.length) {
+          console.log("  — using live-asr segments");
           transcript = { model: liveAsr?.name ?? "live-asr", segments: engineSegs, words: [], text: engineSegs.map(s => s.text).join(" ") };
+        }
       }
     }
 

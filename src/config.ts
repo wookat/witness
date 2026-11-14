@@ -2,8 +2,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AsrChoice } from "./live-asr.js";
+import type { LocalAsrCfg } from "./local-asr.js";
 
-export interface WitConfig { asr?: AsrChoice }
+export interface WitConfig { asr?: AsrChoice; localAsr?: LocalAsrCfg }
 
 const path = () => join(process.cwd(), ".witness", "config.json");
 

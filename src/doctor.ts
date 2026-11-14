@@ -56,16 +56,24 @@ async function checkAsr() {
 
 async function checkTranscribe() {
   console.log("post-session transcription");
-  if (hasTranscriber()) {
-    const which = process.env.WHISPER_BASE_URL ? `WHISPER_BASE_URL (${process.env.WHISPER_MODEL ?? "default model"})`
-      : process.env.GROQ_API_KEY ? "Groq whisper-large-v3-turbo"
-      : "OpenAI whisper-1";
-    ok(`configured: ${which}`);
-  } else {
-    warn("no API key — falls back to free bcut (zh-tuned, no word timestamps)");
-    info("better: set GROQ_API_KEY (free tier) or OPENAI_API_KEY, or WHISPER_BASE_URL for a local whisper.cpp server");
+  const la = await import("./local-asr.js");
+  const cfg = la.localAsrConfig();
+  if (cfg.baseUrl || cfg.port || cfg.model || cfg.enabled) {
+    const port = cfg.port ?? la.LOCAL_ASR_DEFAULT_PORT;
+    const base = cfg.baseUrl ?? `http://127.0.0.1:${port}/v1`;
+    info(`local-asr configured: ${cfg.model ?? la.LOCAL_ASR_DEFAULT_MODEL} @ ${base}`);
+    if (await la.probeEndpoint(base)) ok(`local endpoint reachable — audio stays on this machine`);
+    else warn(`local endpoint not reachable — start it: wit local-asr start (falls through to next backend)`);
+  }
+  if (process.env.WHISPER_BASE_URL) ok(`WHISPER_BASE_URL → ${process.env.WHISPER_BASE_URL} (model: ${process.env.WHISPER_MODEL ?? "whisper-1"})`);
+  if (process.env.GROQ_API_KEY) ok("GROQ_API_KEY → whisper-large-v3-turbo");
+  if (process.env.OPENAI_API_KEY) ok("OPENAI_API_KEY → whisper-1");
+  if (!hasTranscriber()) {
+    warn("no backend — falls back to free bcut for zh/auto sessions only");
+    info("recommended: `wit setup local-asr` (offline, multilingual, private) or set GROQ_API_KEY/OPENAI_API_KEY");
   }
   if (process.env.ZHIPU_API_KEY) ok("ZHIPU_API_KEY set — --correct / --associate available");
+  if (process.env.WIT_ASR_PROMPT) info(`WIT_ASR_PROMPT set — hotword bias for local ASR: "${process.env.WIT_ASR_PROMPT.slice(0, 60)}"`);
 }
 
 function checkEnv() {

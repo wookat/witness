@@ -42,11 +42,17 @@ doubao-web   best punctuation (default pick)
 doubao-ime   per-sentence timestamps, ITN digits
 sr           browser SpeechRecognition (offline)
 off          no live subtitles (final transcript only)</pre></Card>
-    <Card icon="shield" title="Optional keys &amp; env" d="60">Everything works with none of these — they're upgrades, not requirements:<pre style="margin-top:10px;font:12px/1.8 var(--mono)">OPENAI_API_KEY   whisper-1 word timestamps
-ZHIPU_API_KEY    GLM-4 say-correction + associate
-WIT_ASR          engine override for one run
-WIT_NO_BODIES=1  skip response-body capture
-WIT_CDP=&lt;port&gt;   expose CDP so an agent can drive
+    <Card icon="shield" title="Optional keys &amp; env" d="60">Everything works with none of these — they're upgrades, not requirements:<pre style="margin-top:10px;font:12px/1.8 var(--mono)">wit setup local-asr   offline whisper backend
+                 (uv + faster-whisper, ~500MB,
+                 127.0.0.1:8791, any language)
+WHISPER_BASE_URL  any OpenAI-compatible STT endpoint
+GROQ_API_KEY      whisper-large-v3-turbo
+OPENAI_API_KEY    whisper-1 word timestamps
+WIT_ASR_PROMPT    hotword bias for local ASR
+ZHIPU_API_KEY     GLM-4 say-correction + associate
+WIT_ASR           engine override for one run
+WIT_NO_BODIES=1   skip response-body capture
+WIT_CDP=&lt;port&gt;    expose CDP so an agent can drive
                  the recorded browser as the tester</pre></Card>
   </div>
 </div></section>
@@ -78,7 +84,9 @@ wit correct &lt;dir&gt;      LLM polish (verbatim kept)
 wit associate &lt;dir&gt;    LLM picks evidence per SAY
 wit recover &lt;dir&gt;      rebuild after a crash
 wit mcp [dir]          serve evidence over MCP
-wit config asr …       engine: auto|doubao-web|doubao-ime|sr|off</pre></Card>
+wit config asr …       engine: auto|doubao-web|doubao-ime|sr|off
+wit setup local-asr    install offline whisper backend
+wit local-asr …        start | stop | status</pre></Card>
   </div>
 </div></section>
 

@@ -81,7 +81,7 @@ wit start <url> [--lang en-US] [--duration 60] [--no-rr] [--associate]
                 [--shot-format jpeg|webp] [--dsf 1|2] [--keyframes]
 wit list                          # sessions with url/duration/say count
 wit open latest                   # open review.html
-wit transcribe <dir>              # re-run cloud ASR
+wit transcribe <dir>              # re-run transcription (local ASR → keys → bcut)
 wit correct <dir>                 # re-run LLM text polish
 wit associate <dir>               # LLM picks relevant evidence per SAY (ZHIPU_API_KEY)
 wit recover <dir>                 # rebuild artifacts after a crash
@@ -90,7 +90,19 @@ wit keyframes <dir>               # render rrweb → per-segment keyframe jpgs
 wit doctor                        # preflight: browser / live-ASR / keys / dirs
 wit mcp [dir]                     # stdio MCP server over the evidence
 wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
+wit setup local-asr               # install local whisper backend (offline, private)
+wit local-asr start|stop|status   # manage the local ASR server (127.0.0.1:8791)
 ```
+
+### Local transcription — `wit setup local-asr`
+
+One command installs a fully offline whisper backend: `uv` (standalone, no admin) →
+faster-whisper (CT2) → multilingual model (`small` default ≈500MB; `--model tiny|base|small|medium|large|turbo`
+or any faster-whisper HF repo). Then `wit local-asr start` serves an OpenAI-compatible
+`/v1/audio/transcriptions` on `127.0.0.1:8791` — every `wit start` / `wit transcribe` picks it up
+automatically and falls through to your API keys or bcut if it's down. Works for any of whisper's
+~99 languages; `WIT_ASR_PROMPT="…"` adds hotword bias. Already running speaches / whisper.cpp server /
+vLLM? Set `localAsr.baseUrl` in `.witness/config.json` instead.
 
 ## The evidence package — `.witness/sessions/<ts>_<host>/`
 
@@ -129,8 +141,10 @@ audio.webm / transcript.json
 - **Evidence ≠ intent** — behavior without a spoken anchor is never presented as a bug.
 - **Local-first** — deterministic recording; live SAY subtitles stream through free cloud ASR
   (`auto` = doubao-web → doubao-ime → browser SR fallback — pick via `wit config asr`, `--asr`, `WIT_ASR`, or the
-  `get_asr`/`set_asr` MCP tools); final transcript falls back to bcut (bilibili editor ASR, no key needed)
-  when no OPENAI key is set. LLM layers are optional.
+  `get_asr`/`set_asr` MCP tools). Final transcript chain: `WHISPER_BASE_URL` → **local whisper**
+  (`wit setup local-asr` — offline, multilingual, audio never leaves the machine) → Groq → OpenAI →
+  bcut (zh-tuned free endpoint, zh/auto sessions only). `WIT_ASR_PROMPT` biases the local engine toward
+  your product names and error codes. LLM layers are optional.
 - **Privacy engineered in** — password/OTP/credit-card fields masked across four channels, credential fields redacted in POST bodies,
   `WIT_NO_BODIES=1` disables body capture, `P` freezes everything, `.witness/` is auto-gitignored.
   `--lang` now reaches every ASR stage (browser SR, doubao live, whisper post-session).

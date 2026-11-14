@@ -72,7 +72,7 @@ wit start <url> [--lang en-US] [--duration 60] [--no-rr] [--associate]
                 [--shot-format jpeg|webp] [--dsf 1|2] [--keyframes]
 wit list                          # sessions 列表（url/时长/say 数）
 wit open latest                   # 打开 review.html
-wit transcribe <dir>              # 重跑云端转写
+wit transcribe <dir>              # 重跑转写（本地ASR → 密钥 → bcut）
 wit correct <dir>                 # 重跑 LLM 纠错
 wit associate <dir>               # LLM 给每段语音挑相关证据（需 ZHIPU_API_KEY）
 wit recover <dir>                 # 崩溃后从 events.jsonl 重建产物
@@ -81,7 +81,19 @@ wit keyframes <dir>               # rrweb → 每段关键帧 jpg（agent 可读
 wit doctor                        # 体检：浏览器/实时ASR/密钥/目录可写性
 wit mcp [dir]                     # stdio MCP server
 wit config asr <engine>           # 实时 ASR：auto|doubao-web|doubao-ime|sr|off
+wit setup local-asr               # 安装本地 whisper 转写（离线、隐私、多语言）
+wit local-asr start|stop|status   # 管理本地 ASR 服务（127.0.0.1:8791）
 ```
+
+### 本地转写 —— `wit setup local-asr`
+
+一条命令装好全离线 whisper 后端：`uv`（独立二进制，免管理员）→ faster-whisper (CT2) →
+多语言模型（默认 `small` ≈500MB；`--model tiny|base|small|medium|large|turbo` 或任意
+faster-whisper HF 仓库）。然后 `wit local-asr start` 在 `127.0.0.1:8791` 起一个
+OpenAI 兼容的 `/v1/audio/transcriptions`——之后每次 `wit start` / `wit transcribe`
+自动优先使用它，挂了自动回落到 API key 或 bcut。覆盖 whisper 支持的 ~99 种语言；
+`WIT_ASR_PROMPT="…"` 可注入热词偏置。已经在跑 speaches / whisper.cpp server / vLLM？
+直接在 `.witness/config.json` 里配 `localAsr.baseUrl` 即可。
 
 ## 证据包 `.witness/sessions/<ts>_<host>/`
 
@@ -118,7 +130,7 @@ audio.webm / transcript.json
 
 - **证据不改写**——原话原样落盘；合并/纠错/关联只是展示层建议。
 - **证据 ≠ 意图**——没有语音锚点的行为不会被当成 bug 汇报。
-- **本地优先**——默认确定性记录；实时字幕走免费云端流式 ASR（`auto` = doubao-web → doubao-ime → 浏览器 SR 兜底，`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）；LLM 全是可选层。
+- **本地优先**——默认确定性记录；实时字幕走免费云端流式 ASR（`auto` = doubao-web → doubao-ime → 浏览器 SR 兜底，`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）。最终转写链：`WHISPER_BASE_URL` → **本地 whisper**（`wit setup local-asr`，离线、多语言、音频不出本机）→ Groq → OpenAI → bcut（仅 zh/auto 会话）。`WIT_ASR_PROMPT` 给本地引擎加热词偏置。LLM 全是可选层。
 - **隐私内置**——密码/OTP/信用卡字段四通道打码；POST 体凭证字段脱敏；`WIT_NO_BODIES=1` 关响应体；`P` 全冻结；`.witness/` 自动 gitignore。`--lang` 现已贯通全部 ASR 环节（浏览器 SR、豆包实时、whisper 后转写）。
 - **匿名使用统计**——CLI 每条命令发一次匿名 ping（命令名、版本、系统架构、Node 主版本；绝不含 URL、路径或录制内容），走自己的 Cloudflare Worker，不经过任何第三方分析服务。`WIT_TELEMETRY=0` 可关。
 

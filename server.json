@@ -3,7 +3,7 @@
   "name": "io.github.wookat/witness",
   "title": "Witness",
   "description": "Voice-anchored evidence recorder for AI coding agents.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "websiteUrl": "https://witness.zalize.com",
   "repository": {
     "url": "https://github.com/wookat/witness",
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "identifier": "witness-recorder",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "transport": {
         "type": "stdio"
       },

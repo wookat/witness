@@ -11,6 +11,7 @@ Witness solves the gap between what a user sees ("this button does nothing", "th
 - Stop with the ■ toolbar button, Alt+Shift+R, or Ctrl+C → a local bundle lands in `.witness/sessions/<timestamp>_<host>/`
 - `wit mcp [sessionDir]` — stdio MCP server exposing the evidence (14 tools)
 - `wit doctor` — preflight checks: browser, live-ASR reachability, transcription keys, sessions dir
+- `wit setup local-asr` + `wit local-asr start` — optional offline multilingual whisper backend (uv + faster-whisper, ~500MB model, 127.0.0.1:8791, OpenAI-compatible)
 - Gestures: Ctrl+click mark · M inspect mode (hover-pick or drag-lasso) · N new issue boundary · P pause/resume · Esc leave inspect
 
 ## Evidence bundle (English-first agent artifacts, verbatim user speech)
@@ -28,7 +29,7 @@ session_overview · list_segments · segment_detail · list_says · session_md �
 
 ## Speech pipeline
 
-Live captions: `auto` falls through doubao-web → doubao-ime → browser SpeechRecognition (`--asr sr|doubao-web|doubao-ime|off`, `WIT_ASR`, `wit config asr`). `--lang <bcp47>` propagates end-to-end: browser SR, doubao live ASR, and whisper post-session transcription. Final transcript: OpenAI whisper-1 with `OPENAI_API_KEY`, else free bcut fallback. Optional GLM correction/association with `ZHIPU_API_KEY` — display-layer only, raw speech is never rewritten or translated.
+Live captions: `auto` falls through doubao-web → doubao-ime → browser SpeechRecognition (`--asr sr|doubao-web|doubao-ime|off`, `WIT_ASR`, `wit config asr`). `--lang <bcp47>` propagates end-to-end: browser SR, doubao live ASR, and whisper post-session transcription. Final transcript chain: `WHISPER_BASE_URL` → local ASR (`wit setup local-asr` — offline multilingual whisper via bundled faster-whisper server on 127.0.0.1:8791, `wit local-asr start|stop|status`, `WIT_ASR_PROMPT` hotwords, `localAsr.baseUrl` for external OpenAI-compatible servers) → Groq → OpenAI → bcut (zh/auto sessions only). Optional GLM correction/association with `ZHIPU_API_KEY` — display-layer only, raw speech is never rewritten or translated.
 
 ## Privacy
 

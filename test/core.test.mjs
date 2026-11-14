@@ -236,3 +236,60 @@ test("review html: audio player + blocks data + no external deps", () => {
   assert.ok(html.includes('"frags"'));
   assert.ok(!html.includes("https://cdn."));
 });
+
+// ---------- local-asr / transcription provider chain ----------
+
+import { whisperLang, shouldUseBcut, hasTranscriber } from "../dist/transcribe.js";
+import { transcribeTargets, resolveModelPreset, MODEL_PRESETS, LOCAL_ASR_DEFAULT_MODEL } from "../dist/local-asr.js";
+
+test("whisperLang: BCP-47 → ISO-639-1, undefined stays undefined", () => {
+  assert.equal(whisperLang("zh-CN"), "zh");
+  assert.equal(whisperLang("en-US"), "en");
+  assert.equal(whisperLang("ko"), "ko");
+  assert.equal(whisperLang(undefined), undefined);
+  assert.equal(whisperLang(""), undefined);
+});
+
+test("shouldUseBcut: zh/auto allowed, explicit non-zh skipped", () => {
+  assert.equal(shouldUseBcut(undefined), true);
+  assert.equal(shouldUseBcut("zh-CN"), true);
+  assert.equal(shouldUseBcut("zh"), true);
+  assert.equal(shouldUseBcut("en-US"), false);
+  assert.equal(shouldUseBcut("ko-KR"), false);
+  assert.equal(shouldUseBcut("ja"), false);
+});
+
+test("resolveModelPreset: presets map to faster-whisper HF repos, raw ids pass through", () => {
+  assert.equal(resolveModelPreset("small"), "Systran/faster-whisper-small");
+  assert.equal(resolveModelPreset("TINY"), "Systran/faster-whisper-tiny");
+  assert.equal(resolveModelPreset("turbo"), "deepdml/faster-whisper-large-v3-turbo-ct2");
+  assert.equal(resolveModelPreset("vendor/custom-model"), "vendor/custom-model");
+  assert.equal(resolveModelPreset(undefined), LOCAL_ASR_DEFAULT_MODEL);
+  for (const id of Object.values(MODEL_PRESETS)) assert.ok(id.includes("/"), id);
+});
+
+test("transcribeTargets: WHISPER_BASE_URL env wins, then local config, then keys", () => {
+  const saved = { ...process.env };
+  try {
+    delete process.env.WHISPER_BASE_URL; delete process.env.GROQ_API_KEY; delete process.env.OPENAI_API_KEY;
+    const noEnv = transcribeTargets();
+    // local config in repo .witness/config.json may or may not exist — env part must be empty
+    assert.ok(!noEnv.some(t => t.baseURL.includes("groq") || t.baseURL.includes("openai.com")));
+
+    process.env.WHISPER_BASE_URL = "http://localhost:9999/v1/";
+    process.env.WHISPER_MODEL = "whisper-custom";
+    const withEnv = transcribeTargets();
+    assert.equal(withEnv[0].baseURL, "http://localhost:9999/v1"); // trailing slash stripped
+    assert.equal(withEnv[0].model, "whisper-custom");
+    assert.equal(withEnv[0].kind, "openai");
+
+    process.env.GROQ_API_KEY = "gsk_test";
+    const withGroq = transcribeTargets();
+    const groq = withGroq.find(t => t.baseURL.includes("groq"));
+    assert.equal(groq.model, "whisper-large-v3-turbo");
+    assert.equal(hasTranscriber(), true);
+  } finally {
+    for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
+    Object.assign(process.env, saved);
+  }
+});

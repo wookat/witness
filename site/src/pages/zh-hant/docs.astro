@@ -42,7 +42,13 @@ doubao-web   標點最好（預設首選）
 doubao-ime   句級時間戳、數字 ITN 更好
 sr           瀏覽器 SpeechRecognition（離線備援）
 off          不要即時字幕（只出終稿）</pre></Card>
-    <Card icon="shield" title="可選 key 與環境變數" d="60">一個都不配也能跑——這些是增強項不是必需項：<pre style="margin-top:10px;font:12px/1.8 var(--mono)">OPENAI_API_KEY   whisper-1 詞級時間戳
+    <Card icon="shield" title="可選 key 與環境變數" d="60">一個都不配也能跑——這些是增強項不是必需項：<pre style="margin-top:10px;font:12px/1.8 var(--mono)">wit setup local-asr  離線 whisper 後端
+                 （uv+faster-whisper，約500MB，
+                 127.0.0.1:8791，多語言）
+WHISPER_BASE_URL 任意 OpenAI 相容轉寫端點
+GROQ_API_KEY     whisper-large-v3-turbo
+OPENAI_API_KEY   whisper-1 詞級時間戳
+WIT_ASR_PROMPT   本地 ASR 熱詞偏置
 ZHIPU_API_KEY    GLM-4 糾錯 + 語義證據關聯
 WIT_ASR          單次錄製覆蓋引擎
 WIT_NO_BODIES=1  不抓回應體（敏感應用）
@@ -78,7 +84,9 @@ wit correct &lt;dir&gt;     LLM 潤飾（原文保留）
 wit associate &lt;dir&gt;   LLM 給每段話挑證據
 wit recover &lt;dir&gt;     崩潰重建
 wit mcp [dir]         MCP 服務拉證據
-wit config asr …      引擎：auto|doubao-web|doubao-ime|sr|off</pre></Card>
+wit config asr …      引擎：auto|doubao-web|doubao-ime|sr|off
+wit setup local-asr   安裝離線 whisper 後端
+wit local-asr …       start | stop | status</pre></Card>
   </div>
 </div></section>
 

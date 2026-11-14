@@ -42,7 +42,13 @@ doubao-web   句読点がいちばん良い（既定の選択）
 doubao-ime   文ごとのタイムスタンプ、数字 ITN が得意
 sr           ブラウザ SpeechRecognition（オフライン）
 off          ライブ字幕なし（最終文字起こしのみ）</pre></Card>
-    <Card icon="shield" title="任意のキーと環境変数" d="60">全部なくても動きます——これらは必須ではなく強化オプション：<pre style="margin-top:10px;font:12px/1.8 var(--mono)">OPENAI_API_KEY   whisper-1 単語タイムスタンプ
+    <Card icon="shield" title="任意のキーと環境変数" d="60">全部なくても動きます——これらは必須ではなく強化オプション：<pre style="margin-top:10px;font:12px/1.8 var(--mono)">wit setup local-asr  オフライン whisper バックエンド
+                 （uv+faster-whisper、約500MB、
+                 127.0.0.1:8791、多言語対応）
+WHISPER_BASE_URL 任意の OpenAI 互換 STT エンドポイント
+GROQ_API_KEY     whisper-large-v3-turbo
+OPENAI_API_KEY   whisper-1 単語タイムスタンプ
+WIT_ASR_PROMPT   ローカル ASR のホットワード
 ZHIPU_API_KEY    GLM-4 発話訂正 + エビデンス関連付け
 WIT_ASR          その実行だけエンジン上書き
 WIT_NO_BODIES=1  レスポンスボディを取らない
@@ -78,7 +84,9 @@ wit correct &lt;dir&gt;     LLM 仕上げ（原文は保持）
 wit associate &lt;dir&gt;   LLM が各 SAY にエビデンスを選択
 wit recover &lt;dir&gt;     クラッシュ後に再構築
 wit mcp [dir]         MCP 経由でエビデンスを提供
-wit config asr …      エンジン：auto|doubao-web|doubao-ime|sr|off</pre></Card>
+wit config asr …      エンジン：auto|doubao-web|doubao-ime|sr|off
+wit setup local-asr   オフライン whisper バックエンドを導入
+wit local-asr …       start | stop | status</pre></Card>
   </div>
 </div></section>
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0 — local-first transcription for every user
+
+### Added
+- **`wit setup local-asr`** — one-command local whisper backend: bootstraps `uv` (standalone binary, no admin), runs faster-whisper through PEP-723-managed python, downloads a multilingual CT2 model (default `small`; presets `tiny|base|small|medium|large|turbo` or any faster-whisper HF repo id), writes `.witness/config.json`. Audio never leaves the machine.
+- **`wit local-asr start|stop|status`** — manage the bundled OpenAI-compatible server (`local-asr/server.py` ships in the npm package; binds 127.0.0.1:8791; `/health`, `/v1/models`, `/v1/audio/transcriptions` with word timestamps, VAD filter, language passthrough).
+- **Transcription provider chain** — `WHISPER_BASE_URL` env → local ASR → Groq → OpenAI; unreachable candidates are skipped automatically. Both stop-time and `wit transcribe <dir>` use it.
+- **`WIT_ASR_PROMPT`** — initial-prompt hotword bias for the local engine (product names, error codes, jargon).
+- **`config.localAsr.baseUrl`** — point at any OpenAI-compatible server (speaches, whisper.cpp server, vLLM) instead of the bundled one.
+- **bcut fallback is language-gated** — the free zh-tuned endpoint only runs for zh/auto sessions; explicit `--lang en|ko|ja|…` without a whisper backend skips it rather than emitting garbage.
+
+### Changed
+- `hasTranscriber()` now counts local-ASR config; `wit doctor` reports local endpoint reachability, configured model, and `WIT_ASR_PROMPT`.
+- Stop-time flow is now: whisper chain → (zh/auto only) bcut → live-ASR segments, each step logged.
+
 ## 0.4.0 — evidence depth & accuracy
 
 ### Fixed
