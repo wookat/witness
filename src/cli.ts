@@ -172,6 +172,9 @@ program
       console.log("local-asr =", la ? `${la.model ?? "small"} @ ${la.baseUrl ?? `127.0.0.1:${la.port ?? 8791}`} ${la.enabled === false ? "(disabled)" : "(enabled)"}` : "not configured — `wit setup local-asr`");
       if (c.asrPrompt) console.log(`asr-prompt = "${c.asrPrompt}"`);
       console.log("engines:", ASR_ENGINES.join(" | "));
+      const { configPaths } = await import("./config.js");
+      const p = configPaths();
+      console.log(`files: global ${p.global} · project ${p.project}`);
       console.log("set: wit config asr|lang|asr-prompt <value>  ·  one-off: wit start --asr/--lang  ·  env: WIT_ASR / WIT_ASR_PROMPT  ·  wizard: wit init");
       return;
     }
