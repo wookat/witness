@@ -75,14 +75,14 @@ program
     const eventsPath = join(dir, "events.jsonl");
     if (!existsSync(audioPath) || !existsSync(eventsPath)) { console.log("missing audio.webm or events.jsonl in " + dir); return; }
     const s = await loadSession(dir);
-    const { hasTranscriber, shouldUseBcut, withTranscribeProgress } = await import("./transcribe.js");
+    const { hasTranscriber, shouldUseFreeCloud, withTranscribeProgress } = await import("./transcribe.js");
     let t;
     if (hasTranscriber()) {
       console.log("transcribing (whisper chain)…");
       t = await withTranscribeProgress(transcribe(audioPath, { language: s.meta.lang }), (s.meta as { durationMs?: number }).durationMs);
-    } else if (shouldUseBcut(s.meta.lang)) {
-      console.log("transcribing (bcut)…");
-      t = await (await import("./bcut.js")).transcribeBcut(audioPath);
+    } else if (shouldUseFreeCloud(s.meta.lang)) {
+      console.log("transcribing (free cloud: doubao → bcut)…");
+      t = await (await import("./free-cloud.js")).transcribeFreeCloud(audioPath, s.meta.lang);
     } else {
       console.log(`no backend for lang=${s.meta.lang} — run \`wit setup local-asr\` or set WHISPER_BASE_URL/GROQ_API_KEY/OPENAI_API_KEY`);
       return;

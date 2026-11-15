@@ -7,8 +7,8 @@ import { PAGE_SCRIPT } from "./page-script.js";
 import { AudioSink } from "./audio.js";
 import { Shots } from "./shots.js";
 import { wireNetwork } from "./network.js";
-import { transcribe, hasTranscriber, shouldUseBcut, withTranscribeProgress, type Transcript } from "./transcribe.js";
-import { transcribeBcut } from "./bcut.js";
+import { transcribe, hasTranscriber, shouldUseFreeCloud, withTranscribeProgress, type Transcript } from "./transcribe.js";
+import { transcribeFreeCloud } from "./free-cloud.js";
 import { openLiveAsr, type LiveAsrSession, type AsrChoice } from "./live-asr.js";
 
 /** Replace any `microphone=…` directive in a Permissions-Policy value with `microphone=(self)`. */
@@ -307,19 +307,19 @@ export async function record(opts: RecOptions) {
         if (hasTranscriber()) {
           console.log("  transcribing (whisper chain)…");
           transcript = await withTranscribeProgress(transcribe(audio.path, { language: opts.lang }), audioMs);
-        } else if (shouldUseBcut(opts.lang)) {
-          console.log("  transcribing (bcut)…");
-          transcript = await transcribeBcut(audio.path);
+        } else if (shouldUseFreeCloud(opts.lang)) {
+          console.log("  transcribing (free cloud: doubao → bcut)…");
+          transcript = await transcribeFreeCloud(audio.path, opts.lang);
         } else {
-          console.log(`  skipping bcut — lang=${opts.lang} is non-zh and no whisper backend configured (wit setup local-asr / WHISPER_BASE_URL / GROQ_API_KEY / OPENAI_API_KEY)`);
+          console.log(`  skipping free cloud — lang=${opts.lang} is non-zh and no whisper backend configured (wit setup local-asr / WHISPER_BASE_URL / GROQ_API_KEY / OPENAI_API_KEY)`);
         }
         if (transcript) console.log(`  transcript: ${transcript.segments.length} segments (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
       } catch (e) {
         console.log(`  transcription failed: ${(e as Error).message}`);
-        // last resort for zh/auto sessions: free bcut endpoint
-        if (!transcript && shouldUseBcut(opts.lang)) {
-          try { transcript = await transcribeBcut(audio.path); console.log(`  transcript: ${transcript.segments.length} segments (bcut fallback)`); }
-          catch (e2) { console.log(`  bcut fallback failed: ${(e2 as Error).message}`); }
+        // last resort for zh/auto sessions: free cloud endpoints
+        if (!transcript && shouldUseFreeCloud(opts.lang)) {
+          try { transcript = await transcribeFreeCloud(audio.path, opts.lang); console.log(`  transcript: ${transcript.segments.length} segments (free-cloud fallback)`); }
+          catch (e2) { console.log(`  free-cloud fallback failed: ${(e2 as Error).message}`); }
         }
         if (!transcript && engineSegs.length) {
           console.log("  — using live-asr segments");

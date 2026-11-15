@@ -239,7 +239,7 @@ test("review html: audio player + blocks data + no external deps", () => {
 
 // ---------- local-asr / transcription provider chain ----------
 
-import { whisperLang, shouldUseBcut, hasTranscriber } from "../dist/transcribe.js";
+import { whisperLang, shouldUseFreeCloud, hasTranscriber } from "../dist/transcribe.js";
 import { transcribeTargets, resolveModelPreset, MODEL_PRESETS, LOCAL_ASR_DEFAULT_MODEL } from "../dist/local-asr.js";
 
 test("whisperLang: BCP-47 → ISO-639-1, undefined stays undefined", () => {
@@ -250,13 +250,13 @@ test("whisperLang: BCP-47 → ISO-639-1, undefined stays undefined", () => {
   assert.equal(whisperLang(""), undefined);
 });
 
-test("shouldUseBcut: zh/auto allowed, explicit non-zh skipped", () => {
-  assert.equal(shouldUseBcut(undefined), true);
-  assert.equal(shouldUseBcut("zh-CN"), true);
-  assert.equal(shouldUseBcut("zh"), true);
-  assert.equal(shouldUseBcut("en-US"), false);
-  assert.equal(shouldUseBcut("ko-KR"), false);
-  assert.equal(shouldUseBcut("ja"), false);
+test("shouldUseFreeCloud: zh/auto allowed, explicit non-zh skipped", () => {
+  assert.equal(shouldUseFreeCloud(undefined), true);
+  assert.equal(shouldUseFreeCloud("zh-CN"), true);
+  assert.equal(shouldUseFreeCloud("zh"), true);
+  assert.equal(shouldUseFreeCloud("en-US"), false);
+  assert.equal(shouldUseFreeCloud("ko-KR"), false);
+  assert.equal(shouldUseFreeCloud("ja"), false);
 });
 
 test("resolveModelPreset: presets map to faster-whisper HF repos, raw ids pass through", () => {

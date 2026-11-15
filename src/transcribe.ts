@@ -77,8 +77,8 @@ export async function withTranscribeProgress<T>(p: Promise<T>, audioMs?: number)
   try { return await p; } finally { clearInterval(iv); process.stdout.write("\n"); }
 }
 
-/** bcut is a zh-tuned free endpoint — skip it when the user explicitly asked for another language. */
-export function shouldUseBcut(lang?: string): boolean {
+/** the free cloud chain (doubao/bcut) is zh-tuned — skip it when the user explicitly asked for another language. */
+export function shouldUseFreeCloud(lang?: string): boolean {
   const primary = whisperLang(lang);
   return !primary || primary === "zh";
 }
