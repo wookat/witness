@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.2 — config wizard & global/project config split
+
+### Added
+- **`wit init`** — interactive 4-step wizard: default language → live ASR engine menu → local whisper offer → ASR hotwords. One command, writes config, done.
+
+### Fixed
+- **Config silently lost outside the project dir** — machine-level settings (localAsr endpoint, model paths, asr engine, lang) lived in `<cwd>/.witness/config.json`, so running `wit` anywhere else silently fell back to bcut/auto. Now split: `~/.witness/config.json` (global user prefs) merged under `<cwd>/.witness/config.json` (project overrides, e.g. `asrPrompt` domain vocab). `lang` is now persistable via `wit config lang`.
+
 ## 0.6.1 — Permissions-Policy mic fix (#7)
 
 ### Fixed
