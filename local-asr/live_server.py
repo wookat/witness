@@ -57,23 +57,12 @@ async def live(ws: WebSocket):
                 break
             data = msg.get("bytes")
             if data is None:
-                continue
-            if isinstance(data, (bytes, bytearray)) and len(data) >= 2:
-                samples = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
-                stream.accept_waveform(SAMPLE_RATE, samples)
-                while rec.is_ready(stream):
-                    rec.decode_stream(stream)
-                text = rec.get_result(stream)
-                if text:
-                    await ws.send_text(json.dumps({"type": "partial", "text": text}))
-                if rec.is_endpoint(stream):
-                    final = rec.get_result(stream)
-                    await ws.send_text(json.dumps({"type": "final", "text": final}))
-                    rec.reset(stream)
-            else:
-                # JSON control frame: {"type":"eof"} flushes and closes
+                # text control frame: {"type":"eof"} flushes and closes
+                raw = msg.get("text")
+                if raw is None:
+                    continue
                 try:
-                    ctrl = json.loads(data if isinstance(data, str) else data.decode())
+                    ctrl = json.loads(raw)
                 except Exception:
                     ctrl = {}
                 if ctrl.get("type") == "eof":
@@ -82,6 +71,20 @@ async def live(ws: WebSocket):
                     final = rec.get_result(stream)
                     await ws.send_text(json.dumps({"type": "final", "text": final}))
                     break
+                continue
+            if len(data) < 2:
+                continue
+            samples = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
+            stream.accept_waveform(SAMPLE_RATE, samples)
+            while rec.is_ready(stream):
+                rec.decode_stream(stream)
+            text = rec.get_result(stream)
+            if text:
+                await ws.send_text(json.dumps({"type": "partial", "text": text}))
+            if rec.is_endpoint(stream):
+                final = rec.get_result(stream)
+                await ws.send_text(json.dumps({"type": "final", "text": final}))
+                rec.reset(stream)
     except WebSocketDisconnect:
         pass
     finally:

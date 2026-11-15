@@ -275,7 +275,7 @@ program
     if (action === "live") {
       const verb = sub ?? "status";
       if (verb === "setup") {
-        console.log("\nsetting up local live ASR (sherpa-onnx streaming zipformer, zh+en, ~90MB)…\n");
+        console.log("\nsetting up local live ASR (sherpa-onnx streaming zipformer, zh+en, ~190MB)…\n");
         const r = await la.startLiveAsr();
         console.log(`\n✔ local live ASR ready → ws://127.0.0.1:${r.port}/live (pid ${r.pid})`);
         console.log(`  model : ${r.modelDir}`);

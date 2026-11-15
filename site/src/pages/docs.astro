@@ -37,18 +37,24 @@ wit --version</Term>
   <div class="kicker">02 · Configure</div>
   <h2 class="rv">Zero-config by default; switches when you want them.</h2>
   <div class="grid g2" style="margin-top:34px">
-    <Card icon="mic" title="Live ASR engine" d="0"><code>wit config asr</code> persists to the project's <code>.witness/config.json</code>; <code>--asr</code> / <code>WIT_ASR</code> override per run. Agents can flip it live via the <code>set_asr</code> MCP tool.<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
+    <Card icon="mic" title="Live ASR engine" d="0"><code>wit config asr</code> persists to the project's <code>.witness/config.json</code>; <code>--asr</code> / <code>WIT_ASR</code> override per run. Agents can flip it live via the <code>set_asr</code> MCP tool.<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         local → doubao-web → doubao-ime → sr
 doubao-web   best punctuation (default pick)
 doubao-ime   per-sentence timestamps, ITN digits
+local        offline sherpa-onnx live captions
+             (wit local-asr live setup, zh+en)
 sr           browser SpeechRecognition (offline)
 off          no live subtitles (final transcript only)</pre></Card>
     <Card icon="shield" title="Optional keys &amp; env" d="60">Everything works with none of these — they're upgrades, not requirements:<pre style="margin-top:10px;font:12px/1.8 var(--mono)">wit setup local-asr   offline whisper backend
                  (uv + faster-whisper, ~500MB,
                  127.0.0.1:8791, any language)
+wit local-asr live setup
+                 offline LIVE captions (sherpa-onnx,
+                 zh+en streaming, ~190MB)
 WHISPER_BASE_URL  any OpenAI-compatible STT endpoint
 GROQ_API_KEY      whisper-large-v3-turbo
 OPENAI_API_KEY    whisper-1 word timestamps
 WIT_ASR_PROMPT    hotword bias for local ASR
+                 (or: wit config asr-prompt …)
 ZHIPU_API_KEY     GLM-4 say-correction + associate
 WIT_ASR           engine override for one run
 WIT_NO_BODIES=1   skip response-body capture
@@ -84,9 +90,10 @@ wit correct &lt;dir&gt;      LLM polish (verbatim kept)
 wit associate &lt;dir&gt;    LLM picks evidence per SAY
 wit recover &lt;dir&gt;      rebuild after a crash
 wit mcp [dir]          serve evidence over MCP
-wit config asr …       engine: auto|doubao-web|doubao-ime|sr|off
+wit config asr …       engine: auto|local|doubao-web|doubao-ime|sr|off
+wit config asr-prompt …  persist ASR hotwords
 wit setup local-asr    install offline whisper backend
-wit local-asr …        start | stop | status</pre></Card>
+wit local-asr …        start | stop | status | models … | live …</pre></Card>
   </div>
 </div></section>
 
@@ -113,7 +120,7 @@ wit local-asr …        start | stop | status</pre></Card>
   <div class="grid g3" style="margin-top:30px">
     <Card icon="file" title="PROMPT.md" d="0">The paste-this-to-your-agent doc. Teaches it the format: causal-burst indentation, "no aftermath = evidence", component chains, never infer intent without a SAY.</Card>
     <Card icon="clock" title="session.md" d="40">The evidence timeline. Each <code>SAY</code> block carries your verbatim words plus what the page did at that second.</Card>
-    <Card icon="api" title="wit mcp" d="80">Serves the session over stdio MCP — 14 tools: <code>list_segments</code> · <code>segment_detail</code> · <code>session_overview</code> · <code>list_says</code> · <code>session_md</code> · <code>events_around</code> · <code>get_errors</code> · <code>get_shot</code> · <code>get_dom_state</code> · <code>get_body</code> · <code>get_transcript</code> · <code>search_events</code> · <code>get_asr</code> · <code>set_asr</code>.</Card>
+    <Card icon="api" title="wit mcp" d="80">Serves the session over stdio MCP — 15 tools: <code>list_segments</code> · <code>segment_detail</code> · <code>session_overview</code> · <code>list_says</code> · <code>session_md</code> · <code>events_around</code> · <code>get_errors</code> · <code>get_shot</code> · <code>get_dom_state</code> · <code>get_body</code> · <code>get_audio</code> · <code>get_transcript</code> · <code>search_events</code> · <code>get_asr</code> · <code>set_asr</code>.</Card>
   </div>
 </div></section>
 

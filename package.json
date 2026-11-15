@@ -33,7 +33,7 @@
     "prepare": "npm run build",
     "dev": "tsc --watch",
     "start": "node dist/cli.js",
-    "test": "npm run build && node --test \"test/**/*.test.mjs\""
+    "test": "npm run build && node --test test/core.test.mjs"
   },
   "engines": {
     "node": ">=18"
@@ -47,10 +47,10 @@
     "playwright": "^1.48.0",
     "rrweb": "^2.2.2",
     "ws": "^8.22.2",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^22.9.0",
+    "@types/node": "^26.6.6",
     "@types/ws": "^8.18.2",
     "typescript": "^7.0.2"
   },

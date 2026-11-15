@@ -331,26 +331,34 @@ export function liveModelReady(dir = liveModelDir()): boolean {
   return existsSync(join(dir, "encoder.int8.onnx")) && existsSync(join(dir, "tokens.txt"));
 }
 
-/** Download the streaming model (~90MB int8) — HF first, hf-mirror fallback. */
+/** Download the streaming model (~1190MB int8) — HF first, hf-mirror fallback. */
 export async function ensureLiveModel(log: (s: string) => void = console.log): Promise<string> {
   const dir = liveModelDir();
   if (liveModelReady(dir)) return dir;
   mkdirSync(dir, { recursive: true });
   const bases = ["https://huggingface.co", HF_MIRROR];
+  const curlBin = platform() === "win32" ? "curl.exe" : "curl";
   for (const [remote, local] of Object.entries(LIVE_FILES)) {
     const dest = join(dir, local);
     if (existsSync(dest) && statSync(dest).size > 0) continue;
     let ok = false;
     let lastErr = "";
     for (const base of bases) {
+      const url = `${base}/${LIVE_MODEL_REPO}/resolve/main/${remote}`;
       try {
         log(`  … ${remote} (${base.includes("mirror") ? "mirror" : "hf"})`);
-        const r = await fetch(`${base}/${LIVE_MODEL_REPO}/resolve/main/${remote}`, { signal: AbortSignal.timeout(120_000) });
+        const r = await fetch(url, { signal: AbortSignal.timeout(120_000) });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         writeFileSync(dest, Buffer.from(await r.arrayBuffer()));
         ok = true;
         break;
-      } catch (e) { lastErr = (e as Error).message; }
+      } catch (e) {
+        lastErr = (e as Error).message;
+        // undici fetch can fail where curl succeeds (proxy/DNS/redirect quirks) — fall back
+        const c = spawnSync(curlBin, ["-fSL", "--max-time", "300", "-o", dest, url], { stdio: "ignore" });
+        if (c.status === 0 && existsSync(dest) && statSync(dest).size > 0) { ok = true; break; }
+        lastErr += ` | curl: exit ${c.status ?? c.error?.message ?? "?"}`;
+      }
     }
     if (!ok) throw new Error(`live model download failed for ${remote}: ${lastErr}`);
   }
