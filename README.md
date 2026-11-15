@@ -61,6 +61,12 @@ No downloads, no API keys. System Edge/Chrome is preferred; bundled Chromium is 
 | `Esc` | Exit inspect mode |
 | `■` / `Alt+Shift+R` | Stop and finalize the evidence package |
 
+> Sites can forbid the mic document-wide via `Permissions-Policy: microphone=()` — the browser-level
+> permission grant can't override that, so the whole session would record with no audio. Witness
+> rewrites the `microphone` directive to `(self)` on document responses only (all other headers,
+> including duplicate `Set-Cookie`, pass through untouched). Pass `--no-mic-patch` to honor the
+> site's real policy.
+
 Non-password input values are captured verbatim (160 chars) — "I typed X and it broke" keeps X.
 WebSocket text frames are sampled for realtime apps; responses over 64KB keep their head (truncated, flagged).
 
@@ -78,7 +84,7 @@ that moment — dead clicks, mutations, errors — with linked shots and DOM sna
 
 ```bash
 wit start <url> [--lang en-US] [--duration 60] [--no-rr] [--associate]
-                [--shot-format jpeg|webp] [--dsf 1|2] [--keyframes]
+                [--shot-format jpeg|webp] [--dsf 1|2] [--keyframes] [--no-mic-patch]
 wit list                          # sessions with url/duration/say count
 wit open latest                   # open review.html
 wit transcribe <dir>              # re-run transcription (local ASR → keys → bcut)

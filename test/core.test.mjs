@@ -326,3 +326,14 @@ test("modelCacheDirName / installedModels shape", async () => {
   assert.ok(Array.isArray(la.installedModels()));
   assert.equal(la.liveModelReady("Z:/nonexistent-dir-xyz"), false);
 });
+
+// ---------- issue #7: Permissions-Policy mic rewrite ----------
+
+test("relaxMicPolicy: microphone directive → (self), others untouched", async () => {
+  const { relaxMicPolicy } = await import("../dist/recorder.js");
+  assert.equal(relaxMicPolicy("microphone=()"), "microphone=(self)");
+  assert.equal(relaxMicPolicy("camera=(), microphone=(), geolocation=()"), "camera=(), microphone=(self), geolocation=()");
+  assert.equal(relaxMicPolicy('microphone=(self "https://x.com"), camera=()'), "microphone=(self), camera=()");
+  assert.equal(relaxMicPolicy("geolocation=*, camera=()"), "geolocation=*, camera=()");
+  assert.equal(relaxMicPolicy("MICROPHONE=()"), "microphone=(self)");
+});

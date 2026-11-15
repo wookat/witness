@@ -45,6 +45,7 @@ program
   .option("--height <px>", "viewport height", "960")
   .option("--dsf <n>", "device pixel ratio for screenshots (1=default, 2=retina)", "1")
   .option("--shot-format <fmt>", "screenshot codec: jpeg|webp (jpeg=compat, webp=smaller)", "jpeg")
+  .option("--no-mic-patch", "honor the site's real Permissions-Policy mic rules (default rewrites them so recording works)")
   .action(async (url, o) => {
     await record({
       url,
@@ -55,6 +56,7 @@ program
       height: Number(o.height),
       dsf: Number(o.dsf),
       shotFormat: o.shotFormat === "webp" ? "webp" : "jpeg",
+      micPatch: o.micPatch,
       duration: o.duration ? Number(o.duration) : undefined,
       lang: o.lang,
       correct: !!o.correct,

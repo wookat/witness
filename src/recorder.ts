@@ -10,6 +10,11 @@ import { wireNetwork } from "./network.js";
 import { transcribe, hasTranscriber, shouldUseBcut, withTranscribeProgress, type Transcript } from "./transcribe.js";
 import { transcribeBcut } from "./bcut.js";
 import { openLiveAsr, type LiveAsrSession, type AsrChoice } from "./live-asr.js";
+
+/** Replace any `microphone=…` directive in a Permissions-Policy value with `microphone=(self)`. */
+export function relaxMicPolicy(value: string): string {
+  return value.replace(/microphone\s*=\s*[^,;]*/gi, "microphone=(self)");
+}
 import { resolveAsr } from "./config.js";
 import { align } from "./align.js";
 import { correctSays, hasCorrector } from "./correct.js";
@@ -33,6 +38,7 @@ export interface RecOptions {
   keyframes?: boolean;       // opt-in: render rrweb → per-segment keyframe jpgs after stop (slower finalize)
   shotFormat?: "jpeg" | "webp"; // screenshot codec — jpeg default (best agent compat), webp ~35% smaller
   dsf?: number;              // deviceScaleFactor — 1 default; 2 gives retina-sharp shots for human zoom
+  micPatch?: boolean;        // default true: rewrite Permissions-Policy on document responses so mic works (--no-mic-patch to honor the site's real policy)
 }
 
 const slug = (s: string) => s.replace(/^https?:\/\//, "").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
@@ -114,6 +120,27 @@ export async function record(opts: RecOptions) {
     ignoreHTTPSErrors: true,
   });
 
+  // Sites can forbid mic at the DOCUMENT level (Permissions-Policy: microphone=()) —
+  // the context grant above can't override it → getUserMedia throws NotAllowedError
+  // and the whole session records without audio. Rewrite document responses so the
+  // recorded page always permits its own microphone. Escape hatch: --no-mic-patch.
+  if (opts.micPatch !== false) {
+    await ctx.route("**/*", async route => {
+      if (route.request().resourceType() !== "document") return route.fallback();
+      try {
+        const response = await route.fetch();
+        // headers() is lower-cased; permissions-policy is single-value by spec.
+        // fulfill({response, headers}) overrides only the named header — everything
+        // else (incl. duplicate set-cookie) passes through byte-for-byte.
+        const pp = response.headers()["permissions-policy"];
+        if (pp == null) return route.fulfill({ response });
+        await route.fulfill({ response, headers: { "permissions-policy": relaxMicPolicy(pp) } });
+      } catch {
+        return route.fallback();
+      }
+    });
+  }
+
   let stopping = false;
   let transcript: Transcript | undefined;
   const stopFns: (() => void)[] = [];
@@ -131,6 +158,12 @@ export async function record(opts: RecOptions) {
     const page = src.page ?? lastPage; // the page that emitted — never the wrong tab
     if (e?.kind === "_ui" && e.action === "paused") paused = true;
     if (e?.kind === "_ui" && e.action === "resumed") paused = false;
+    // mic died in-page (denied or Permissions-Policy) — shout now, don't let the
+    // user discover an audio-less session at the end
+    if (e?.kind === "note" && (e as { tag?: string }).tag === "mic-denied") {
+      console.log(`\n\x1b[33m⚠ mic blocked — this session will have NO audio\x1b[0m (${String(e.text ?? "").replace(/^mic denied:\s*/i, "")})`);
+      console.log("  cause: page Permissions-Policy or a denied prompt. Witness already rewrites `microphone=` policies — if you passed --no-mic-patch that's why. To force a grant, allow the mic in the browser's site prompt.");
+    }
     if (e?.kind === "mark" && page) {
       const clip = e.region ? { x: e.region.x, y: e.region.y, width: e.region.w, height: e.region.h } : undefined;
       const p = await shots.at(page, "mark", clip).catch(() => null);
