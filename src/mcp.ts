@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -178,6 +178,31 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
       inputSchema: { path: z.string() },
     },
     async ({ path }) => text(await readFile(safe(path), "utf8")));
+
+  server.registerTool("get_audio",
+    {
+      description: "Session microphone audio (audio.webm, opus). Returns the whole recording inline when ≤15MB — use it to verify what the user actually said against the transcript. Larger files return the path+size instead; extract a time range locally with ffmpeg if needed",
+      inputSchema: {},
+    },
+    async () => {
+      const s = await load();
+      const audioPath = (s as any).audio ?? "audio.webm";
+      const p = safe(audioPath);
+      if (!existsSync(p)) return text("(no audio.webm in this session)");
+      const { size } = await stat(p);
+      const CAP = 15 * 1024 * 1024;
+      if (size > CAP) {
+        return text(`# ${audioPath}\nsize: ${(size / 1024 / 1024).toFixed(1)}MB — too large to return inline.\npath: ${p}\nExtract a segment locally, e.g.: ffmpeg -ss <sec> -t <dur> -i "${p}" clip.wav`);
+      }
+      const buf = await readFile(p);
+      return {
+        content: [{
+          type: "audio" as const,
+          data: buf.toString("base64"),
+          mimeType: /\.ogg$/i.test(audioPath) ? "audio/ogg" : "audio/webm",
+        }],
+      };
+    });
 
   server.registerTool("get_transcript",
     {

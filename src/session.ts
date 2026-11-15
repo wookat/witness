@@ -117,8 +117,9 @@ function groupBlocks(events: Ev[]): Block[] {
     const evs = events.filter(e =>
       e.kind !== "say" && e.kind !== "issue" && e.t >= r[0].segStart - 1500 && (next ? e.t < next.at - 1500 : true)
     );
+    const lowConf = r.some(s => s.lowConf);
     blocks.push({
-      head: r.length === 1 ? `SAY “${r[0].text}”` : "SAY",
+      head: (r.length === 1 ? `SAY “${r[0].text}”` : "SAY") + (lowConf ? " ⚠ low-confidence ASR" : ""),
       evs, at: r[0].segStart,
       frags: r.length > 1 ? r : undefined,
       says: r,
@@ -718,6 +719,7 @@ export function renderPrompt(sessionDir: string, events: Ev[] = [], issueCount =
     "4. For anything you can't fix, state the reason and the extra evidence needed in your report.",
     "",
     "Note: SAY lines are raw speech-recognition fragments (split on pauses); consecutive fragments may belong to one utterance. They contain colloquialisms and homophone errors — read for intent using the vocabulary below, not literally.",
+    "SAY blocks marked `⚠ low-confidence ASR` had low mean word-probability — the wording may be wrong; verify against shots/audio before quoting it as fact.",
     "`⏺ ISSUE #n` marks an issue boundary the user cut explicitly with the N key — speech and evidence between boundaries belong to the same issue.",
     "The paused/resumed window records nothing (the user deliberately froze evidence) — do not interpret that interval.",
     ...(vocab.length ? [`Page element text (to help read the transcript): ${vocab.join(" / ")}`] : []),

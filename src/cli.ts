@@ -73,11 +73,11 @@ program
     const eventsPath = join(dir, "events.jsonl");
     if (!existsSync(audioPath) || !existsSync(eventsPath)) { console.log("missing audio.webm or events.jsonl in " + dir); return; }
     const s = await loadSession(dir);
-    const { hasTranscriber, shouldUseBcut } = await import("./transcribe.js");
+    const { hasTranscriber, shouldUseBcut, withTranscribeProgress } = await import("./transcribe.js");
     let t;
     if (hasTranscriber()) {
       console.log("transcribing (whisper chain)…");
-      t = await transcribe(audioPath, { language: s.meta.lang });
+      t = await withTranscribeProgress(transcribe(audioPath, { language: s.meta.lang }), (s.meta as { durationMs?: number }).durationMs);
     } else if (shouldUseBcut(s.meta.lang)) {
       console.log("transcribing (bcut)…");
       t = await (await import("./bcut.js")).transcribeBcut(audioPath);
@@ -167,8 +167,9 @@ program
       console.log("asr =", c.asr ?? "auto", " (default)");
       const la = c.localAsr;
       console.log("local-asr =", la ? `${la.model ?? "small"} @ ${la.baseUrl ?? `127.0.0.1:${la.port ?? 8791}`} ${la.enabled === false ? "(disabled)" : "(enabled)"}` : "not configured — `wit setup local-asr`");
+      if (c.asrPrompt) console.log(`asr-prompt = "${c.asrPrompt}"`);
       console.log("engines:", ASR_ENGINES.join(" | "));
-      console.log("set: wit config asr <engine>  ·  one-off: wit start --asr <engine>  ·  env: WIT_ASR");
+      console.log("set: wit config asr <engine> · wit config asr-prompt <hotwords>  ·  one-off: wit start --asr <engine>  ·  env: WIT_ASR / WIT_ASR_PROMPT");
       return;
     }
     if (key === "asr") {
@@ -177,7 +178,14 @@ program
       console.log(`✔ asr = ${value} (persisted to .witness/config.json)`);
       return;
     }
-    console.log(`unknown key "${key}" — supported: asr`);
+    if (key === "asr-prompt" || key === "prompt") {
+      const v = (value ?? "").trim();
+      setConfig("asrPrompt", v); // "" clears — falsy downstream
+      if (v) console.log(`✔ asr-prompt = "${v}" (persisted — biases local whisper; env WIT_ASR_PROMPT overrides)`);
+      else console.log("✔ asr-prompt cleared");
+      return;
+    }
+    console.log(`unknown key "${key}" — supported: asr, asr-prompt`);
   });
 
 program
@@ -227,11 +235,11 @@ program
   });
 
 program
-  .command("local-asr <action>")
-  .description("manage the local ASR server: start | stop | status")
+  .command("local-asr <action> [sub] [name]")
+  .description("manage the local ASR server: start | stop | status | models [list|use|pull|rm <preset|hf-id>]")
   .option("--port <n>", "override port (start)")
   .option("--model <preset>", "override model preset/id (start)")
-  .action(async (action, o) => {
+  .action(async (action, sub, name, o) => {
     const la = await import("./local-asr.js");
     if (action === "start") {
       console.log("starting local ASR… (first run downloads python deps + model — be patient)\n");
@@ -264,7 +272,74 @@ program
       console.log(`server : ${h.ok ? "reachable" : "unreachable — start with: wit local-asr start"}`);
       return;
     }
-    console.log("usage: wit local-asr start|stop|status");
+    if (action === "live") {
+      const verb = sub ?? "status";
+      if (verb === "setup") {
+        console.log("\nsetting up local live ASR (sherpa-onnx streaming zipformer, zh+en, ~90MB)…\n");
+        const r = await la.startLiveAsr();
+        console.log(`\n✔ local live ASR ready → ws://127.0.0.1:${r.port}/live (pid ${r.pid})`);
+        console.log(`  model : ${r.modelDir}`);
+        console.log(`  use it: wit config asr local   (or --asr local per run; "auto" prefers it once installed)`);
+        console.log(`  note  : zh+en bilingual model — other languages still prefer doubao/sr`);
+        return;
+      }
+      if (verb === "stop") { console.log(la.stopLiveAsr() ? "✔ live ASR stopped" : "not running"); return; }
+      const ready = la.liveModelReady();
+      const alive = la.liveAsrPidAlive();
+      console.log(`model : ${la.liveModelDir()} ${ready ? "✓ downloaded" : "(not downloaded — wit local-asr live setup)"}`);
+      console.log(`server: ${alive ? "running" : "not running"} ${alive ? "" : "— start on demand via --asr local"}`);
+      console.log(`live?.enabled in config: ${la.localAsrConfig().live?.enabled ?? false}`);
+      return;
+    }
+    if (action === "models") {
+      const { setConfig } = await import("./config.js");
+      const verb = sub ?? "list";
+      const cfg = la.localAsrConfig();
+      const current = cfg.model ?? la.LOCAL_ASR_DEFAULT_MODEL;
+      const fmtMB = (b: number) => b ? `${(b / 1048576).toFixed(0)}MB` : "—";
+      if (verb === "list") {
+        const installed = new Set(la.installedModels());
+        console.log(`current : ${current}${la.modelInstalled(current) ? "" : "  (not downloaded yet)"}`);
+        console.log(`cache   : ${la.hfCacheHub()}`);
+        console.log(`\npresets:`);
+        for (const [alias, id] of Object.entries(la.MODEL_PRESETS)) {
+          const mark = id === current ? " ← active" : installed.has(id) ? " ✓" : "";
+          console.log(`  ${alias.padEnd(7)} ${id}${installed.has(id) ? `  (${fmtMB(la.modelDirSize(id))})` : ""}${mark}`);
+        }
+        const extra = [...installed].filter(id => !Object.values(la.MODEL_PRESETS).includes(id));
+        if (extra.length) {
+          console.log(`\nother cached models:`);
+          for (const id of extra) console.log(`  ${id}${id === current ? " ← active" : ""}  (${fmtMB(la.modelDirSize(id))})`);
+        }
+        console.log(`\n  use : wit local-asr models use <preset|hf-id>`);
+        console.log(`  pull: wit local-asr models pull <preset|hf-id>   (download without switching)`);
+        console.log(`  rm  : wit local-asr models rm <preset|hf-id>`);
+        return;
+      }
+      if (!name) { console.log(`usage: wit local-asr models ${verb} <preset|hf-id>`); return; }
+      const model = la.resolveModelPreset(name);
+      if (verb === "use") {
+        setConfig("localAsr", { ...cfg, enabled: true, model });
+        console.log(`✔ active model → ${model}`);
+        console.log(`  if the server is running, restart it: wit local-asr stop && wit local-asr start`);
+        if (!la.modelInstalled(model)) console.log(`  note: not in local cache yet — first transcription will download it`);
+        return;
+      }
+      if (verb === "pull") {
+        const uv = await la.ensureUv();
+        await la.warmLocalAsrModel(uv, model, console.log, cfg.hfEndpoint ?? process.env.HF_ENDPOINT);
+        console.log(`✔ ${model} ready`);
+        return;
+      }
+      if (verb === "rm") {
+        if (model === current) { console.log(`refusing to remove the active model (${model}) — switch first: wit local-asr models use <other>`); return; }
+        console.log(la.removeModel(model) ? `✔ removed ${model} from cache` : `${model} not in cache`);
+        return;
+      }
+      console.log(`usage: wit local-asr models list|use|pull|rm`);
+      return;
+    }
+    console.log("usage: wit local-asr start|stop|status|models [list|use|pull|rm <preset|hf-id>]");
   });
 
 program

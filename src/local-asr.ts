@@ -1,12 +1,12 @@
 /** Local ASR management: uv bootstrap, speaches-free faster-whisper server lifecycle, health probes. */
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, openSync, closeSync, writeSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, statSync, openSync, closeSync, writeSync } from "node:fs";
 import { homedir, platform, arch } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readConfig, setConfig } from "./config.js";
 
-export interface LocalAsrCfg { enabled?: boolean; port?: number; model?: string; baseUrl?: string; hfEndpoint?: string }
+export interface LocalAsrCfg { enabled?: boolean; port?: number; model?: string; baseUrl?: string; hfEndpoint?: string; live?: { enabled?: boolean; modelDir?: string } }
 
 export const LOCAL_ASR_DEFAULT_PORT = 8791;
 export const LOCAL_ASR_DEFAULT_MODEL = "Systran/faster-whisper-small";
@@ -59,6 +59,61 @@ export function transcribeTargets(): TranscribeTarget[] {
 export function hasLocalAsr(): boolean {
   const cfg = localAsrConfig();
   return !!(cfg.baseUrl || cfg.port || cfg.model || cfg.enabled === true);
+}
+
+// ---- model management: list / switch / download / remove ----
+
+/** huggingface_hub cache root (~/.cache/huggingface, overridable via HF_HOME). */
+export function hfCacheHub(): string {
+  const home = process.env.HF_HOME ?? join(homedir(), ".cache", "huggingface");
+  return join(home, "hub");
+}
+
+/** `Org/name` → `models--Org--name` cache dir name. */
+export function modelCacheDirName(modelId: string): string {
+  return "models--" + modelId.replace(/\//g, "--");
+}
+
+/** Repo ids present in the HF cache with at least one snapshot file. */
+export function installedModels(): string[] {
+  const hub = hfCacheHub();
+  if (!existsSync(hub)) return [];
+  const out: string[] = [];
+  for (const d of readdirSync(hub)) {
+    if (!d.startsWith("models--")) continue;
+    const snaps = join(hub, d, "snapshots");
+    try {
+      const ok = readdirSync(snaps).some(s => readdirSync(join(snaps, s)).length > 0);
+      if (ok) out.push(d.slice("models--".length).replace(/--/g, "/"));
+    } catch { /* partial download — skip */ }
+  }
+  return out.sort();
+}
+
+export function modelInstalled(modelId: string): boolean {
+  return installedModels().includes(modelId);
+}
+
+export function removeModel(modelId: string): boolean {
+  const p = join(hfCacheHub(), modelCacheDirName(modelId));
+  if (!existsSync(p)) return false;
+  rmSync(p, { recursive: true, force: true });
+  return true;
+}
+
+/** Rough on-disk size of a cached model dir (bytes), 0 if absent. */
+export function modelDirSize(modelId: string): number {
+  const p = join(hfCacheHub(), modelCacheDirName(modelId));
+  let total = 0;
+  const walk = (d: string) => {
+    for (const f of readdirSync(d, { withFileTypes: true })) {
+      const fp = join(d, f.name);
+      if (f.isDirectory()) walk(fp);
+      else { try { total += statSync(fp).size; } catch { /* locked file — skip */ } }
+    }
+  };
+  try { walk(p); } catch { /* absent */ }
+  return total;
 }
 
 /** GET {base}/models — true if an OpenAI-compatible server answers. */
@@ -250,4 +305,111 @@ export async function warmLocalAsrModel(uv: string, model: string, log: (s: stri
 export const HF_MIRROR = "https://hf-mirror.com";
 export function looksLikeHubNetworkError(msg: string): boolean {
   return /connect|timed?\s?out|timeout|10060|10054|econn|enotfound|network|huggingface|hub/i.test(msg);
+}
+
+// ---- local LIVE asr (sherpa-onnx streaming zipformer, fully offline) ----
+
+export const LIVE_ASR_PORT = 8792;
+const LIVE_MODEL_REPO = "csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20";
+// int8 = ~4x smaller/faster on CPU; zh+en bilingual covers the primary user base
+const LIVE_FILES: Record<string, string> = {
+  "encoder-epoch-99-avg-1.int8.onnx": "encoder.int8.onnx",
+  "decoder-epoch-99-avg-1.int8.onnx": "decoder.int8.onnx",
+  "joiner-epoch-99-avg-1.int8.onnx": "joiner.int8.onnx",
+  "tokens.txt": "tokens.txt",
+};
+
+export function liveScriptPath(): string {
+  return join(dirname(fileURLToPath(import.meta.url)), "..", "local-asr", "live_server.py");
+}
+
+export function liveModelDir(): string {
+  return localAsrConfig().live?.modelDir ?? join(homedir(), ".witness", "models", "sherpa-zipformer-zh-en");
+}
+
+export function liveModelReady(dir = liveModelDir()): boolean {
+  return existsSync(join(dir, "encoder.int8.onnx")) && existsSync(join(dir, "tokens.txt"));
+}
+
+/** Download the streaming model (~90MB int8) — HF first, hf-mirror fallback. */
+export async function ensureLiveModel(log: (s: string) => void = console.log): Promise<string> {
+  const dir = liveModelDir();
+  if (liveModelReady(dir)) return dir;
+  mkdirSync(dir, { recursive: true });
+  const bases = ["https://huggingface.co", HF_MIRROR];
+  for (const [remote, local] of Object.entries(LIVE_FILES)) {
+    const dest = join(dir, local);
+    if (existsSync(dest) && statSync(dest).size > 0) continue;
+    let ok = false;
+    let lastErr = "";
+    for (const base of bases) {
+      try {
+        log(`  … ${remote} (${base.includes("mirror") ? "mirror" : "hf"})`);
+        const r = await fetch(`${base}/${LIVE_MODEL_REPO}/resolve/main/${remote}`, { signal: AbortSignal.timeout(120_000) });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        writeFileSync(dest, Buffer.from(await r.arrayBuffer()));
+        ok = true;
+        break;
+      } catch (e) { lastErr = (e as Error).message; }
+    }
+    if (!ok) throw new Error(`live model download failed for ${remote}: ${lastErr}`);
+  }
+  return dir;
+}
+
+const livePidFile = () => join(stateDir(), "live-asr.pid");
+const liveLogFile = () => join(stateDir(), "live-asr.log");
+
+function livePid(): number | null {
+  try { const p = parseInt(readFileSync(livePidFile(), "utf8").trim(), 10); return Number.isFinite(p) ? p : null; } catch { return null; }
+}
+
+export function liveAsrPidAlive(): boolean {
+  const pid = livePid();
+  if (!pid) return false;
+  try { process.kill(pid, 0); return true; } catch { return false; }
+}
+
+export async function probeLive(timeoutMs = 1500): Promise<boolean> {
+  try {
+    const r = await fetch(`http://127.0.0.1:${LIVE_ASR_PORT}/health`, { signal: AbortSignal.timeout(timeoutMs) });
+    return r.ok;
+  } catch { return false; }
+}
+
+/** Spawn the sherpa-onnx live server detached; resolves when /health answers. */
+export async function startLiveAsr(opts: { uv?: string } = {}): Promise<{ port: number; pid: number; modelDir: string }> {
+  if (liveAsrPidAlive() && await probeLive()) return { port: LIVE_ASR_PORT, pid: livePid()!, modelDir: liveModelDir() };
+  const dir = await ensureLiveModel();
+  const uv = opts.uv ?? await ensureUv();
+  const script = liveScriptPath();
+  if (!existsSync(script)) throw new Error(`live server script missing: ${script}`);
+  const logFd = openSync(liveLogFile(), "a");
+  writeSync(logFd, `\n--- wit local live-asr start ${new Date().toISOString()} modelDir=${dir} ---\n`);
+  const child = spawn(uv, ["run", script, "--model-dir", dir, "--port", String(LIVE_ASR_PORT), "--host", "127.0.0.1"], {
+    detached: true, stdio: ["ignore", logFd, logFd], windowsHide: true, env: { ...process.env },
+  });
+  closeSync(logFd);
+  child.unref();
+  writeFileSync(livePidFile(), String(child.pid));
+  const cfg = localAsrConfig();
+  setConfig("localAsr", { ...cfg, live: { ...(cfg.live ?? {}), enabled: true, modelDir: dir } });
+  const deadline = Date.now() + 5 * 60_000;
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, 2000));
+    if (await probeLive()) return { port: LIVE_ASR_PORT, pid: child.pid!, modelDir: dir };
+    if (!liveAsrPidAlive()) throw new Error(`live server exited early — see ${liveLogFile()}`);
+  }
+  throw new Error(`live server not ready in 5min — see ${liveLogFile()}`);
+}
+
+export function stopLiveAsr(): boolean {
+  const pid = livePid();
+  rmSync(livePidFile(), { force: true });
+  if (!pid) return false;
+  try {
+    if (platform() === "win32") spawnSync("taskkill", ["/pid", String(pid), "/T", "/F"], { stdio: "ignore" });
+    else { try { process.kill(-pid, "SIGTERM"); } catch { process.kill(pid, "SIGTERM"); } }
+    return true;
+  } catch { return false; }
 }

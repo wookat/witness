@@ -7,7 +7,7 @@ import { PAGE_SCRIPT } from "./page-script.js";
 import { AudioSink } from "./audio.js";
 import { Shots } from "./shots.js";
 import { wireNetwork } from "./network.js";
-import { transcribe, hasTranscriber, shouldUseBcut, type Transcript } from "./transcribe.js";
+import { transcribe, hasTranscriber, shouldUseBcut, withTranscribeProgress, type Transcript } from "./transcribe.js";
 import { transcribeBcut } from "./bcut.js";
 import { openLiveAsr, type LiveAsrSession, type AsrChoice } from "./live-asr.js";
 import { resolveAsr } from "./config.js";
@@ -265,6 +265,7 @@ export async function record(opts: RecOptions) {
     }
 
     if (rrStream) await new Promise<void>(r => rrStream.end(() => r()));
+    const audioMs = store.now(); // audio t=0 ≈ session t=0 — duration estimate for progress display
     await store.close();
 
     if (opts.transcribe !== false && audio.hasAudio) {
@@ -272,7 +273,7 @@ export async function record(opts: RecOptions) {
       try {
         if (hasTranscriber()) {
           console.log("  transcribing (whisper chain)…");
-          transcript = await transcribe(audio.path, { language: opts.lang });
+          transcript = await withTranscribeProgress(transcribe(audio.path, { language: opts.lang }), audioMs);
         } else if (shouldUseBcut(opts.lang)) {
           console.log("  transcribing (bcut)…");
           transcript = await transcribeBcut(audio.path);

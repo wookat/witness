@@ -2,9 +2,10 @@ import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
 import OpenAI from "openai";
 import { transcribeTargets, localAsrConfig, probeEndpoint, startLocalAsr, type TranscribeTarget } from "./local-asr.js";
+import { readConfig } from "./config.js";
 
-export interface Word { word: string; start: number; end: number }
-export interface Segment { start: number; end: number; text: string }
+export interface Word { word: string; start: number; end: number; prob?: number }
+export interface Segment { start: number; end: number; text: string; conf?: number; lowConf?: boolean }
 export interface Transcript { segments: Segment[]; words: Word[]; text: string; model: string; lang?: string }
 
 const GAP = 0.9;        // split on silence > this (s)
@@ -27,11 +28,11 @@ async function runTarget(audioPath: string, t: TranscribeTarget, language?: stri
     timestamp_granularities: ["word"],
     ...(language ? { language } : {}),
     // initial_prompt (domain hotwords) — only our local server understands it;
-    // hosted whisper APIs reject unknown fields
-    ...(t.kind === "local" && process.env.WIT_ASR_PROMPT ? { prompt: process.env.WIT_ASR_PROMPT } : {}),
+    // hosted whisper APIs reject unknown fields. env WIT_ASR_PROMPT > .witness/config.json asrPrompt
+    ...(t.kind === "local" && (process.env.WIT_ASR_PROMPT ?? readConfig().asrPrompt) ? { prompt: process.env.WIT_ASR_PROMPT ?? readConfig().asrPrompt } : {}),
   } as any);
   const r = res as any;
-  const words: Word[] = (r.words || []).map((w: any) => ({ word: w.word, start: w.start, end: w.end }));
+  const words: Word[] = (r.words || []).map((w: any) => ({ word: w.word, start: w.start, end: w.end, prob: typeof w.probability === "number" ? w.probability : undefined }));
   const segments = segment(words.length ? words : (r.segments || []).flatMap((s: any) => [{ word: s.text, start: s.start, end: s.end }]));
   return { segments, words, text: r.text || "", model: t.model, lang: language };
 }
@@ -63,23 +64,50 @@ export async function transcribe(audioPath: string, opts: { language?: string } 
   throw new Error(`all transcription backends failed — ${errors.join(" | ")}`);
 }
 
+/** Elapsed-time ticker for long transcriptions — providers give no real progress,
+ *  but local whisper on CPU can take minutes for hour-long audio. */
+export async function withTranscribeProgress<T>(p: Promise<T>, audioMs?: number): Promise<T> {
+  const t0 = Date.now();
+  const iv = setInterval(() => {
+    const el = Math.round((Date.now() - t0) / 1000);
+    const dur = audioMs ? ` · audio ~${Math.round(audioMs / 60000)}m` : "";
+    process.stdout.write(`\r  … transcribing ${el}s elapsed${dur}   `);
+  }, 15000);
+  iv.unref?.();
+  try { return await p; } finally { clearInterval(iv); process.stdout.write("\n"); }
+}
+
 /** bcut is a zh-tuned free endpoint — skip it when the user explicitly asked for another language. */
 export function shouldUseBcut(lang?: string): boolean {
   const primary = whisperLang(lang);
   return !primary || primary === "zh";
 }
 
+const LOW_CONF = 0.55; // mean word probability below this → flag as possibly-misheard
+
 function segment(words: Word[]): Segment[] {
   const out: Segment[] = [];
   let cur: Segment | null = null;
+  let probSum = 0, probN = 0;
+  const flush = () => {
+    if (!cur) return;
+    cur.text = cur.text.trim();
+    if (probN) {
+      cur.conf = +(probSum / probN).toFixed(3);
+      cur.lowConf = cur.conf < LOW_CONF;
+    }
+    out.push(cur);
+  };
   for (const w of words) {
     if (!cur || w.start - cur.end > GAP || w.start - cur.start > MAX_SEG) {
-      if (cur) { cur.text = cur.text.trim(); out.push(cur); }
+      flush();
       cur = { start: w.start, end: w.end, text: "" };
+      probSum = 0; probN = 0;
     }
     cur.text += /^\s/.test(cur.text) || /^[一-鿿]/.test(w.word) || cur.text === "" ? w.word.trim() : " " + w.word.trim();
     cur.end = w.end;
+    if (typeof w.prob === "number") { probSum += w.prob; probN++; }
   }
-  if (cur) { cur.text = cur.text.trim(); out.push(cur); }
+  flush();
   return out.filter(s => s.text.length > 0);
 }

@@ -1,0 +1,41 @@
+name: Bug report
+description: Something recorded wrong, crashed, or produced bad transcripts
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Include the session dir path (`.witness/sessions/<ts>/`) if you have one — it contains events.jsonl, transcript.json, session.md which pinpoint most issues.
+  - type: input
+    id: version
+    attributes:
+      label: witness-recorder version
+      placeholder: "0.6.0 (npm ls -g witness-recorder)"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "Windows 11 / macOS 14 / Ubuntu 22.04"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [recording, transcription, MCP, CLI, site]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Expected vs actual, steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / console output
+      render: shell

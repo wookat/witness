@@ -293,3 +293,36 @@ test("transcribeTargets: WHISPER_BASE_URL env wins, then local config, then keys
     Object.assign(process.env, saved);
   }
 });
+
+// ---------- 0.6.0: ASR confidence ----------
+
+test("align: low-confidence segments flag say events", () => {
+  const out = align([], [
+    { start: 0, end: 1, text: "清晰的话", conf: 0.9 },
+    { start: 2, end: 3, text: "模糊的部分", conf: 0.3, lowConf: true },
+  ]);
+  const says = out.filter(e => e.kind === "say");
+  assert.equal(says[0].lowConf, undefined);
+  assert.equal(says[1].lowConf, true);
+});
+
+test("markdown: low-confidence say run carries the warning marker", () => {
+  const md = renderMarkdown([
+    { kind: "say", t: 1000, text: "可能听错了", segStart: 1000, segEnd: 2000, lowConf: true },
+  ], meta);
+  assert.ok(md.includes("low-confidence ASR"), md.slice(0, 400));
+});
+
+test("markdown: confident say run has no marker", () => {
+  const md = renderMarkdown([say(1000, "正常的一句。")], meta);
+  assert.ok(!md.includes("low-confidence ASR"));
+});
+
+// ---------- 0.6.0: model management helpers ----------
+
+test("modelCacheDirName / installedModels shape", async () => {
+  const la = await import("../dist/local-asr.js");
+  assert.equal(la.modelCacheDirName("Systran/faster-whisper-small"), "models--Systran--faster-whisper-small");
+  assert.ok(Array.isArray(la.installedModels()));
+  assert.equal(la.liveModelReady("Z:/nonexistent-dir-xyz"), false);
+});

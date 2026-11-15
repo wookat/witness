@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { AsrChoice } from "./live-asr.js";
 import type { LocalAsrCfg } from "./local-asr.js";
 
-export interface WitConfig { asr?: AsrChoice; localAsr?: LocalAsrCfg }
+export interface WitConfig { asr?: AsrChoice; localAsr?: LocalAsrCfg; asrPrompt?: string }
 
 const path = () => join(process.cwd(), ".witness", "config.json");
 
@@ -22,5 +22,5 @@ export function setConfig<K extends keyof WitConfig>(key: K, val: WitConfig[K]):
 /** Resolution order: flag > WIT_ASR env > .witness/config.json > "auto". */
 export function resolveAsr(flag?: string): AsrChoice {
   const v = flag ?? process.env.WIT_ASR ?? readConfig().asr ?? "auto";
-  return (["auto", "doubao-web", "doubao-ime", "sr", "off"] as AsrChoice[]).includes(v as AsrChoice) ? v as AsrChoice : "auto";
+  return (["auto", "doubao-web", "doubao-ime", "local", "sr", "off"] as AsrChoice[]).includes(v as AsrChoice) ? v as AsrChoice : "auto";
 }

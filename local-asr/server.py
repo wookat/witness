@@ -133,11 +133,14 @@ async def transcriptions(
         texts.append(text)
         seg_words = []
         for w in s.words or []:
-            seg_words.append({"word": w.word, "start": round(w.start, 3), "end": round(w.end, 3)})
-            words.append({"word": w.word, "start": round(w.start, 3), "end": round(w.end, 3)})
+            prob = round(getattr(w, "probability", 0.0) or 0.0, 4)
+            seg_words.append({"word": w.word, "start": round(w.start, 3), "end": round(w.end, 3), "probability": prob})
+            words.append({"word": w.word, "start": round(w.start, 3), "end": round(w.end, 3), "probability": prob})
         segs.append({
             "id": i, "start": round(s.start, 3), "end": round(s.end, 3),
             "text": text, "words": seg_words,
+            "avg_logprob": round(getattr(s, "avg_logprob", 0.0) or 0.0, 4),
+            "no_speech_prob": round(getattr(s, "no_speech_prob", 0.0) or 0.0, 4),
         })
     full = " ".join(texts).strip()
     fmt = (response_format or "json").lower()

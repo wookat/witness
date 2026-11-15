@@ -16,6 +16,7 @@ export function align(storeEvents: Ev[], segments: Segment[]): Ev[] {
     text: s.text,
     segStart: Math.round(s.start * 1000),
     segEnd: Math.round(s.end * 1000),
+    ...(s.lowConf ? { lowConf: true } : {}),
   }));
   return [...base, ...says].sort((a, b) => a.t - b.t);
 }
