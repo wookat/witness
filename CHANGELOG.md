@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.1 — Permissions-Policy mic fix (#7)
+
+### Fixed
+- **Silent audio-less sessions on `Permissions-Policy: microphone=()` sites** — sites can forbid the mic document-wide; the browser-level permission grant can't override it, so `getUserMedia` threw `NotAllowedError` and the session recorded with `audio: false` and zero speech. Witness now rewrites `microphone=…` → `microphone=(self)` on **document responses only** (all other headers incl. duplicate `Set-Cookie` pass through untouched). New `--no-mic-patch` flag honors the site's real policy. A loud ⚠ console warning now fires the moment the mic is blocked — no more discovering it at finalize.
+
 ## 0.6.0 — confidence, local live ASR & model management
 
 ### Added
