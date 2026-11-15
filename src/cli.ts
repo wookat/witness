@@ -58,7 +58,7 @@ program
       shotFormat: o.shotFormat === "webp" ? "webp" : "jpeg",
       micPatch: o.micPatch,
       duration: o.duration ? Number(o.duration) : undefined,
-      lang: o.lang,
+      lang: (await import("./config.js")).resolveLang(o.lang),
       correct: !!o.correct,
       associate: !!o.associate,
       rr: o.rr !== false,
@@ -167,17 +167,25 @@ program
     if (!key) {
       const c = readConfig();
       console.log("asr =", c.asr ?? "auto", " (default)");
+      console.log("lang =", c.lang ?? "(browser/OS default)");
       const la = c.localAsr;
       console.log("local-asr =", la ? `${la.model ?? "small"} @ ${la.baseUrl ?? `127.0.0.1:${la.port ?? 8791}`} ${la.enabled === false ? "(disabled)" : "(enabled)"}` : "not configured — `wit setup local-asr`");
       if (c.asrPrompt) console.log(`asr-prompt = "${c.asrPrompt}"`);
       console.log("engines:", ASR_ENGINES.join(" | "));
-      console.log("set: wit config asr <engine> · wit config asr-prompt <hotwords>  ·  one-off: wit start --asr <engine>  ·  env: WIT_ASR / WIT_ASR_PROMPT");
+      console.log("set: wit config asr|lang|asr-prompt <value>  ·  one-off: wit start --asr/--lang  ·  env: WIT_ASR / WIT_ASR_PROMPT  ·  wizard: wit init");
       return;
     }
     if (key === "asr") {
       if (!ASR_ENGINES.includes(value)) { console.log(`asr must be one of: ${ASR_ENGINES.join(" | ")}`); return; }
       setConfig("asr", value);
       console.log(`✔ asr = ${value} (persisted to .witness/config.json)`);
+      return;
+    }
+    if (key === "lang" || key === "language") {
+      const v = (value ?? "").trim();
+      setConfig("lang", v); // "" clears — falls back to browser/OS default
+      if (v) console.log(`✔ lang = "${v}" (persisted — BCP-47 like zh-CN / en-US / ko-KR)`);
+      else console.log("✔ lang cleared (browser/OS default)");
       return;
     }
     if (key === "asr-prompt" || key === "prompt") {
@@ -188,6 +196,74 @@ program
       return;
     }
     console.log(`unknown key "${key}" — supported: asr, asr-prompt`);
+  });
+
+program
+  .command("init")
+  .description("interactive first-run wizard: language, live ASR engine, local transcription, hotwords")
+  .action(async () => {
+    const { createInterface } = await import("node:readline");
+    const { readConfig, setConfig } = await import("./config.js");
+    const { ASR_ENGINES } = await import("./live-asr.js");
+    const rl = createInterface({ input: process.stdin });
+    // buffer lines so piped/scripted input isn't dropped while no question is pending
+    const lines: string[] = [];
+    let waiter: ((s: string) => void) | null = null;
+    rl.on("line", l => { const w = waiter; waiter = null; w ? w(l) : lines.push(l); });
+    rl.on("close", () => { const w = waiter; waiter = null; w?.(""); }); // EOF → empty answer
+    const ask = (q: string) => new Promise<string>(res => {
+      process.stdout.write(q);
+      if (lines.length) res(lines.shift()!); else waiter = res;
+    }).then(s => s.trim());
+    const c = readConfig();
+
+    console.log(`\n\x1b[36m◉ wit init\x1b[0m — configure once, record forever  (.witness/config.json)\n`);
+
+    // 1) default language
+    const lang = await ask(`1/4 默认语音语言 BCP-47 [当前:${c.lang ?? "跟随系统"}] 如 zh-CN / en-US / ko-KR / ja-JP (回车保持): `);
+    if (lang) { setConfig("lang", lang); console.log(`    ✔ lang = ${lang}`); }
+
+    // 2) live captions engine
+    console.log(`\n2/4 实时字幕引擎 [当前:${c.asr ?? "auto"}]`);
+    const menu: [string, string][] = [
+      ["auto", "推荐 — 装了本地 sherpa 优先用它，否则 doubao-web → doubao-ime → 浏览器 SR 逐级回落"],
+      ["local", "全离线 sherpa-onnx 流式 (需 wit local-asr live setup, ~190MB 模型)"],
+      ["doubao-web", "免费云端流式,中文最优,无需 key (音频会上云)"],
+      ["doubao-ime", "免费云端 IME 端点,备选"],
+      ["sr", "浏览器自带语音识别"],
+      ["off", "不要实时字幕 (音频照录,停止后仍出终稿)"],
+    ];
+    menu.forEach(([k, d], i) => console.log(`    ${i + 1}) ${k.padEnd(12)} ${d}`));
+    const pick = await ask(`   选择 [1-${menu.length}] (回车保持): `);
+    const idx = Number(pick) - 1;
+    if (pick && menu[idx]) { setConfig("asr", menu[idx][0] as never); console.log(`    ✔ asr = ${menu[idx][0]}`); }
+    else if (pick) console.log("    ! 无效选择,保持当前");
+
+    // 3) local whisper for final transcript
+    const la = c.localAsr;
+    console.log(`\n3/4 终稿转写后端 [当前:${la?.enabled !== false && la ? `本地 ${la.model ?? "small"}` : "云端 key / bcut"}]`);
+    if (!la || la.enabled === false) {
+      const yn = await ask("   安装本地 whisper 吗? 离线/隐私/多语言,一次性 ~500MB 模型 [y/N]: ");
+      if (/^y/i.test(yn)) {
+        rl.close();
+        await program.parseAsync(["setup", "local-asr"], { from: "user" });
+        return;
+      }
+    } else {
+      console.log(`   ✔ 已配置 ${la.model ?? "small"} @ 127.0.0.1:${la.port ?? 8791} — wit local-asr models 可换模型`);
+    }
+
+    // 4) hotwords
+    const hw = await ask(`\n4/4 ASR 热词偏置 [当前:"${c.asrPrompt ?? "无"}"] 如 "witness, MCP, getUserMedia" (回车跳过, "-"清除): `);
+    if (hw === "-") { setConfig("asrPrompt", ""); console.log("    ✔ 已清除"); }
+    else if (hw) { setConfig("asrPrompt", hw); console.log(`    ✔ asr-prompt = "${hw}"`); }
+
+    rl.close();
+    const done = readConfig();
+    console.log(`\n\x1b[32m✔ 配置完成\x1b[0m → .witness/config.json`);
+    console.log(`   asr=${done.asr ?? "auto"} · lang=${done.lang ?? "系统"} · prompt="${done.asrPrompt ?? ""}"`);
+    console.log(`   改: wit config <key> · 体检: wit doctor · 开录: wit start <url>\n`);
+    void ASR_ENGINES;
   });
 
 program
