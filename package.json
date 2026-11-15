@@ -47,7 +47,7 @@
     "playwright": "^1.48.0",
     "rrweb": "^2.2.2",
     "ws": "^8.22.2",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
