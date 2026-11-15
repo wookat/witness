@@ -303,12 +303,21 @@ export async function record(opts: RecOptions) {
 
     if (opts.transcribe !== false && audio.hasAudio) {
       const t0 = Date.now();
+      // live ASR already heard the whole session → reuse it as the final transcript
+      // instead of pushing the same audio through the same engine a second time.
+      // (a whisper backend still runs — it's a *better* engine: word conf + bigger model)
+      const audioSec = audioMs / 1000;
+      const lastEnd = engineSegs.reduce((m, s) => Math.max(m, s.end), 0);
+      const liveCovered = engineSegs.length > 0 && lastEnd >= audioSec * 0.75;
       try {
-        if (hasTranscriber()) {
+        if (liveCovered && !hasTranscriber()) {
+          transcript = { model: liveAsr?.name ?? "live-asr", segments: engineSegs, words: [], text: engineSegs.map(s => s.text).join(" ") };
+          console.log(`  transcript: reusing live ${transcript.model} (${engineSegs.length} segs, covered ${Math.round(lastEnd)}s/${Math.round(audioSec)}s)`);
+        } else if (hasTranscriber()) {
           console.log("  transcribing (whisper chain)…");
           transcript = await withTranscribeProgress(transcribe(audio.path, { language: opts.lang }), audioMs);
         } else if (shouldUseFreeCloud(opts.lang)) {
-          console.log("  transcribing (free cloud: doubao → bcut)…");
+          console.log(`  transcribing (free cloud: doubao → bcut${engineSegs.length ? ", live coverage incomplete" : ""})…`);
           transcript = await transcribeFreeCloud(audio.path, opts.lang);
         } else {
           console.log(`  skipping free cloud — lang=${opts.lang} is non-zh and no whisper backend configured (wit setup local-asr / WHISPER_BASE_URL / GROQ_API_KEY / OPENAI_API_KEY)`);
