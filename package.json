@@ -1,6 +1,6 @@
 {
   "name": "witness-recorder",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "mcpName": "io.github.wookat/witness",
   "repository": {
     "type": "git",

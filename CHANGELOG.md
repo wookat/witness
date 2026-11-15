@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.3 — free-cloud final transcription & single-pass reuse
+
+### Added
+- **Free cloud final transcription** — zh/auto sessions without a whisper backend/key now transcribe via doubao-web (VoiceGenie) batch → bcut fallback, zero config. `shouldUseBcut` → `shouldUseFreeCloud`.
+
+### Changed
+- **Live transcript reuse** — when the live ASR engine already covered ≥75% of the recording and no better (whisper) backend is configured, its transcript becomes the final one. Skips ~40s of re-transcribing the same audio through the same engine; falls back to re-transcription on partial coverage (WS drops, nav-killed sessions).
+
 ## 0.6.2 — config wizard & global/project config split
 
 ### Added
