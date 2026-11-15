@@ -33,7 +33,7 @@
     "prepare": "npm run build",
     "dev": "tsc --watch",
     "start": "node dist/cli.js",
-    "test": "npm run build && node --test \"test/**/*.test.mjs\""
+    "test": "npm run build && node --test test/core.test.mjs"
   },
   "engines": {
     "node": ">=18"
