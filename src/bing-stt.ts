@@ -43,7 +43,7 @@ export async function bingStt(file: string, lang = "zh-CN", onPartial?: (t: stri
       ws.send(`Path: speech.config\r\nX-RequestId: ${rid}\r\nX-Timestamp: ${ts()}\r\nContent-Type: application/json; charset=utf-8\r\n\r\n` +
         JSON.stringify({ context: { system: { version: "1.0", name: "SpeechSDK", build: "1.0", lang: "JavaScript" }, os: { platform: "Browser", name: "Edge", version: "143" }, device: { manufacturer: "Microsoft", model: "Edge", version: "143" } }, recognition: "interactive", language: lang }));
       // stream audio in ~100ms chunks (3200 bytes = 100ms @16k*2B)
-      for (let i = 0; i < wav.length; i += 3200) ws.send(audioMsg(wav.subarray(i, i + 3200), rid));
+      for (let i = 0; i < wav.length; i += 3200) ws.send(new Uint8Array(audioMsg(wav.subarray(i, i + 3200), rid)));
       ws.send(`Path: speech.endDetected\r\nX-RequestId: ${rid}\r\nX-Timestamp: ${ts()}\r\nContent-Type: application/json; charset=utf-8\r\n\r\n{}`);
     };
     ws.onmessage = (ev) => {
