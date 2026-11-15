@@ -7,7 +7,7 @@
   <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A518-17181c?style=flat-square" alt="Node ≥ 18">
-  <img src="https://img.shields.io/badge/MCP-14%20tools-17181c?style=flat-square" alt="14 MCP tools">
+  <img src="https://img.shields.io/badge/MCP-15%20tools-17181c?style=flat-square" alt="15 MCP tools">
   <br>
   <b>English</b> · <a href="README.zh-CN.md">中文</a> · <a href="https://witness.zalize.com">witness.zalize.com</a> · <a href="VISION.md">VISION.md</a>
 </div>
@@ -89,9 +89,12 @@ wit segments <dir>                # regenerate speech-anchor index + bundles
 wit keyframes <dir>               # render rrweb → per-segment keyframe jpgs
 wit doctor                        # preflight: browser / live-ASR / keys / dirs
 wit mcp [dir]                     # stdio MCP server over the evidence
-wit config asr <engine>           # live ASR: auto|doubao-web|doubao-ime|sr|off
+wit config asr <engine>           # live ASR: auto|local|doubao-web|doubao-ime|sr|off
+wit config asr-prompt <words>     # persist ASR hotwords (product names, error codes)
 wit setup local-asr               # install local whisper backend (offline, private)
 wit local-asr start|stop|status   # manage the local ASR server (127.0.0.1:8791)
+wit local-asr models …            # list | use | pull | rm faster-whisper models
+wit local-asr live …              # setup | status | stop — offline live captions (zh+en)
 ```
 
 ### Local transcription — `wit setup local-asr`
@@ -101,8 +104,16 @@ faster-whisper (CT2) → multilingual model (`small` default ≈500MB; `--model 
 or any faster-whisper HF repo). Then `wit local-asr start` serves an OpenAI-compatible
 `/v1/audio/transcriptions` on `127.0.0.1:8791` — every `wit start` / `wit transcribe` picks it up
 automatically and falls through to your API keys or bcut if it's down. Works for any of whisper's
-~99 languages; `WIT_ASR_PROMPT="…"` adds hotword bias. Already running speaches / whisper.cpp server /
+~99 languages; `WIT_ASR_PROMPT="…"` or `wit config asr-prompt "…"` adds hotword bias.
+`wit local-asr models list|use|pull|rm` manages model presets in the HF cache.
+Already running speaches / whisper.cpp server /
 vLLM? Set `localAsr.baseUrl` in `.witness/config.json` instead.
+
+**Offline live captions:** `wit local-asr live setup` installs a sherpa-onnx streaming
+zipformer (zh+en bilingual, int8, ~190MB) served on a loopback WebSocket (127.0.0.1:8792).
+Then `--asr local` — or plain `auto` — captions live without any cloud call: mic PCM16/16k/mono
+never leaves the machine. Segments whose mean word-probability is low show up as
+`⚠ low-confidence ASR` in session.md so agents verify instead of quoting hallucinations.
 
 ## The evidence package — `.witness/sessions/<ts>_<host>/`
 
@@ -133,18 +144,19 @@ audio.webm / transcript.json
 (Claude Code, Cursor, Devin) at it and it pulls exactly what it needs:
 
 `list_segments` · `segment_detail(n)` · `session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
-`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_transcript` · `search_events` · `get_asr` · `set_asr`
+`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_audio` · `get_transcript` · `search_events` · `get_asr` · `set_asr`
 
 ## Principles
 
 - **Evidence is never rewritten** — speech lands verbatim; merging/correction/association are display-layer suggestions.
 - **Evidence ≠ intent** — behavior without a spoken anchor is never presented as a bug.
-- **Local-first** — deterministic recording; live SAY subtitles stream through free cloud ASR
-  (`auto` = doubao-web → doubao-ime → browser SR fallback — pick via `wit config asr`, `--asr`, `WIT_ASR`, or the
-  `get_asr`/`set_asr` MCP tools). Final transcript chain: `WHISPER_BASE_URL` → **local whisper**
-  (`wit setup local-asr` — offline, multilingual, audio never leaves the machine) → Groq → OpenAI →
-  bcut (zh-tuned free endpoint, zh/auto sessions only). `WIT_ASR_PROMPT` biases the local engine toward
-  your product names and error codes. LLM layers are optional.
+- **Local-first** — deterministic recording; live SAY subtitles prefer the **local sherpa-onnx**
+  engine once `wit local-asr live setup` has run, then `auto` = local → doubao-web → doubao-ime → browser SR
+  (pick via `wit config asr`, `--asr`, `WIT_ASR`, or the `get_asr`/`set_asr` MCP tools). Final transcript chain:
+  `WHISPER_BASE_URL` → **local whisper** (`wit setup local-asr` — offline, multilingual,
+  audio never leaves the machine) → Groq → OpenAI → bcut (zh-tuned free endpoint, zh/auto sessions only).
+  `WIT_ASR_PROMPT` / `wit config asr-prompt` biases the local engine toward your product names and error codes.
+  LLM layers are optional.
 - **Privacy engineered in** — password/OTP/credit-card fields masked across four channels, credential fields redacted in POST bodies,
   `WIT_NO_BODIES=1` disables body capture, `P` freezes everything, `.witness/` is auto-gitignored.
   `--lang` now reaches every ASR stage (browser SR, doubao live, whisper post-session).

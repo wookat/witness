@@ -7,7 +7,7 @@
   <a href="https://github.com/wookat/witness/stargazers"><img src="https://img.shields.io/github/stars/wookat/witness?style=flat-square&color=ff4f00" alt="GitHub stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-17181c?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A518-17181c?style=flat-square" alt="Node ≥ 18">
-  <img src="https://img.shields.io/badge/MCP-14%20tools-17181c?style=flat-square" alt="14 个 MCP 工具">
+  <img src="https://img.shields.io/badge/MCP-15%20tools-17181c?style=flat-square" alt="15 个 MCP 工具">
   <br>
   <a href="README.md">English</a> · <b>中文</b> · <a href="https://witness.zalize.com">witness.zalize.com</a> · <a href="VISION.md">愿景与路线 VISION.md</a>
 </div>
@@ -80,9 +80,12 @@ wit segments <dir>                # 重建语音段索引 + 每段证据包
 wit keyframes <dir>               # rrweb → 每段关键帧 jpg（agent 可读的回放）
 wit doctor                        # 体检：浏览器/实时ASR/密钥/目录可写性
 wit mcp [dir]                     # stdio MCP server
-wit config asr <engine>           # 实时 ASR：auto|doubao-web|doubao-ime|sr|off
+wit config asr <engine>           # 实时 ASR：auto|local|doubao-web|doubao-ime|sr|off
+wit config asr-prompt <词>         # 持久化 ASR 热词（产品名、报错码）
 wit setup local-asr               # 安装本地 whisper 转写（离线、隐私、多语言）
 wit local-asr start|stop|status   # 管理本地 ASR 服务（127.0.0.1:8791）
+wit local-asr models …            # list | use | pull | rm 管理 whisper 模型
+wit local-asr live …              # setup | status | stop —— 离线实时字幕（中英）
 ```
 
 ### 本地转写 —— `wit setup local-asr`
@@ -92,8 +95,16 @@ wit local-asr start|stop|status   # 管理本地 ASR 服务（127.0.0.1:8791）
 faster-whisper HF 仓库）。然后 `wit local-asr start` 在 `127.0.0.1:8791` 起一个
 OpenAI 兼容的 `/v1/audio/transcriptions`——之后每次 `wit start` / `wit transcribe`
 自动优先使用它，挂了自动回落到 API key 或 bcut。覆盖 whisper 支持的 ~99 种语言；
-`WIT_ASR_PROMPT="…"` 可注入热词偏置。已经在跑 speaches / whisper.cpp server / vLLM？
-直接在 `.witness/config.json` 里配 `localAsr.baseUrl` 即可。
+`WIT_ASR_PROMPT="…"` 或 `wit config asr-prompt "…"` 可注入热词偏置；
+`wit local-asr models list|use|pull|rm` 管理 HF 缓存里的模型预设。已经在跑
+speaches / whisper.cpp server / vLLM？直接在 `.witness/config.json` 里配
+`localAsr.baseUrl` 即可。
+
+**离线实时字幕**：`wit local-asr live setup` 安装 sherpa-onnx 流式 zipformer
+（中英双语 int8，约 1190MB），通过本机回环 WebSocket（127.0.0.1:8792）服务。
+之后 `--asr local`（或 `auto`）直接离线出实时字幕——PCM16/16k/mono 麦克风
+音频不出本机。平均词概率偏低的段落会在 session.md 里标 `⚠ low-confidence ASR`，
+提醒 agent 先核实再引用。
 
 ## 证据包 `.witness/sessions/<ts>_<host>/`
 
@@ -124,13 +135,13 @@ audio.webm / transcript.json
 它按需查询而不是吞全文：
 
 `list_segments` · `segment_detail(n)` · `session_overview` · `list_says` · `session_md` · `events_around(t_ms, radius, kinds)` ·
-`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_transcript` · `search_events` · `get_asr` · `set_asr`
+`get_errors` · `get_shot` · `get_body` · `get_dom_state(t)` · `get_audio` · `get_transcript` · `search_events` · `get_asr` · `set_asr`
 
 ## 原则
 
 - **证据不改写**——原话原样落盘；合并/纠错/关联只是展示层建议。
 - **证据 ≠ 意图**——没有语音锚点的行为不会被当成 bug 汇报。
-- **本地优先**——默认确定性记录；实时字幕走免费云端流式 ASR（`auto` = doubao-web → doubao-ime → 浏览器 SR 兜底，`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）。最终转写链：`WHISPER_BASE_URL` → **本地 whisper**（`wit setup local-asr`，离线、多语言、音频不出本机）→ Groq → OpenAI → bcut（仅 zh/auto 会话）。`WIT_ASR_PROMPT` 给本地引擎加热词偏置。LLM 全是可选层。
+- **本地优先**——默认确定性记录；装了 `wit local-asr live setup` 后实时字幕优先走**本地 sherpa-onnx**，`auto` = local → doubao-web → doubao-ime → 浏览器 SR 兜底（`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）。最终转写链：`WHISPER_BASE_URL` → **本地 whisper**（`wit setup local-asr`，离线、多语言、音频不出本机）→ Groq → OpenAI → bcut（仅 zh/auto 会话）。`WIT_ASR_PROMPT` / `wit config asr-prompt` 给本地引擎加热词偏置。LLM 全是可选层。
 - **隐私内置**——密码/OTP/信用卡字段四通道打码；POST 体凭证字段脱敏；`WIT_NO_BODIES=1` 关响应体；`P` 全冻结；`.witness/` 自动 gitignore。`--lang` 现已贯通全部 ASR 环节（浏览器 SR、豆包实时、whisper 后转写）。
 - **匿名使用统计**——CLI 每条命令发一次匿名 ping（命令名、版本、系统架构、Node 主版本；绝不含 URL、路径或录制内容），走自己的 Cloudflare Worker，不经过任何第三方分析服务。`WIT_TELEMETRY=0` 可关。
 

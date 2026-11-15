@@ -3,7 +3,7 @@
 ## 0.6.0 — confidence, local live ASR & model management
 
 ### Added
-- **Local live ASR (`--asr local`)** — fully-offline streaming captions via sherpa-onnx zipformer (zh+en bilingual, int8 ~90MB). `wit local-asr live setup` downloads the model + starts the server; `auto` prefers it once installed, then falls back to doubao-web → doubao-ime. PCM16/16k/mono streams over a loopback WebSocket (`local-asr/live_server.py` ships in the package).
+- **Local live ASR (`--asr local`)** — fully-offline streaming captions via sherpa-onnx zipformer (zh+en bilingual, int8 ~190MB). `wit local-asr live setup` downloads the model + starts the server; `auto` prefers it once installed, then falls back to doubao-web → doubao-ime. PCM16/16k/mono streams over a loopback WebSocket (`local-asr/live_server.py` ships in the package).
 - **`wit local-asr models`** — `list|use|pull|rm` manage faster-whisper models in the HF cache: presets + arbitrary repo ids, disk usage shown, active model protected from deletion.
 - **ASR confidence surfacing** — local server returns word `probability` + segment `avg_logprob`/`no_speech_prob`; segments with mean word-prob < 0.55 are flagged `lowConf` and rendered as `⚠ low-confidence ASR` in session.md, with a PROMPT.md rule telling agents to verify before quoting.
 - **MCP `get_audio`** — returns `audio.webm` inline (≤15MB) so agents can verify transcripts against the original voice; larger files return path + ffmpeg hint.

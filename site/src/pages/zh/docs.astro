@@ -37,18 +37,24 @@ wit --version</Term>
   <div class="kicker">02 · 配置</div>
   <h2 class="rv">默认零配置；想调再调。</h2>
   <div class="grid g2" style="margin-top:34px">
-    <Card icon="mic" title="实时 ASR 引擎" d="0"><code>wit config asr</code> 持久化到项目的 <code>.witness/config.json</code>；<code>--asr</code> / <code>WIT_ASR</code> 单次覆盖。agent 也能通过 <code>set_asr</code> MCP 工具自己切。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         doubao-web → doubao-ime → sr
+    <Card icon="mic" title="实时 ASR 引擎" d="0"><code>wit config asr</code> 持久化到项目的 <code>.witness/config.json</code>；<code>--asr</code> / <code>WIT_ASR</code> 单次覆盖。agent 也能通过 <code>set_asr</code> MCP 工具自己切。<pre style="margin-top:10px;font:12px/1.8 var(--mono)">auto         local → doubao-web → doubao-ime → sr
 doubao-web   标点最好（默认首选）
 doubao-ime   句级时间戳、数字 ITN 更好
+local        离线 sherpa-onnx 实时字幕
+             （wit local-asr live setup，中英双语）
 sr           浏览器 SpeechRecognition（离线兜底）
 off          不要实时字幕（只出终稿）</pre></Card>
     <Card icon="shield" title="可选 key 与环境变量" d="60">一个都不配也能跑——这些是增强项不是必需项：<pre style="margin-top:10px;font:12px/1.8 var(--mono)">wit setup local-asr  离线 whisper 后端
                  （uv+faster-whisper，约500MB，
                  127.0.0.1:8791，多语言）
+wit local-asr live setup
+                 离线实时字幕（sherpa-onnx 中英
+                 流式，约1190MB）
 WHISPER_BASE_URL 任意 OpenAI 兼容转写端点
 GROQ_API_KEY     whisper-large-v3-turbo
 OPENAI_API_KEY   whisper-1 词级时间戳
 WIT_ASR_PROMPT   本地 ASR 热词偏置
+                 （或：wit config asr-prompt …）
 ZHIPU_API_KEY    GLM-4 纠错 + 语义证据关联
 WIT_ASR          单次录制覆盖引擎
 WIT_NO_BODIES=1  不抓响应体（敏感应用）
@@ -84,9 +90,10 @@ wit correct &lt;dir&gt;     LLM 润色（原文保留）
 wit associate &lt;dir&gt;   LLM 给每段话挑证据
 wit recover &lt;dir&gt;     崩溃重建
 wit mcp [dir]         MCP 服务拉证据
-wit config asr …      引擎：auto|doubao-web|doubao-ime|sr|off
+wit config asr …      引擎：auto|local|doubao-web|doubao-ime|sr|off
+wit config asr-prompt …  持久化 ASR 热词
 wit setup local-asr   安装离线 whisper 后端
-wit local-asr …       start | stop | status</pre></Card>
+wit local-asr …       start | stop | status | models … | live …</pre></Card>
   </div>
 </div></section>
 
@@ -113,7 +120,7 @@ wit local-asr …       start | stop | status</pre></Card>
   <div class="grid g3" style="margin-top:30px">
     <Card icon="file" title="PROMPT.md" d="0">给不认识 Witness 的 agent 的说明书。教它读格式：因果缩进、"无反应也是证据"、组件链定位、没有 SAY 不许猜意图。</Card>
     <Card icon="clock" title="session.md" d="40">证据时间轴本体。每个 <code>SAY</code> 块带你的原话 + 那一秒页面发生的一切。</Card>
-    <Card icon="api" title="wit mcp" d="80">把 session 变成 stdio MCP server，14 个工具：<code>list_segments</code> · <code>segment_detail</code> · <code>session_overview</code> · <code>list_says</code> · <code>session_md</code> · <code>events_around</code> · <code>get_errors</code> · <code>get_shot</code> · <code>get_dom_state</code> · <code>get_body</code> · <code>get_transcript</code> · <code>search_events</code> · <code>get_asr</code> · <code>set_asr</code>。</Card>
+    <Card icon="api" title="wit mcp" d="80">把 session 变成 stdio MCP server，15 个工具：<code>list_segments</code> · <code>segment_detail</code> · <code>session_overview</code> · <code>list_says</code> · <code>session_md</code> · <code>events_around</code> · <code>get_errors</code> · <code>get_shot</code> · <code>get_dom_state</code> · <code>get_body</code> · <code>get_audio</code> · <code>get_transcript</code> · <code>search_events</code> · <code>get_asr</code> · <code>set_asr</code>。</Card>
   </div>
 </div></section>
 
