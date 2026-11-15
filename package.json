@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
-    "commander": "^12.1.0",
+    "commander": "^15.1.0",
     "dotenv": "^16.4.5",
     "fix-webm-duration": "^1.0.6",
     "openai": "^4.77.0",
