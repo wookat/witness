@@ -337,3 +337,72 @@ test("relaxMicPolicy: microphone directive → (self), others untouched", async 
   assert.equal(relaxMicPolicy("geolocation=*, camera=()"), "geolocation=*, camera=()");
   assert.equal(relaxMicPolicy("MICROPHONE=()"), "microphone=(self)");
 });
+
+// ---------- audit fixes: review.html, page-script, associate, segments, network ----------
+
+import vm from "node:vm";
+
+test("review html: single-fragment SAY blocks are preserved and embedded script is valid JS", () => {
+  const html = renderReviewHtml([
+    say(1000, "单独一句报错", 1000, 1800),
+    click(3000, "支付"),
+    say(9000, "另一句单独的话", 9000, 9600),
+  ], { ...meta, url: 'https://example.com/"<script>', title: 'Demo <tag>' });
+  const dm = html.match(/<script>const D=(\{[\s\S]*?\});<\/script>/);
+  assert.ok(dm, "embedded D payload present");
+  const parsed = JSON.parse(dm[1]);
+  const sayBlocks = parsed.blocks.filter(b => b.frags && b.frags.length);
+  assert.equal(sayBlocks.length, 2);
+  assert.equal(sayBlocks[0].frags[0].text, "单独一句报错");
+  assert.equal(sayBlocks[1].frags[0].text, "另一句单独的话");
+  // XSS escaping in title & header
+  assert.ok(!html.includes('<title>Witness · https://example.com/"<script></title>'));
+  // Validate main inline script parses cleanly
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+  assert.ok(scripts.length >= 2);
+  assert.doesNotThrow(() => new vm.Script(scripts.at(-1)));
+});
+
+test("review html: blocks javascript: URLs in header href", () => {
+  const html = renderReviewHtml([], { ...meta, url: "javascript:alert(1)" });
+  assert.ok(!html.includes('href="javascript:'));
+});
+
+test("page-script: compiles as valid JS with pause PCM guard and plain-key guard", async () => {
+  const { PAGE_SCRIPT } = await import("../dist/page-script.js");
+  const code = PAGE_SCRIPT("zh-CN", { sr: false, pcm: true, asrLabel: "local" });
+  assert.doesNotThrow(() => new vm.Script(code));
+  assert.ok(code.includes("if (W.paused || W.stopped)"));
+  assert.ok(code.includes("const plain = !e.ctrlKey && !e.metaKey && !e.altKey"));
+});
+
+test("associate: briefEvent extracts real input.value, error.message, and mut.sel/summary", async () => {
+  const { briefEvent } = await import("../dist/associate.js");
+  assert.ok(briefEvent({ kind: "input", t: 1, sel: "#code", masked: false, len: 4, value: "SAVE" }).includes("SAVE"));
+  assert.ok(briefEvent({ kind: "input", t: 2, sel: "#pw", masked: true, len: 8 }).includes("[masked]"));
+  assert.ok(briefEvent({ kind: "error", t: 3, message: "TypeError: boom" }).includes("TypeError: boom"));
+  assert.ok(briefEvent({ kind: "mut", t: 4, sel: "button.pay", summary: "attr disabled: → true" }).includes("button.pay attr disabled"));
+});
+
+test("segments: flags status=0 failures, ignores console.debug, scopes vocab per segment", async () => {
+  const { extractSegments } = await import("../dist/segments.js");
+  const segs = extractSegments([
+    say(1000, "支付按钮坏了", 1000, 1500),
+    click(1600, "支付按钮"),
+    { kind: "res", t: 1800, id: 1, url: "http://x/api/pay", status: 0 },
+    { kind: "console", t: 1900, level: "debug", text: "noisy debug" },
+    say(9000, "样式不对", 9000, 9500),
+    click(9600, "支付按钮"),
+  ]);
+  assert.equal(segs.length, 2);
+  assert.equal(segs[0].errors.length, 1); // status=0 counted, console.debug ignored
+  assert.ok(segs[0].suspects.some(s => s.via === "vocab"));
+  assert.ok(!segs[1].suspects.some(s => s.via === "vocab")); // segment 2 didn't say 支付
+});
+
+test("network: redactUrl masks sensitive query params and preserves normal params", async () => {
+  const { redactUrl, maskPostData } = await import("../dist/network.js");
+  assert.equal(redactUrl("https://api.example.com/v1?page=2&token=secret123&api_key=abc"), "https://api.example.com/v1?page=2&token=***&api_key=***");
+  assert.equal(redactUrl("https://api.example.com/v1?page=2&q=hello"), "https://api.example.com/v1?page=2&q=hello");
+  assert.equal(maskPostData('{"password":"p1","user":"alice"}'), '{"password":"***","user":"alice"}');
+});

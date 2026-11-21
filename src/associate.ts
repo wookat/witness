@@ -15,19 +15,20 @@ const WIN_BEFORE = 2000;
 const WIN_AFTER = 5000;
 const SKIP = new Set(["say", "shot", "note", "_ui", "issue"]);
 
-function brief(e: Ev): string {
+export function briefEvent(e: Ev): string {
   const a = e as any;
   switch (e.kind) {
     case "click": return `click ${a.sel ?? ""} "${a.text ?? ""}"`;
-    case "input": return `input ${a.sel ?? ""} "${a.text ?? ""}"`;
+    case "input": return `input ${a.sel ?? ""} ${a.masked ? "[masked]" : `"${a.value ?? ""}"`}`;
     case "key": return `key ${a.key}`;
     case "nav": return `nav ${a.url}`;
     case "req": return `${a.method} ${a.url}`;
     case "res": return `res ${a.status} ${a.url}`;
     case "console": return `console.${a.level} ${String(a.text ?? "").slice(0, 120)}`;
-    case "error": return `error ${String(a.text ?? "").slice(0, 120)}`;
-    case "mut": return `mut ${a.label ?? a.sel ?? ""} ${a.attr ?? ""}: ${a.prev ?? ""}->${a.val ?? ""}`;
+    case "error": return `error ${String(a.message ?? "").slice(0, 120)}`;
+    case "mut": return `mut ${a.sel ?? ""} ${String(a.summary ?? "").slice(0, 120)}`;
     case "mark": return `mark ${a.sel ?? ""} "${a.text ?? ""}"`;
+    case "ws": return `ws ${a.dir} ${a.url} ${String(a.data ?? "").slice(0, 80)}`;
     case "scroll": return `scroll y=${a.y}`;
     default: return e.kind;
   }
@@ -50,7 +51,7 @@ export async function associateSays(events: Ev[]): Promise<AssocMap> {
       .slice(0, 100);
     sections.push(
       `SAY#${idx.get(s)} t=${s.t}ms: "${(s as any).text}"\n` +
-      cands.map(e => `  E${idx.get(e)} +${e.t - s.t}ms ${brief(e)}`).join("\n")
+      cands.map(e => `  E${idx.get(e)} +${e.t - s.t}ms ${briefEvent(e)}`).join("\n")
     );
   }
 

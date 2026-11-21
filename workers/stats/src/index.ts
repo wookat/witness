@@ -14,6 +14,7 @@ const EVENTS: Record<string, number> = {
 const CLI_COMMANDS = new Set([
   "start", "transcribe", "correct", "recover", "associate",
   "segments", "keyframes", "config", "mcp", "list", "open",
+  "doctor", "init", "setup", "local-asr",
 ]);
 const PATH_RE = /^\/[a-zA-Z0-9\-_/.]{0,120}$/;
 

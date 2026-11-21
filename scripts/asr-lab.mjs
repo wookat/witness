@@ -123,11 +123,11 @@ function wavHeader(pcmLen) {
 }
 
 async function batchProviders(wavFile, emit) {
-  const m = await import("../dist/asr-providers.js");
-  const list = [["bcut 必剪(B站)", "bcut"]]; // dead providers removed: 快手/剪映/uncloseai/notetakers all confirmed gone
-  await Promise.all(list.map(async ([label, fn]) => {
+  const { transcribeBcut } = await import("../dist/bcut.js");
+  const list = [["bcut 必剪(B站)", "bcut", async f => (await transcribeBcut(f)).segments]];
+  await Promise.all(list.map(async ([label, fn, run]) => {
     const t0 = Date.now();
-    try { emit({ name: fn, label, ok: true, streaming: false, ms: Date.now() - t0, segs: await m[fn](wavFile) }); }
+    try { emit({ name: fn, label, ok: true, streaming: false, ms: Date.now() - t0, segs: await run(wavFile) }); }
     catch (e) { emit({ name: fn, label, ok: false, streaming: false, ms: Date.now() - t0, error: e.message?.slice(0, 160) }); }
   }));
 }
@@ -193,12 +193,13 @@ const existing = process.argv[2];
 if (existing && existsSync(existing)) {
   // offline bench: file → all providers (streaming ones at file pacing)
   (async () => {
-    const m = await import("../dist/asr-providers.js");
-    const web = await import("../dist/doubao-web.js");
+    const { doubaoWebStt } = await import("../dist/doubao-web.js");
+    const { doubaoStt } = await import("../dist/doubao.js");
+    const { transcribeBcut } = await import("../dist/bcut.js");
     const list = [
-      { name: "doubao-web", label: "doubao-web 豆包网页(VoiceGenie)", streaming: true, run: f => web.doubaoWebStt(f, t => console.log("  [vg]", t.slice(-40)), 2) },
-      { name: "doubao", label: "doubao 豆包输入法(Seed-ASR)", streaming: true, run: f => m.doubao(f) },
-      { name: "bcut", label: "bcut 必剪(B站)", streaming: false, run: f => m.bcut(f) },
+      { name: "doubao-web", label: "doubao-web 豆包网页(VoiceGenie)", streaming: true, run: f => doubaoWebStt(f, t => console.log("  [vg]", t.slice(-40)), 2) },
+      { name: "doubao", label: "doubao 豆包输入法(Seed-ASR)", streaming: true, run: f => doubaoStt(f) },
+      { name: "bcut", label: "bcut 必剪(B站)", streaming: false, run: async f => (await transcribeBcut(f)).segments },
     ];
     await Promise.all(list.map(async p => {
       const t0 = Date.now();

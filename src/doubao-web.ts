@@ -7,7 +7,7 @@ import tls from "node:tls";
 import { readFileSync } from "node:fs";
 import WebSocket from "ws";
 import { webmToWav } from "./webm2wav.js";
-import type { AsrSeg } from "./asr-providers.js";
+import type { AsrSeg } from "./asr-types.js";
 
 const HOST = "frontier-audio-web-ws.doubao.com";
 const APP_KEY = "GOqQpfo1fO7slHv8";

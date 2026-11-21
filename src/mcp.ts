@@ -24,7 +24,7 @@ const brief = (e: Ev) => {
     case "res": return { ...base, status: a.status, url: a.url, body: a.bodyPath, bodyTrunc: a.bodyTrunc };
     case "console": return { ...base, level: a.level, text: a.text };
     case "error": return { ...base, text: a.text ?? a.message };
-    case "mut": return { ...base, label: a.label, attr: a.attr, prev: a.prev, val: a.val };
+    case "mut": return { ...base, sel: a.sel, summary: a.summary, n: a.n };
     case "nav": return { ...base, url: a.url };
     case "say": return { ...base, text: a.text, segStart: a.segStart, segEnd: a.segEnd };
     case "shot": return { ...base, path: a.path };
@@ -185,8 +185,8 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
       inputSchema: {},
     },
     async () => {
-      const s = await load();
-      const audioPath = (s as any).audio ?? "audio.webm";
+      await load();
+      const audioPath = "audio.webm";
       const p = safe(audioPath);
       if (!existsSync(p)) return text("(no audio.webm in this session)");
       const { size } = await stat(p);
@@ -199,7 +199,7 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
         content: [{
           type: "audio" as const,
           data: buf.toString("base64"),
-          mimeType: /\.ogg$/i.test(audioPath) ? "audio/ogg" : "audio/webm",
+          mimeType: "audio/webm",
         }],
       };
     });
@@ -244,16 +244,17 @@ export async function serveMcp(sessionDir?: string): Promise<void> {
     });
 
   server.registerTool("get_asr",
-    { description: "Current live speech-recognition engine for future recordings (auto|doubao-web|doubao-ime|sr|off)" },
+    { description: "Current live speech-recognition engine for future recordings (auto|local|doubao-web|doubao-ime|sr|off)" },
     async () => {
       const { readConfig } = await import("./config.js");
-      return text(JSON.stringify({ asr: readConfig().asr ?? "auto", engines: ["auto", "doubao-web", "doubao-ime", "sr", "off"] }));
+      const { ASR_ENGINES } = await import("./live-asr.js");
+      return text(JSON.stringify({ asr: readConfig().asr ?? "auto", engines: ASR_ENGINES }));
     });
 
   server.registerTool("set_asr",
     {
-      description: "Switch the live ASR engine for FUTURE recordings (persists to .witness/config.json). doubao-web = best quality streaming; doubao-ime = sentence timestamps; sr = browser builtin; off = none.",
-      inputSchema: { engine: z.enum(["auto", "doubao-web", "doubao-ime", "sr", "off"]) },
+      description: "Switch the live ASR engine for FUTURE recordings (persists to ~/.witness/config.json). local = offline sherpa-onnx; doubao-web = best cloud punctuation; doubao-ime = sentence timestamps; sr = browser builtin; off = none.",
+      inputSchema: { engine: z.enum(["auto", "local", "doubao-web", "doubao-ime", "sr", "off"]) },
     },
     async ({ engine }) => {
       const { setConfig } = await import("./config.js");

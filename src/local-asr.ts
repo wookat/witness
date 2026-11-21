@@ -1,6 +1,8 @@
 /** Local ASR management: uv bootstrap, speaches-free faster-whisper server lifecycle, health probes. */
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, statSync, openSync, closeSync, writeSync } from "node:fs";
+import { spawn, spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, statSync, openSync, closeSync, writeSync, renameSync, createWriteStream } from "node:fs";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { homedir, platform, arch } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -143,7 +145,7 @@ export async function probeHealth(baseURL: string, timeoutMs = 1800): Promise<{ 
 // ---------- uv bootstrap ----------
 
 function witBinDir(): string {
-  const d = join(homedir(), ".wit", "bin");
+  const d = join(homedir(), ".witness", "bin");
   mkdirSync(d, { recursive: true });
   return d;
 }
@@ -210,12 +212,13 @@ export function serverScriptPath(): string {
 }
 
 function stateDir(): string {
-  const d = join(process.cwd(), ".witness");
+  const d = join(homedir(), ".witness");
   mkdirSync(d, { recursive: true });
   return d;
 }
+export const localAsrLogFile = () => join(stateDir(), "local-asr.log");
 const pidFile = () => join(stateDir(), "local-asr.pid");
-const logFile = () => join(stateDir(), "local-asr.log");
+const logFile = localAsrLogFile;
 
 function readPid(): number | null {
   try { const p = parseInt(readFileSync(pidFile(), "utf8").trim(), 10); return Number.isFinite(p) ? p : null; } catch { return null; }
@@ -331,7 +334,7 @@ export function liveModelReady(dir = liveModelDir()): boolean {
   return existsSync(join(dir, "encoder.int8.onnx")) && existsSync(join(dir, "tokens.txt"));
 }
 
-/** Download the streaming model (~1190MB int8) — HF first, hf-mirror fallback. */
+/** Download the streaming model (~190MB int8) — HF first, hf-mirror fallback, atomic .part rename. */
 export async function ensureLiveModel(log: (s: string) => void = console.log): Promise<string> {
   const dir = liveModelDir();
   if (liveModelReady(dir)) return dir;
@@ -340,23 +343,33 @@ export async function ensureLiveModel(log: (s: string) => void = console.log): P
   const curlBin = platform() === "win32" ? "curl.exe" : "curl";
   for (const [remote, local] of Object.entries(LIVE_FILES)) {
     const dest = join(dir, local);
+    const part = `${dest}.part`;
     if (existsSync(dest) && statSync(dest).size > 0) continue;
+    rmSync(part, { force: true });
     let ok = false;
     let lastErr = "";
     for (const base of bases) {
       const url = `${base}/${LIVE_MODEL_REPO}/resolve/main/${remote}`;
       try {
         log(`  … ${remote} (${base.includes("mirror") ? "mirror" : "hf"})`);
-        const r = await fetch(url, { signal: AbortSignal.timeout(120_000) });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        writeFileSync(dest, Buffer.from(await r.arrayBuffer()));
+        const r = await fetch(url, { signal: AbortSignal.timeout(180_000) });
+        if (!r.ok || !r.body) throw new Error(`HTTP ${r.status}`);
+        await pipeline(Readable.fromWeb(r.body as any), createWriteStream(part));
+        if (statSync(part).size === 0) throw new Error("empty download");
+        renameSync(part, dest);
         ok = true;
         break;
       } catch (e) {
+        rmSync(part, { force: true });
         lastErr = (e as Error).message;
         // undici fetch can fail where curl succeeds (proxy/DNS/redirect quirks) — fall back
-        const c = spawnSync(curlBin, ["-fSL", "--max-time", "300", "-o", dest, url], { stdio: "ignore" });
-        if (c.status === 0 && existsSync(dest) && statSync(dest).size > 0) { ok = true; break; }
+        const c = spawnSync(curlBin, ["-fSL", "--max-time", "300", "-o", part, url], { stdio: "ignore" });
+        if (c.status === 0 && existsSync(part) && statSync(part).size > 0) {
+          renameSync(part, dest);
+          ok = true;
+          break;
+        }
+        rmSync(part, { force: true });
         lastErr += ` | curl: exit ${c.status ?? c.error?.message ?? "?"}`;
       }
     }

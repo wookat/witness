@@ -1,75 +1,123 @@
 ---
-// Interactive evidence-timeline demo — click a SAY to expand its causal burst.
-const defaultSays = [
-  {
-    t: "00:09",
-    quote: "the button fades and shrinks when I scroll",
-    ev: [
-      ["SCROLL", "y=3936", "dim"],
-      ["MUT", "button.feedback · data-collapsed: false → true", "acc2"],
-      ["MUT", "button.feedback · data-collapsed: true → false", "acc2"],
-    ],
-    note: "attribute flapping on the boundary",
-    ui: "scroll",
-  },
-  {
-    t: "00:34",
-    quote: "the submit button does nothing",
-    ev: [["CLICK", "button#submit “Submit” · @482,701", "ok"]],
-    note: "page showed no reaction for 1.8s after the click — that itself is evidence",
-    ui: "btn",
-  },
-  {
-    t: "01:02",
-    quote: "the orders API returns wrong data",
-    ev: [
-      ["CLICK", "a[href=\"/orders\"] “Orders”", "ok"],
-      ["NET →", "GET /api/orders?page=1", "dim"],
-      ["NET ←", "200 /api/orders · items: []", "bad"],
-    ],
-    note: "response body captured → bodies/req_0041.json",
-    ui: "api",
-  },
-];
-const { says = defaultSays, hint = "click a quote to expand its evidence" } = Astro.props;
+// Interactive evidence-timeline explorer — switch output views (session.md / SEGMENTS.md /
+// events.jsonl / wit mcp), filter event kinds, expand SAY bursts, and inspect real screenshots.
+const { says = [], hint = "click a quote to expand its evidence" } = Astro.props;
+
+const rawJsonl = `{"t":9120,"kind":"say","text":${JSON.stringify(says[0]?.quote ?? "the button fades when I scroll")},"segStart":9120,"segEnd":11400}
+{"t":9400,"kind":"scroll","y":3936}
+{"t":9460,"kind":"mut","sel":"button.feedback","summary":"attr data-collapsed: false → true"}
+{"t":34100,"kind":"say","text":${JSON.stringify(says[1]?.quote ?? "the submit button does nothing")},"segStart":34100,"segEnd":36200}
+{"t":34410,"kind":"click","sel":"button#submit","text":"Submit","x":482,"y":701,"shot":"shots/011-click.jpg"}
+{"t":62050,"kind":"req","id":41,"method":"GET","url":"/api/orders?page=1","resType":"fetch"}
+{"t":62188,"kind":"res","id":41,"status":200,"url":"/api/orders?page=1","bodyPath":"bodies/req_0041.json"}`;
+
+const segmentsMd = `# SEGMENTS — http://localhost:5173
+
+01:18 recorded · 3 speech-anchored segments.
+
+## S1 · 00:09–00:11 · “${says[0]?.quote ?? ""}”
+- suspect elements: button.feedback
+- shots: shots/003-say.jpg · detail: segments/01.md
+
+## S2 · 00:34–00:36 · “${says[1]?.quote ?? ""}”
+- suspect elements: button#submit
+- **1 click with zero page reaction** — hard evidence of dead UI
+- shots: shots/011-click.jpg · detail: segments/02.md
+
+## S3 · 01:02–01:05 · “${says[2]?.quote ?? ""}”
+- suspect elements: a[href="/orders"]
+- bodies: bodies/req_0041.json · detail: segments/03.md`;
+
+const mcpSample = `// Tool call: segment_detail({ n: 2 })
+{
+  "segment": "S2 (00:34–00:36)",
+  "verbatim": ${JSON.stringify(says[1]?.quote ?? "the submit button does nothing")},
+  "deadClicks": [
+    { "t": 34410, "sel": "button#submit", "reactionMs": null }
+  ],
+  "suspects": [{ "via": "click", "sel": "button#submit" }],
+  "shots": ["shots/011-click.jpg"],
+  "nextToolHint": "call get_shot('shots/011-click.jpg') to verify UI state"
+}`;
 ---
-<div class="demo rv" data-d="100">
-  <div class="bar"><i></i><i></i><i></i><span>session.md — interactive</span><em>{hint}</em></div>
-  <div class="tl">
-    {says.map((s, i) => (
-      <div class={"say" + (i === 0 ? " open" : "")} data-i={i}>
-        <button class="head" type="button">
-          <span class="ts">{s.t}</span>
-          <span class="tag">SAY</span>
-          <span class="q">“{s.quote}”</span>
-          <svg class="chev" width="12" height="12" viewBox="0 0 12 12"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </button>
-        <div class="burst"><div class="burst-in">
-          <div class="rows">
-            {s.ev.map(([k, v, c]) => <div class="row"><span class={"k " + c}>{k}</span><span class="v">{v}</span></div>)}
-            <div class="note">└─ {s.note}</div>
-          </div>
-          <button class={"shot " + s.ui} type="button" title="click to enlarge">
-            <div class="vp">
-              {s.ui === "btn" && <><div class="ui-bar"></div><div class="ui-btn"></div><div class="ui-line l1"></div><div class="ui-line l2"></div></>}
-              {s.ui === "scroll" && <><div class="ui-bar"></div><div class="ui-card"></div><div class="ui-card short"></div><div class="ui-btn small"></div></>}
-              {s.ui === "api" && <><div class="ui-bar"></div><div class="ui-row"></div><div class="ui-row"></div><div class="ui-row empty"></div><div class="ui-row empty"></div></>}
-            </div>
-            <span>shot_{s.t.replace(":","")}.png</span>
-          </button>
-        </div></div>
-      </div>
-    ))}
+<div class="demo rv" data-d="80" id="wit-demo">
+  <div class="bar">
+    <i></i><i></i><i></i>
+    <div class="vtabs" role="tablist" aria-label="Evidence output view">
+      <button type="button" class="vt on" data-v="tl">session.md</button>
+      <button type="button" class="vt" data-v="seg">SEGMENTS.md</button>
+      <button type="button" class="vt" data-v="jsonl">events.jsonl</button>
+      <button type="button" class="vt" data-v="mcp">wit mcp</button>
+    </div>
+    <div class="efilt" id="demo-efilt">
+      <button type="button" class="ef on" data-f="all">ALL</button>
+      <button type="button" class="ef" data-f="CLICK">CLICK</button>
+      <button type="button" class="ef" data-f="NET">NET</button>
+      <button type="button" class="ef" data-f="MUT">MUT</button>
+    </div>
+    <em>{hint}</em>
   </div>
+
+  <div class="view on" data-view="tl">
+    <div class="tl">
+      {says.map((s: any, i: number) => (
+        <div class={"say" + (i === 0 ? " open" : "")} data-i={i}>
+          <button class="head" type="button" aria-expanded={i === 0 ? "true" : "false"}>
+            <span class="ts">{s.t}</span>
+            <span class="tag">SAY</span>
+            <span class="q">“{s.quote}”</span>
+            <svg class="chev" width="12" height="12" viewBox="0 0 12 12"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+          <div class="burst"><div class="burst-in">
+            <div class="rows">
+              {s.ev.map(([k, v, c]: [string, string, string]) => (
+                <div class="row" data-k={k.split(" ")[0]}>
+                  <span class={"k " + c}>{k}</span><span class="v">{v}</span>
+                </div>
+              ))}
+              <div class="note">└─ {s.note}</div>
+            </div>
+            <button class="shot" type="button" data-img={s.ui === "btn" ? "/sample/review.png" : "/sample/shot.jpg"} data-cap={`shot_${s.t.replace(":", "")}.jpg · ${s.t}`} title="Click to inspect real frame">
+              <img src={s.ui === "btn" ? "/sample/review.png" : "/sample/shot.jpg"} alt={`Evidence frame at ${s.t}`} loading="lazy" />
+              <span>shot_{s.t.replace(":", "")}.jpg ↗</span>
+            </button>
+          </div></div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="view" data-view="seg"><pre class="raw">{segmentsMd}</pre></div>
+  <div class="view" data-view="jsonl"><pre class="raw">{rawJsonl}</pre></div>
+  <div class="view" data-view="mcp"><pre class="raw">{mcpSample}</pre></div>
 </div>
+
+<div class="lb" id="wit-lb" aria-hidden="true">
+  <img id="wit-lb-img" alt="Enlarged evidence screenshot" />
+  <span class="cap" id="wit-lb-cap"></span>
+  <span class="hint">ESC / CLICK TO CLOSE</span>
+</div>
+
 <style>
-  .demo{background:var(--term);border:1px solid var(--term-line);border-radius:var(--r);overflow:hidden;margin-top:44px;box-shadow:0 24px 60px #17171c24;font-family:var(--mono)}
-  .bar{display:flex;align-items:center;gap:7px;padding:12px 16px;border-bottom:1px solid var(--term-line);color:#8b87a3;font-size:11.5px}
-  .bar i{width:10px;height:10px;border-radius:50%}
+  .demo{background:var(--term);border:1px solid var(--term-line);border-radius:var(--r);overflow:hidden;margin-top:40px;box-shadow:0 24px 60px #17171c24;font-family:var(--mono)}
+  .bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--term-line);color:#8b87a3;font-size:11.5px;flex-wrap:wrap}
+  .bar i{width:9px;height:9px;border-radius:50%;flex:none}
   .bar i:nth-child(1){background:#ef4444}.bar i:nth-child(2){background:#f4b83f}.bar i:nth-child(3){background:#3fc96a}
-  .bar span{margin-left:8px}
-  .bar em{margin-left:auto;font-style:normal;color:#5b5871}
-  @media(max-width:640px){.bar em{display:none}}
+  .vtabs{display:inline-flex;gap:3px;background:#191922;padding:3px;border-radius:8px;margin-left:4px;flex-wrap:wrap}
+  .vt{background:transparent;border:0;color:#8b87a3;font:600 11px var(--mono);padding:4px 9px;border-radius:6px;cursor:pointer;transition:all .14s}
+  .vt:hover{color:#e6e4f0}
+  .vt.on{background:#2d2d3d;color:#fff}
+  .efilt{display:inline-flex;gap:4px;margin-left:6px}
+  .efilt.hide{display:none}
+  .ef{background:transparent;border:1px solid #2b2b38;color:#7d7a94;font:600 10px var(--mono);padding:3px 7px;border-radius:5px;cursor:pointer}
+  .ef:hover{color:#d8d5e8}
+  .ef.on{background:#e5484d26;border-color:#e5484d55;color:#ff9497}
+  .bar em{margin-left:auto;font-style:normal;color:#6b6880;font-size:11px}
+  @media(max-width:780px){.bar em{display:none}}
+
+  .view{display:none}
+  .view.on{display:block}
+  .raw{padding:18px 20px;font:12px/1.8 var(--mono);color:var(--term-text);overflow-x:auto;white-space:pre;margin:0}
 
   .tl{padding:8px 0}
   .say{border-left:2px solid transparent}
@@ -84,57 +132,70 @@ const { says = defaultSays, hint = "click a quote to expand its evidence" } = As
 
   .burst{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s cubic-bezier(.2,.6,.2,1)}
   .say.open .burst{grid-template-rows:1fr}
-  .burst-in{overflow:hidden;opacity:0;transition:opacity .22s .05s}
-  .say.open .burst-in{opacity:1}
-  .burst-in{display:flex;gap:18px;padding:2px 20px 18px 84px}
+  .burst-in{overflow:hidden;opacity:0;transition:opacity .22s .05s;display:flex;gap:18px;padding:0 20px 0 84px}
+  .say.open .burst-in{opacity:1;padding-top:2px;padding-bottom:18px}
   @media(max-width:640px){.burst-in{flex-direction:column;padding-left:20px}}
   .rows{flex:1;min-width:0}
   .row{display:flex;gap:10px;padding:4px 0;font-size:12.5px}
+  .row.dimmed{opacity:.24}
   .k{flex:none;width:56px;font-weight:600;font-size:11px;padding-top:2px}
-  .k.ok{color:#6fce97}.k.bad{color:#f28b86}.k.dim{color:#6a6a75}.k.acc2{color:#e8c476}
-  .v{color:#b8b4d6;word-break:break-all}
-  .note{padding:6px 0 0 66px;font-size:12px;color:#6f6b87;font-style:italic}
+  .k.ok{color:#6fce97}.k.bad{color:#f28b86}.k.dim{color:#787886}.k.acc2{color:#e8c476}
+  .v{color:#c4c0de;word-break:break-word}
+  .note{padding:6px 0 0 66px;font-size:12px;color:#7e7a96;font-style:italic}
   @media(max-width:640px){.note{padding-left:0}}
 
-  .shot{flex:none;width:170px;background:none;border:0;padding:0;font:inherit;text-align:center;cursor:zoom-in}
-  .shot .vp{height:104px;border-radius:10px;background:linear-gradient(160deg,#1d1c24,#141319);border:1px solid #302e3d;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
-  .shot:hover .vp{border-color:#565270;transform:scale(1.03)}
-  .shot span{display:block;margin-top:7px;font-size:10.5px;color:#5b5871;text-align:center}
-  .ui-bar{position:absolute;top:9px;left:10px;right:10px;height:6px;border-radius:3px;background:#3d3956}
-  .ui-btn{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:74px;height:20px;border-radius:10px;background:linear-gradient(135deg,#2a2b31,#17181c)}
-  .ui-btn.small{width:46px;height:13px;bottom:auto;top:70px}
-  .ui-line{position:absolute;left:22px;right:22px;height:5px;border-radius:3px;background:#34314c}
-  .ui-line.l1{top:34px}.ui-line.l2{top:47px;right:50px}
-  .ui-card{position:absolute;top:26px;left:10px;right:10px;height:34px;border-radius:7px;background:#2b2840}
-  .ui-card.short{top:66px;right:60px;height:26px}
-  .ui-row{position:absolute;left:10px;right:10px;height:14px;border-radius:4px;background:#2e2b44}
-  .ui-row:nth-of-type(2){top:26px}.ui-row:nth-of-type(3){top:46px}.ui-row:nth-of-type(4){top:66px}.ui-row:nth-of-type(5){top:86px}
-  .ui-row.empty{background:transparent;border:1px dashed #413e52}
+  .shot{flex:none;width:184px;background:none;border:0;padding:0;font:inherit;text-align:center;cursor:zoom-in}
+  .shot img{display:block;width:100%;height:108px;object-fit:cover;border-radius:9px;border:1px solid #302e3d;transition:border-color .2s,transform .2s}
+  .shot:hover img{border-color:#686384;transform:scale(1.03)}
+  .shot span{display:block;margin-top:6px;font-size:10.5px;color:#817d9c}
 
-  /* lightbox */
-  .lb{position:fixed;inset:0;z-index:80;background:#0d0d12cf;backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:0;pointer-events:none;transition:opacity .22s}
+  .lb{position:fixed;inset:0;z-index:90;background:#0d0d12dc;backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s}
   .lb.on{opacity:1;pointer-events:auto}
-  .lb .stage{width:170px;height:104px;transform:scale(2.6) translateY(-4px);transform-origin:center}
-  .lb .vp{width:170px;height:104px;border-radius:10px;background:linear-gradient(160deg,#1d1c24,#141319);border:1px solid #3a3747;position:relative;overflow:hidden}
-  .lb .cap{font:500 12px var(--mono);color:#9d99b8;margin-top:96px}
-  .lb .hint{position:absolute;bottom:26px;font:500 10.5px var(--mono);color:#5b5871;letter-spacing:.1em}
+  .lb img{max-width:min(92vw,960px);max-height:78vh;border-radius:10px;border:1px solid #3a3747;box-shadow:0 28px 80px #0008}
+  .lb .cap{font:500 12px var(--mono);color:#c4c0de}
+  .lb .hint{font:500 10.5px var(--mono);color:#78748f;letter-spacing:.1em}
 </style>
-<div class="lb" id="wit-lb" aria-hidden="true"><div class="stage"><div class="vp" id="wit-lb-vp"></div></div><span class="cap" id="wit-lb-cap"></span><span class="hint">ESC / CLICK TO CLOSE</span></div>
+
 <script>
-  document.querySelectorAll(".demo .head").forEach(h => h.addEventListener("click", () => {
-    const s = h.parentElement;
+  const root = document.getElementById("wit-demo");
+  const efilt = document.getElementById("demo-efilt");
+
+  root?.querySelectorAll<HTMLButtonElement>(".vt").forEach(btn => btn.addEventListener("click", () => {
+    const v = btn.dataset.v;
+    root.querySelectorAll(".vt").forEach(x => x.classList.toggle("on", x === btn));
+    root.querySelectorAll<HTMLElement>(".view").forEach(p => p.classList.toggle("on", p.dataset.view === v));
+    efilt?.classList.toggle("hide", v !== "tl");
+  }));
+
+  root?.querySelectorAll<HTMLButtonElement>(".ef").forEach(btn => btn.addEventListener("click", () => {
+    const f = btn.dataset.f;
+    root.querySelectorAll(".ef").forEach(x => x.classList.toggle("on", x === btn));
+    root.querySelectorAll<HTMLElement>(".row").forEach(r => {
+      r.classList.toggle("dimmed", f !== "all" && r.dataset.k !== f);
+    });
+  }));
+
+  root?.querySelectorAll<HTMLButtonElement>(".head").forEach(h => h.addEventListener("click", () => {
+    const s = h.parentElement!;
     const was = s.classList.contains("open");
-    s.parentElement.querySelectorAll(".say").forEach(x => x.classList.remove("open"));
-    if (!was) s.classList.add("open");
+    s.parentElement!.querySelectorAll(".say").forEach(x => {
+      x.classList.remove("open");
+      x.querySelector(".head")?.setAttribute("aria-expanded", "false");
+    });
+    if (!was) { s.classList.add("open"); h.setAttribute("aria-expanded", "true"); }
   }));
-  const lb = document.getElementById("wit-lb"), lbvp = document.getElementById("wit-lb-vp"), lbcap = document.getElementById("wit-lb-cap");
-  const closeLb = () => lb.classList.remove("on");
-  document.querySelectorAll(".demo .shot").forEach(sh => sh.addEventListener("click", e => {
+
+  const lb = document.getElementById("wit-lb");
+  const lbImg = document.getElementById("wit-lb-img") as HTMLImageElement | null;
+  const lbCap = document.getElementById("wit-lb-cap");
+  const closeLb = () => { lb?.classList.remove("on"); lb?.setAttribute("aria-hidden", "true"); };
+  root?.querySelectorAll<HTMLButtonElement>(".shot").forEach(sh => sh.addEventListener("click", e => {
     e.stopPropagation();
-    lbvp.innerHTML = sh.querySelector(".vp").innerHTML;
-    lbcap.textContent = sh.querySelector("span").textContent + " · " + sh.closest(".say").querySelector(".ts").textContent;
-    lb.classList.add("on");
+    if (lbImg) lbImg.src = sh.dataset.img || "/sample/shot.jpg";
+    if (lbCap) lbCap.textContent = sh.dataset.cap || "";
+    lb?.classList.add("on");
+    lb?.setAttribute("aria-hidden", "false");
   }));
-  lb.addEventListener("click", closeLb);
+  lb?.addEventListener("click", closeLb);
   addEventListener("keydown", e => { if (e.key === "Escape") closeLb(); });
 </script>

@@ -4,7 +4,7 @@ import { openLiveIme, type LiveIme } from "./doubao.js";
 import { openLocalLive, type LocalLive } from "./local-live-asr.js";
 import { localAsrConfig } from "./local-asr.js";
 import { liveModelReady } from "./local-asr.js";
-import type { AsrSeg } from "./asr-providers.js";
+import type { AsrSeg } from "./asr-types.js";
 
 export type AsrChoice = "auto" | "doubao-web" | "doubao-ime" | "local" | "sr" | "off";
 export const ASR_ENGINES: AsrChoice[] = ["auto", "doubao-web", "doubao-ime", "local", "sr", "off"];

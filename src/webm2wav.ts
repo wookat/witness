@@ -1,14 +1,13 @@
 import { readFileSync } from "node:fs";
-import { chromium } from "playwright";
+import { launchBrowser } from "./browser.js";
 
 /**
  * Decode audio.webm → 16kHz mono WAV via Chromium's decodeAudioData.
- * Playwright is already a dependency — zero new native deps, and Chromium
- * is the exact same decoder the review page uses.
+ * Uses system Edge/Chrome when available (same zero-download path as recording).
  */
 export async function webmToWav(path: string): Promise<Buffer> {
   const buf = readFileSync(path);
-  const b = await chromium.launch();
+  const { browser: b } = await launchBrowser({ headless: true });
   try {
     const page = await b.newPage();
     const pcm16 = await page.evaluate(async (b64) => {

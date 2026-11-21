@@ -1,0 +1,107 @@
+---
+// Unified multi-language Docs page — single source of truth across en / zh / zh-hant / ja.
+import Base from "../layouts/Base.astro";
+import Term from "./Term.astro";
+import Card from "./Card.astro";
+import DocsHead from "./DocsHead.astro";
+import Configurator from "./Configurator.astro";
+import { ui } from "../i18n.js";
+import { docsUi } from "../i18n/docs.js";
+import { GH } from "../meta.js";
+
+const { lang = "en" } = Astro.props;
+const d = docsUi(lang);
+const homePath = ui(lang).path;
+---
+<Base lang={lang} title={d.pageTitle} desc={d.pageDesc}>
+<DocsHead lang={lang} title={d.headTitle} lede={d.headLede} chapters={d.chapters} />
+
+<div class="ruler"><b class="a">{d.rulers[0]}</b><i style="--x:4%"></i></div>
+
+<section id="install2" class="alt"><div class="wrap">
+  <div class="kicker">{d.s1.k}</div>
+  <h2 class="rv">{d.s1.h}</h2>
+  <p class="lede rv" data-d="60" set:html={d.s1.lede} />
+  <Term label={d.s1.term1Lbl} d="80">{d.s1.term1}</Term>
+  <div class="grid g2" style="margin-top:24px">
+    <Card icon="box" title={d.s1.c1t} d="0"><span set:html={d.s1.c1d} /></Card>
+    <Card icon="file" title={d.s1.c2t} d="60"><span set:html={d.s1.c2d} /> <a href={GH + "/blob/main/skills/witness/SKILL.md"}>{d.s1.c2link}</a></Card>
+  </div>
+  <Term label={d.s1.term2Lbl} d="100"><span class="c-dim">{d.s1.term2Comment}</span>
+npm i -g witness-recorder
+wit doctor</Term>
+</div></section>
+
+<div class="ruler"><b class="a">{d.rulers[1]}</b><i style="--x:36%"></i></div>
+
+<section id="config"><div class="wrap">
+  <div class="kicker">{d.s2.k}</div>
+  <h2 class="rv">{d.s2.h}</h2>
+  <p class="lede rv" data-d="40" set:html={d.s2.lede} />
+  <Configurator lang={lang} compact={true} />
+  <div class="grid g2" style="margin-top:28px">
+    <Card icon="mic" title={d.s2.c1t} d="0"><span set:html={d.s2.c1d} /><pre class="cpre">{d.s2.c1pre}</pre></Card>
+    <Card icon="shield" title={d.s2.c2t} d="60"><span set:html={d.s2.c2d} /><pre class="cpre">{d.s2.c2pre}</pre></Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">{d.rulers[2]}</b><b class="b">● REC</b><i style="--x:52%"></i></div>
+
+<section id="use" class="alt"><div class="wrap">
+  <div class="kicker">{d.s3.k}</div>
+  <h2 class="rv">{d.s3.h}</h2>
+  <Term label={d.s3.termLbl} d="60" copy={false}><Fragment set:html={d.s3.conv} /></Term>
+  <div class="grid g2" style="margin-top:28px">
+    <Card icon="eye" n={d.s3.c1n} title={d.s3.c1t} d="0"><pre class="cpre">{d.s3.c1pre}</pre></Card>
+    <Card icon="file" n={d.s3.c2n} title={d.s3.c2t} d="60"><pre class="cpre">{d.s3.c2pre}</pre></Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">{d.rulers[3]}</b><i style="--x:70%"></i></div>
+
+<section id="output"><div class="wrap">
+  <div class="kicker">{d.s4.k}</div>
+  <h2 class="rv">{d.s4.h}</h2>
+  <p class="lede rv" data-d="60" set:html={d.s4.lede} />
+  <Term label={d.s4.treeLabel} d="80" copy={false}><Fragment set:html={d.s4.tree} /></Term>
+  <div class="grid g3" style="margin-top:28px">
+    <Card icon="file" title="PROMPT.md" d="0"><span set:html={d.s4.c1d} /></Card>
+    <Card icon="clock" title="session.md" d="40"><span set:html={d.s4.c2d} /></Card>
+    <Card icon="api" title="wit mcp" d="80"><span set:html={d.s4.c3d} /></Card>
+  </div>
+</div></section>
+
+<div class="ruler"><b class="a">{d.rulers[4]}</b><i style="--x:86%"></i></div>
+
+<section id="agent" class="alt"><div class="wrap">
+  <div class="kicker">{d.s5.k}</div>
+  <h2 class="rv">{d.s5.h}</h2>
+  <div class="grid g3" style="margin-top:30px">
+    <Card icon="terminal" n={d.s5.c1n} title={d.s5.c1t} d="0"><pre class="cpre">{d.s5.c1pre}</pre></Card>
+    <Card icon="file" n={d.s5.c2n} title={d.s5.c2t} d="40"><span set:html={d.s5.c2d} /></Card>
+    <Card icon="api" n={d.s5.c3n} title={d.s5.c3t} d="80"><pre class="cpre">{`{ "mcpServers": { "witness": {\n  "command": "wit", "args": ["mcp"]\n} } }`}</pre><span set:html={d.s5.c3d} /></Card>
+  </div>
+  <p class="lede rv" data-d="120" style="margin-top:24px" set:html={d.s5.foot} />
+</div></section>
+
+<div class="ruler"><b class="a">{d.rulers[5]}</b><b class="b">■ STOP</b><i style="--x:96%"></i></div>
+
+<section id="try"><div class="wrap">
+  <div class="kicker">{d.s6.k}</div>
+  <h2 class="rv">{d.s6.h}</h2>
+  <p class="lede rv" data-d="60">{d.s6.lede}</p>
+  <Term label="terminal" d="80">wit start https://witness.zalize.com/demo-app.html --duration 60
+<span class="c-dim">{d.s6.termComment}</span></Term>
+  <div class="cta rv" data-d="140" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px">
+    <a class="btn pri" href="/demo-app.html" target="_blank" rel="noopener">{d.s6.btnDemo}</a>
+    <a class="btn" href={GH}>GitHub ★</a>
+    <a class="btn" href={homePath}>{d.s6.btnBack}</a>
+  </div>
+</div></section>
+</Base>
+<style>
+  section{padding:52px 0}
+  h2{font-size:clamp(22px,3vw,30px);margin-bottom:12px}
+  .lede{font-size:15px;max-width:640px}
+  .cpre{margin-top:10px;font:12px/1.8 var(--mono);overflow-x:auto;color:var(--ink)}
+</style>

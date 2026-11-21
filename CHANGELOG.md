@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0 — user-driven review workbench, interactive site configurator & core reliability
+
+### Added
+- **User-driven `review.html` workbench (`src/review-template.ts`)** — DOM Replay ↔ Screenshots dual stage switcher, pause-compensated audio clock with automatic RAF virtual-clock fallback when no audio exists, volume/mute & keyboard shortcuts (`Space`, `←/→`, `J/K`, `E`, `M`, `?`), zoomable 3-lane timeline (`1×/2×/4×`) with clickable filter legend, Transcript/Events search & filters (`+ Noise` toggle), selectable Issue cards with parameterized **Copy for AI** builder (`Selected Issues` / `Full PROMPT.md` / `Current Moment ±5s` / `MCP Prompt` + optional extra note), inline artifact viewer & interactive screenshot gallery.
+- **Upgraded recording HUD (`src/page-script.ts`)** — displays live ASR badge, mark & issue counters, `CC` live-caption toggle, `?` shortcut popover, region-crop visual flash, viewport-clamped dragging, single shared `AudioContext` & clean media teardown on stop.
+- **Interactive site workflow configurator & unified 4-language docs** — customizable Agent / Privacy / Language / URL / Flags generator on landing & docs pages (`en` / `zh` / `zh-hant` / `ja`), multi-view evidence explorer, mobile nav drawer & mobile competitor comparison cards, Astro 7 upgrade (0 audit vulnerabilities).
+- **`wit config telemetry on|off`** — persists anonymous CLI telemetry opt-out globally.
+
+### Fixed
+- **Single-fragment `SAY` blocks dropped in `review.html`** — `renderReviewHtml` now serializes `b.says` instead of multi-frag-only `b.frags`, plus fixes `window.RRE` binding, `rr_mediaState` autoplay noise, XSS escaping, and mobile/tablet header overflow.
+- **MCP `get_audio` TypeError crash & `mut`/`set_asr` bugs** — `get_audio` no longer passes boolean `s.audio` into `path.resolve`; `brief()` emits real `mut.sel`/`summary`; `get_asr`/`set_asr` now support `local`.
+- **Full privacy freeze on `P` pause** — `wireNetwork`, `console`, `pageerror`, `framenavigated`, `__witAudio`, and in-page PCM tap all respect pause state; URL sensitive query params are now redacted.
+- **Zero-download system browser in `webm2wav` & `keyframes`** — shared `src/browser.ts` prefers system Edge/Chrome across recording, audio decoding, and keyframe rendering; calibrated `rrweb` keyframe offset.
+- **Cross-platform & reliability fixes** — `wit open` works on Windows/macOS/Linux; repeated utterances are no longer dropped by text-only dedupe; `--duration` and periodic screenshot timers clean up on exit; `local-asr` PID/logs stored globally in `~/.witness/` with atomic `.part` model downloads; `associate.ts` reads real `input.value`/`error.message`/`mut.summary`; `segments.ts` catches HTTP `status=0`, ignores `console.debug`, and scopes CJK vocab per segment; `workers/stats` allowlists `doctor`/`init`/`setup`/`local-asr`.
+
 ## 0.6.3 — free-cloud final transcription & single-pass reuse
 
 ### Added

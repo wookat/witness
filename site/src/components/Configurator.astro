@@ -1,0 +1,240 @@
+---
+// Interactive Workflow & Parameter Configurator — user-driven setup generator.
+// Users choose their AI agent, voice/privacy preset, language, target URL, and recording flags;
+// gets tailored runnable CLI commands, Agent/MCP config, and a live privacy boundary summary.
+import { ui } from "../i18n.js";
+const { lang = "en", compact = false } = Astro.props;
+const c = ui(lang).configurator;
+const uid = compact ? "cfg-doc" : "cfg-home";
+---
+<div class="cfg rv" data-d="60" id={uid}>
+  <div class="cfg-grid">
+    <!-- Left: interactive parameter controls -->
+    <div class="cfg-controls">
+      <div class="grp">
+        <label class="glbl">01 · {c.lAgent}</label>
+        <div class="pill-row" data-param="agent">
+          {c.agents.map(([id, label]: [string, string], i: number) => (
+            <button type="button" class={"cp" + (i === 0 ? " on" : "")} data-val={id}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div class="grp">
+        <label class="glbl">02 · {c.lPrivacy}</label>
+        <div class="mode-grid" data-param="privacy">
+          {c.privacies.map(([id, label, sub]: [string, string, string], i: number) => (
+            <button type="button" class={"mp" + (i === 0 ? " on" : "")} data-val={id}>
+              <b>{label}</b>
+              <span>{sub}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="grp two">
+        <div>
+          <label class="glbl">03 · {c.lLang}</label>
+          <div class="pill-row" data-param="slang">
+            {c.langs.map(([id, label]: [string, string], i: number) => (
+              <button type="button" class={"cp" + (i === 0 ? " on" : "")} data-val={id}>{label}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label class="glbl" for={`${uid}-url`}>04 · {c.lUrl}</label>
+          <input id={`${uid}-url`} class="url-in" type="url" value="http://localhost:5173" placeholder="http://localhost:5173" />
+        </div>
+      </div>
+
+      <div class="grp">
+        <label class="glbl">05 · {c.lFlags}</label>
+        <div class="pill-row" data-param="flags">
+          {c.flags.map(([id, label]: [string, string]) => (
+            <button type="button" class="cp tog" data-flag={id}>{label}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: live generated outputs -->
+    <div class="cfg-out">
+      <div class="priv-banner" data-role="priv-banner">
+        <span class="pdot"></span>
+        <span data-role="priv-text"></span>
+      </div>
+
+      <div class="out-card">
+        <div class="oh">
+          <span>{c.outCli}</span>
+          <button type="button" class="ocopy" data-copy="cli">⧉ {c.copy}</button>
+        </div>
+        <pre data-out="cli"></pre>
+      </div>
+
+      <div class="out-card">
+        <div class="oh">
+          <span data-role="agent-title">{c.outAgent}</span>
+          <button type="button" class="ocopy" data-copy="agent">⧉ {c.copy}</button>
+        </div>
+        <pre data-out="agent"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cfg{margin-top:36px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 16px 46px #17181c0f}
+  .cfg-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:start}
+  @media(max-width:860px){.cfg-grid{grid-template-columns:1fr}.cfg{padding:18px}}
+  .cfg-controls{display:flex;flex-direction:column;gap:18px}
+  .grp{display:flex;flex-direction:column;gap:8px}
+  .grp.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.grp.two{grid-template-columns:1fr}}
+  .glbl{font:600 10.5px var(--mono);letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
+  .pill-row{display:flex;flex-wrap:wrap;gap:6px}
+  .cp{background:var(--bg);border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:6px 12px;font:600 12px var(--sans);cursor:pointer;transition:all .14s}
+  .cp:hover{border-color:var(--line2);color:var(--ink)}
+  .cp.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .cp.tog.on{background:var(--rec-soft);color:var(--rec-ink);border-color:#e9b7b7}
+
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:520px){.mode-grid{grid-template-columns:1fr}}
+  .mp{text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .14s;display:flex;flex-direction:column;gap:3px}
+  .mp b{font-size:12.5px;color:var(--ink);font-weight:700}
+  .mp span{font-size:11px;color:var(--dim);line-height:1.4}
+  .mp:hover{border-color:var(--line2)}
+  .mp.on{background:var(--rec-soft);border-color:var(--rec);box-shadow:0 0 0 1px #e5484d33}
+  .mp.on b{color:var(--rec-ink)}
+
+  .url-in{width:100%;border:1px solid var(--line2);border-radius:9px;padding:8px 11px;font:500 12.5px var(--mono);background:#fff;color:var(--ink);outline:none}
+  .url-in:focus{border-color:var(--rec)}
+
+  .cfg-out{display:flex;flex-direction:column;gap:12px}
+  .priv-banner{display:flex;align-items:flex-start;gap:9px;padding:10px 13px;border-radius:10px;font-size:12.5px;line-height:1.5;border:1px solid var(--line);background:var(--warm);color:var(--ink)}
+  .priv-banner.offline{background:#edf7f1;border-color:#c6e6d2;color:#1b5e36}
+  .priv-banner.cloud{background:#fdf6e7;border-color:#f0dcb0;color:#7a5512}
+  .pdot{width:8px;height:8px;border-radius:50%;background:currentColor;margin-top:6px;flex:none}
+
+  .out-card{background:var(--term);border:1px solid var(--term-line);border-radius:12px;overflow:hidden}
+  .oh{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--term-line);font:600 11px var(--mono);color:#9796a4}
+  .ocopy{background:#21222c;border:1px solid #353747;color:#d6d4cc;border-radius:6px;padding:3px 9px;font:600 10.5px var(--mono);cursor:pointer;transition:all .14s}
+  .ocopy:hover{color:#fff;border-color:#5a5d75}
+  .ocopy.ok{background:#15281e;border-color:#3d9d63;color:#6fce97}
+  .out-card pre{padding:13px 15px;font:12px/1.7 var(--mono);color:var(--term-text);overflow-x:auto;white-space:pre;margin:0}
+</style>
+
+<script define:vars={{ uid, privCopy: c.privDesc, copyTxt: c.copy, copiedTxt: c.copied, agentTitles: c.agentTitles, defaultLang: lang === "zh" || lang === "zh-hant" ? "zh-CN" : lang === "ja" ? "ja-JP" : "auto" }}>
+(() => {
+  const root = document.getElementById(uid);
+  if (!root) return;
+  const state = {
+    agent: "claude",
+    privacy: "free",
+    slang: defaultLang,
+    url: "http://localhost:5173",
+    flags: new Set(),
+  };
+
+  // Pre-select matching locale language chip if available
+  const langBtn = root.querySelector(`[data-param="slang"] [data-val="${defaultLang}"]`);
+  if (langBtn) {
+    root.querySelectorAll('[data-param="slang"] .cp').forEach(b => b.classList.toggle("on", b === langBtn));
+  }
+
+  const urlIn = root.querySelector(".url-in");
+  const outCli = root.querySelector('[data-out="cli"]');
+  const outAgent = root.querySelector('[data-out="agent"]');
+  const agentTitle = root.querySelector('[data-role="agent-title"]');
+  const privBanner = root.querySelector('[data-role="priv-banner"]');
+  const privText = root.querySelector('[data-role="priv-text"]');
+
+  const render = () => {
+    const url = (state.url || "http://localhost:5173").trim();
+    const parts = ["wit start", url];
+    if (state.slang !== "auto") parts.push("--lang", state.slang);
+    if (state.privacy === "offline") parts.push("--asr", "local");
+    else if (state.privacy === "silent") parts.push("--asr", "off", "--no-transcribe");
+    for (const f of state.flags) parts.push(f);
+
+    const cliLines = [];
+    if (state.privacy === "offline") {
+      cliLines.push("# 1. One-time offline setup (faster-whisper + sherpa-onnx)");
+      cliLines.push("wit setup local-asr && wit local-asr live setup");
+      cliLines.push("# 2. Record (100% local, zero cloud bytes)");
+      cliLines.push(parts.join(" "));
+    } else if (state.privacy === "byok") {
+      cliLines.push("# Set your Whisper API key once in .env (GROQ_API_KEY or OPENAI_API_KEY)");
+      cliLines.push("export GROQ_API_KEY=gsk_...");
+      cliLines.push(parts.join(" "));
+    } else {
+      cliLines.push("# Install once (or run `wit init` for guided defaults)");
+      cliLines.push("npm i -g witness-recorder");
+      cliLines.push(parts.join(" "));
+    }
+    outCli.textContent = cliLines.join("\n");
+
+    const isOffline = state.privacy === "offline" || state.privacy === "silent";
+    privBanner.className = "priv-banner " + (isOffline ? "offline" : "cloud");
+    privText.textContent = privCopy[state.privacy] || "";
+
+    const mcpAgents = new Set(["claude", "cursor", "devin", "codex", "windsurf"]);
+    if (mcpAgents.has(state.agent)) {
+      agentTitle.textContent = (agentTitles?.mcp || "MCP config") + " (" + state.agent + ")";
+      if (state.agent === "claude") {
+        outAgent.textContent = `# Add Witness MCP server (15 tools)\nclaude mcp add witness -- wit mcp\n\n# Then tell Claude Code:\n"Record ${url} with witness — I'll talk through the issues, then fix from SEGMENTS.md."`;
+      } else {
+        outAgent.textContent = JSON.stringify({
+          mcpServers: {
+            witness: { command: "wit", args: ["mcp"] }
+          }
+        }, null, 2) + `\n\n// Prompt: "Use witness MCP (list_segments → segment_detail) to confirm and fix issues."`;
+      }
+    } else {
+      agentTitle.textContent = agentTitles?.prompt || "Agent handoff prompt";
+      outAgent.textContent = `I recorded a Witness session for ${url}.\nEvidence is in .witness/sessions/<latest>/.\n1. Read SEGMENTS.md and PROMPT.md first.\n2. Restate the issues as a checklist for my confirmation before editing code.`;
+    }
+  };
+
+  root.querySelectorAll('[data-param="agent"] .cp').forEach(b => b.addEventListener("click", () => {
+    state.agent = b.dataset.val;
+    root.querySelectorAll('[data-param="agent"] .cp').forEach(x => x.classList.toggle("on", x === b));
+    render();
+  }));
+  root.querySelectorAll('[data-param="privacy"] .mp').forEach(b => b.addEventListener("click", () => {
+    state.privacy = b.dataset.val;
+    root.querySelectorAll('[data-param="privacy"] .mp').forEach(x => x.classList.toggle("on", x === b));
+    render();
+  }));
+  root.querySelectorAll('[data-param="slang"] .cp').forEach(b => b.addEventListener("click", () => {
+    state.slang = b.dataset.val;
+    root.querySelectorAll('[data-param="slang"] .cp').forEach(x => x.classList.toggle("on", x === b));
+    render();
+  }));
+  root.querySelectorAll('[data-param="flags"] .tog').forEach(b => b.addEventListener("click", () => {
+    const f = b.dataset.flag;
+    if (state.flags.has(f)) state.flags.delete(f); else state.flags.add(f);
+    b.classList.toggle("on", state.flags.has(f));
+    render();
+  }));
+  urlIn?.addEventListener("input", () => { state.url = urlIn.value; render(); });
+
+  root.querySelectorAll(".ocopy").forEach(btn => btn.addEventListener("click", async () => {
+    const key = btn.dataset.copy;
+    const txt = root.querySelector(`[data-out="${key}"]`)?.textContent ?? "";
+    const ok = () => {
+      btn.textContent = "✓ " + copiedTxt;
+      btn.classList.add("ok");
+      setTimeout(() => { btn.textContent = "⧉ " + copyTxt; btn.classList.remove("ok"); }, 1600);
+    };
+    try { await navigator.clipboard.writeText(txt); ok(); }
+    catch {
+      const ta = document.createElement("textarea");
+      ta.value = txt; ta.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); ok();
+    }
+  }));
+
+  render();
+})();
+</script>

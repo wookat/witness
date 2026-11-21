@@ -1,19 +1,25 @@
 ---
-// Real session footage in a layered composition — main window plus
-// tilted artifact panels floating beside it (devin.ai-style depth).
+// Real session footage in a layered composition — interactive playback controls + demo app CTA.
 import Icon from "./Icon.astro";
 import { ui } from "../i18n.js";
 const { lang = "en" } = Astro.props;
 const t = ui(lang).video;
 ---
-<div class="stage rv" data-d="120">
+<div class="stage rv" data-d="100" id="vdemo">
   <div class="win">
     <div class="chrome">
       <i class="r"></i><i class="y"></i><i class="g"></i>
       <div class="url">localhost:5173/checkout</div>
       <span class="tag">{t.tag}</span>
     </div>
-    <video src="/demo.mp4" autoplay muted loop playsinline preload="metadata"></video>
+    <video id="vdemo-vid" src="/demo.mp4" autoplay muted loop playsinline preload="metadata"></video>
+    <div class="vctrl">
+      <button type="button" id="vdemo-pp" aria-label="Pause or play video">⏸</button>
+      <input type="range" id="vdemo-seek" min="0" max="100" step="0.2" value="0" aria-label="Video progress" />
+      <span class="vtc" id="vdemo-tc">00:00</span>
+      <button type="button" id="vdemo-re" title="Restart">↺</button>
+      <a class="vtry" href="/demo-app.html" target="_blank" rel="noopener">{t.tryDemo ?? "Try demo app ↗"}</a>
+    </div>
   </div>
 
   <div class="fp fp-md" aria-hidden="true">
@@ -38,13 +44,21 @@ const t = ui(lang).video;
   .chrome .r{background:#e5484d}.chrome .y{background:#e2a93b}.chrome .g{background:#3d9d63}
   .url{margin-left:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font:500 11px var(--mono);color:var(--dim)}
   .tag{margin-left:auto;font:600 9.5px var(--mono);letter-spacing:.1em;color:var(--faint)}
-  video{display:block;width:100%;height:auto;background:#f4f3ef}
+  video{display:block;width:100%;height:auto;background:#f4f3ef;cursor:pointer}
+
+  .vctrl{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--line);background:#fbfaf7;flex-wrap:wrap}
+  .vctrl button{border:1px solid var(--line2);background:#fff;color:var(--ink);border-radius:7px;padding:4px 9px;font:600 11.5px var(--mono);cursor:pointer;transition:all .14s}
+  .vctrl button:hover{border-color:var(--ink)}
+  .vctrl input[type=range]{flex:1;min-width:100px;accent-color:var(--rec);cursor:pointer}
+  .vtc{font:500 11px var(--mono);color:var(--dim);min-width:42px;text-align:right}
+  .vtry{margin-left:auto;text-decoration:none;font:600 11.5px var(--mono);color:var(--rec-ink);background:var(--rec-soft);border:1px solid #f0cdcd;border-radius:999px;padding:4px 11px;white-space:nowrap;transition:all .14s}
+  .vtry:hover{background:var(--rec);color:#fff;border-color:var(--rec)}
 
   .fp{position:absolute;z-index:3;background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 13px;box-shadow:0 18px 44px #17181c1f;font-family:var(--mono)}
   .fp-h{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--ink);margin-bottom:7px;letter-spacing:.04em}
   .fp code{font-size:10px;line-height:1.8;color:var(--dim);display:block}
   .k.say{color:#8fb0f4}.k.ok{color:var(--ok)}.k.dim{color:var(--faint)}.k.rec{color:var(--rec)}
-  .fp-md{left:-7%;bottom:9%;transform:rotate(-5deg);width:240px;animation:bobA 8s ease-in-out infinite}
+  .fp-md{left:-7%;bottom:13%;transform:rotate(-5deg);width:240px;animation:bobA 8s ease-in-out infinite}
   .fp-pr{right:-6%;top:14%;transform:rotate(4.5deg);width:215px;animation:bobB 9s ease-in-out infinite}
   .fp-rec{right:4%;top:-14px;display:flex;align-items:center;gap:6px;padding:7px 13px;font:700 10.5px var(--mono);letter-spacing:.14em;color:var(--rec);transform:rotate(2deg)}
   .fp-rec i{width:7px;height:7px;border-radius:50%;background:var(--rec);animation:bl 1.4s infinite}
@@ -55,3 +69,28 @@ const t = ui(lang).video;
   @media(max-width:860px){.fp-md,.fp-pr{display:none}}
   @media(max-width:640px){.tag{display:none}}
 </style>
+
+<script>
+  const vid = document.getElementById("vdemo-vid") as HTMLVideoElement | null;
+  const pp = document.getElementById("vdemo-pp");
+  const sk = document.getElementById("vdemo-seek") as HTMLInputElement | null;
+  const tc = document.getElementById("vdemo-tc");
+  const re = document.getElementById("vdemo-re");
+  const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+  if (vid) {
+    const toggle = () => { vid.paused ? vid.play().catch(() => {}) : vid.pause(); };
+    pp?.addEventListener("click", toggle);
+    vid.addEventListener("click", toggle);
+    re?.addEventListener("click", () => { vid.currentTime = 0; vid.play().catch(() => {}); });
+    vid.addEventListener("play", () => { if (pp) pp.textContent = "⏸"; });
+    vid.addEventListener("pause", () => { if (pp) pp.textContent = "▶"; });
+    vid.addEventListener("timeupdate", () => {
+      if (sk && vid.duration) sk.value = String((vid.currentTime / vid.duration) * 100);
+      if (tc) tc.textContent = fmt(vid.currentTime || 0);
+    });
+    sk?.addEventListener("input", () => {
+      if (vid.duration) vid.currentTime = (Number(sk.value) / 100) * vid.duration;
+    });
+  }
+</script>

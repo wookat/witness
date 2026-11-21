@@ -1,7 +1,7 @@
 /** Local live ASR session: streams mic PCM16/16k/mono to the sherpa-onnx server. */
 import WebSocket from "ws";
 import { LIVE_ASR_PORT, liveModelReady, probeLive, startLiveAsr, localAsrConfig } from "./local-asr.js";
-import type { AsrSeg } from "./asr-providers.js";
+import type { AsrSeg } from "./asr-types.js";
 
 export interface LocalLive {
   push(pcm: Buffer): void;

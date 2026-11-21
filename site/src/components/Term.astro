@@ -1,7 +1,38 @@
 ---
-const { label = "terminal", d } = Astro.props;
+const { label = "terminal", d, copy = true } = Astro.props;
 ---
 <div class="term rv" data-d={d}>
-  <div class="th"><i></i><i></i><i></i><span>{label}</span></div>
+  <div class="th">
+    <i></i><i></i><i></i><span>{label}</span>
+    {copy && <button class="tcopy" type="button" aria-label="Copy code">⧉ Copy</button>}
+  </div>
   <pre><slot /></pre>
 </div>
+<style>
+  .tcopy{margin-left:auto;background:#1f2029;border:1px solid #323341;color:#b8b6c4;border-radius:6px;padding:3px 9px;font:600 10.5px var(--mono);cursor:pointer;transition:all .15s}
+  .tcopy:hover{color:#fff;border-color:#53556b}
+  .tcopy.ok{color:#6fce97;border-color:#3d9d63;background:#15251c}
+</style>
+<script>
+  document.querySelectorAll<HTMLButtonElement>(".term .tcopy").forEach(btn => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", async () => {
+      const pre = btn.closest(".term")?.querySelector("pre");
+      const raw = (pre?.textContent ?? "").trim();
+      if (!raw) return;
+      const done = () => {
+        const prev = btn.textContent;
+        btn.textContent = "✓ Copied";
+        btn.classList.add("ok");
+        setTimeout(() => { btn.textContent = prev || "⧉ Copy"; btn.classList.remove("ok"); }, 1600);
+      };
+      try { await navigator.clipboard.writeText(raw); done(); }
+      catch {
+        const ta = document.createElement("textarea");
+        ta.value = raw; ta.style.cssText = "position:fixed;opacity:0";
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); done();
+      }
+    });
+  });
+</script>

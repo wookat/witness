@@ -1,6 +1,6 @@
 {
   "name": "witness-recorder",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "mcpName": "io.github.wookat/witness",
   "repository": {
     "type": "git",
@@ -42,9 +42,8 @@
     "@modelcontextprotocol/sdk": "^1.32.2",
     "commander": "^15.1.0",
     "dotenv": "^16.4.5",
-    "fix-webm-duration": "^1.0.6",
     "openai": "^7.55.0",
-    "playwright": "^1.48.0",
+    "playwright": "^1.65.0",
     "rrweb": "^2.2.2",
     "ws": "^8.22.2",
     "zod": "^4.6.7"

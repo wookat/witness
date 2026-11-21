@@ -8,8 +8,8 @@ export default {
     title: "Witness — 语音锚定的因果证据记录仪，为 AI 编码 agent 设计",
     desc: "像平时一样体验产品、用嘴说出哪里不对。Witness 录下语音、点击、网络、报错与 DOM 回放，产出你的 AI agent 能直接动手的因果证据包。",
   },
-  nav: { how: "原理", evidence: "证据", mcp: "MCP", install: "安装", faq: "FAQ", docs: "文档" },
-  docsPath: "/zh/docs",
+  nav: { configurator: "场景配置", how: "原理", evidence: "证据", mcp: "MCP", install: "安装", faq: "FAQ", docs: "文档" },
+  docsPath: "/zh/docs/",
   footer: {
     tagline: "语音锚定的因果证据记录仪——为 AI 编码 agent 设计。本地优先，MIT 开源。",
     selfRec: "本官网用 Witness 录过自己",
@@ -24,12 +24,45 @@ export default {
     h1a: "你开口，", h1b: "Witness 补全",
     rot: ["证据。", "那个 bug。", "那次卡顿。", "那个 500。", "前因后果。"],
     sub: "像平时一样体验产品、用嘴说出哪里不对——“这个按钮点了没反应”。Witness 把你说的每句话焊死在那一秒的因果证据上，然后把证据包交给你的 AI 编码 agent。",
-    cta1: "查看 GitHub", cta2: "工作原理",
+    cta1: "查看 GitHub", cta2: "工作原理", ctaCfg: "定制我的工作流",
+    modeCli: "CLI 命令", modeAgent: "交给 AI Agent",
+    agentCmd: "帮我安装 witness（`npm i -g witness-recorder`），跑一下 `wit init`，然后录一段 http://localhost:5173",
+    copy: "复制", copied: "已复制", dlUnit: "月下载", starUnit: "Star",
     fsay: "“这个按钮点了没反应”",
-    insthint: "↑ 丢给你的 AI agent——它装完就能帮你录",
-    instmeta: "装的是 wit CLI——录制·渲染·MCP 一体 · Node 18+ · 系统 Edge/Chrome · 免 key",
+    insthint: "↑ 切换 CLI / Agent 指令或包管理器 —— 免云账号、免 key",
+    instmeta: "wit CLI —— 录制 · 回放工作台 · 15 工具 MCP 一体 · Node 18+ · 系统 Edge/Chrome",
   },
-  video: { tag: "PLAYWRIGHT 实录 · 一镜到底", say: "点了没反应", vocab: "订单/提交/支付" },
+  video: { tag: "PLAYWRIGHT 实录 · 一镜到底", say: "点了没反应", vocab: "订单/提交/支付", tryDemo: "打开演示页试玩 ↗" },
+  configurator: {
+    k: "03 · 按你的场景定制",
+    h: "选好 Agent 与隐私档位，一键生成专属命令。",
+    p: "支持 100% 全离线本地 Whisper + Sherpa，也支持 10 秒零配置免 key 开录——勾选你的偏好实时生成：",
+    lAgent: "你使用的 AI 编码 Agent",
+    lPrivacy: "语音与隐私档位",
+    lLang: "语音识别语言",
+    lUrl: "目标页面 URL",
+    lFlags: "可选采集参数",
+    agents: [["claude", "Claude Code"], ["cursor", "Cursor"], ["devin", "Devin"], ["codex", "Codex"], ["windsurf", "Windsurf"], ["generic", "其他 Agent"]],
+    privacies: [
+      ["free", "零配置免费云端", "免 key 实时字幕 + 免费终稿（豆包 → bcut）"],
+      ["offline", "100% 全离线本地", "本地 Whisper + Sherpa-ONNX，音频不出本机"],
+      ["byok", "自带 Whisper Key", "接 Groq / OpenAI API，词级时间戳最快"],
+      ["silent", "静音仅录操作", "不开麦克风，仅记录点击/网络/报错/DOM回放"],
+    ],
+    langs: [["auto", "自动"], ["zh-CN", "中文"], ["en-US", "English"], ["ja-JP", "日本語"]],
+    flags: [["--keyframes", "关键帧渲染"], ["--shot-format webp", "WebP 轻截图"], ["--dsf 2", "2× 高清屏"], ["--associate", "GLM 语义关联"]],
+    privDesc: {
+      free: "证据包留在本地（.witness/sessions/）。实时字幕与中/自动终稿会把麦克风音频流式发往免费云端 ASR（doubao-web → bcut）。",
+      offline: "100% 离线隔绝 —— 麦克风音频、实时字幕（sherpa-onnx）与终稿转写（faster-whisper）全部在本机运行，零字节出网。",
+      byok: "证据包留在本地；停录后通过你自备的 Groq / OpenAI Whisper API Key 完成高精度转写。",
+      silent: "零麦克风采集、零语音外发 —— 仅在本地记录点击、网络请求、Console 报错、DOM 快照与 rrweb 全量回放。",
+    },
+    outCli: "运行命令（CLI）",
+    outAgent: "Agent 接入配置",
+    agentTitles: { mcp: "MCP 接入配置", prompt: "Agent 交接提示词" },
+    copy: "复制",
+    copied: "已复制",
+  },
   convo: {
     you: "你",
     msgs: [
@@ -54,7 +87,7 @@ export default {
   },
   stats: ["条记录线", "个 MCP 工具", "云端 key 依赖", "项测试通过", "开源协议"],
   how: {
-    k: "03 · 工作原理",
+    k: "04 · 工作原理",
     h: "三条记录线，一条时间轴。",
     p: "<code>wit start &lt;dev-url&gt;</code> 打开一个托管浏览器。从那一刻起三条流并行记录——零手动：",
     cards: [
@@ -76,7 +109,7 @@ export default {
     ],
   },
   evidence: {
-    k: "04 · 产出",
+    k: "05 · 产出",
     h: "你的话，变成证据锚点。",
     p: "每段语音成为时间轴上的一个块，挂载该时刻的因果事实——“因果爆发链”。点开一句话看看：",
     hint: "点击一句话展开它的证据",
@@ -99,12 +132,12 @@ export default {
     ],
   },
   aud: {
-    k: "05 · 两种受众", h: "人看回放，Agent 读结构。", labels: ["给人看", "给 AI agent"],
+    k: "06 · 两种受众", h: "人看回放，Agent 读结构。", labels: ["给人看", "给 AI agent"],
     humans: [
-      ["review.html", "语音卡片 + 音频跳转 + 截图", { img: "/sample/review.png", cap: "真实的 review.html —— 就是录这个官网产出的那次" }],
-      ["▶ DOM 回放", "内嵌 rrweb 播放器，真实页面状态", { img: "/sample/review.png", cap: "review.html 内置的 rrweb 回放区" }],
-      ["film strip", "像拖视频一样刷整场录制", { img: "/sample/review.png", cap: "底部胶片条 scrubber" }],
-      ["audio.webm", "原始录音", { img: "/sample/review.png", cap: "语音卡片点哪句播哪句" }],
+      ["review.html", "回放工作台：DOM 回放 + 截图 + 筛选 + 定向交接", { img: "/sample/review.png", cap: "真实的 review.html —— 含可缩放时间轴、全文搜索、问题勾选与定向 Copy for AI" }],
+      ["▶ DOM 回放 / 截图双切", "内嵌 rrweb 播放器与红框截图自由切换", { img: "/sample/shot.jpg", pre: "rrweb.jsonl → 内嵌 Replayer 与音画/虚拟时钟同步\n随时在「DOM 回放」与「原始截图 shots/」之间切换，红框标记一览无余", cap: "在 review.html 内一键切换全量 DOM 回放与带红框标记的截图序列" }],
+      ["交互式 3 轨时间轴", "1×/2×/4× 缩放 + 可点击图例筛选", { pre: "轨道 1：语音块（SAY —— 点哪跳哪）\n轨道 2：用户交互（click · mark · nav · input · issue #N）\n轨道 3：异常信号（console · errors · 失败请求）\n\n支持 1×/2×/4× 缩放 · 按 E 跳下个报错 · 点击图例芯片开关轨道", cap: "高密度区间可放大查看，图例芯片即过滤器" }],
+      ["audio.webm", "可精准 Seek 的原始录音 + 暂停补偿", { pre: "编码：WebM/Opus（浏览器 MediaRecorder，零系统依赖）\n停录自动补全 Duration 头，任意秒可拖放\n按 P 暂停时自动记录区间偏移，恢复后音画依然对齐", cap: "原始声音原样保存，随时核对 ASR 转写" }],
     ],
     agents: [
       ["PROMPT.md", "交接说明 + 页面词表", { pre: `This is a product-feedback session recorded by Witness (voice + clicks + live page evidence).
@@ -128,7 +161,7 @@ Process in this order:
     ],
   },
   mcp: {
-    k: "06 · 拉取，不是推送",
+    k: "07 · 拉取，不是推送",
     h: "<code>wit mcp</code>——把证据变成 API。",
     p: "session 不是一坨死文件，而是一个 stdio MCP server。接进任何支持 MCP 的 agent，它按需查询精确的证据：",
     cards: [
@@ -140,21 +173,21 @@ Process in this order:
       ["api", "<code>session_md</code>", "要全文时返回渲染好的时间轴。"],
       ["mic", "<code>get_asr / set_asr</code>", "agent 自己查、自己切语音引擎——配置环里不需要人。"],
     ],
-    mcap: "……共 14 个注册工具——session 是可查询的 API，不是一坨死文件。",
+    mcap: "……共 15 个注册工具——session 是可查询的 API，不是一坨死文件。",
   },
   agents: {
-    k: "07 · 接入你的 agent",
+    k: "08 · 接入你的 agent",
     h: "贴进去，或者插上来。",
     lede: "证据包自描述、零厂商锁定。两条路，按 agent 能力选：",
     c1t: "PROMPT.md → 粘贴",
     c1d: "每个 session 自带交接文件：格式说明、页面词表、修复规则。贴进任何会跑命令的 agent——它就知道该怎么读证据、先复述清单再动手。",
     c2t: "wit mcp → 接入",
-    c2d: "支持 MCP 的 agent 直接连 stdio server：14 个工具按需挖证据，不用把整包塞进上下文。仓库还自带 SKILL.md——支持 skill 的 agent 原生加载，其他可以当规则文件用。",
+    c2d: "支持 MCP 的 agent 直接连 stdio server：15 个工具按需挖证据，不用把整包塞进上下文。仓库还自带 SKILL.md——支持 skill 的 agent 原生加载，其他可以当规则文件用。",
     works: "适配",
     agents: ["Devin", "Claude Code", "Cursor", "Codex", "Windsurf", "任何 MCP 客户端"],
   },
   principles: {
-    k: "08 · 原则",
+    k: "09 · 原则",
     h: "证据不说谎。",
     cards: [
       ["terminal", "本地优先，零配置", "系统 Edge/Chrome + 免费流式 ASR（doubao-web → doubao-ime → 浏览器 SR 兜底，<code>wit config asr</code> 可切）。不需要任何 API key；LLM 只是可选增强层，永远不是主流程。"],
@@ -164,7 +197,7 @@ Process in this order:
     ],
   },
   vs: {
-    k: "09 · 为什么不直接……",
+    k: "10 · 为什么不直接……",
     h: "录屏记下像素，Witness 记下因果。",
     lede: "手写一份 bug 报告也行，发段录屏也行。各自落到哪一步：",
     cols: ["", "手写的报告", "一段录屏", "Witness"],
@@ -180,7 +213,7 @@ Process in this order:
     pcols: ["", "Jam", "Replay.io", "Loom", "Replay SaaS*", "Witness"],
     prows: [
       ["语音 → 锚定证据", "◐ 视频配音", "—", "◐ 旁白", "—", "原话逐字，焊进事件"],
-      ["为 AI agent 而造", "◐ AI 生成 repro + MCP", "✓ MCP + 时间旅行", "—", "—", "session.md + PROMPT.md + 14 工具 MCP"],
+      ["为 AI agent 而造", "◐ AI 生成 repro + MCP", "✓ MCP + 时间旅行", "—", "—", "SEGMENTS.md + PROMPT.md + 15 工具 MCP"],
       ["console / 网络", "✓", "✓ runtime 级", "—", "✓", "✓ + 因果爆发链、死点击"],
       ["回放深度", "视频 · 2 分钟 DOM", "runtime 时间旅行——最深", "视频", "✓ DOM 回放", "✓ rrweb 全量 DOM"],
       ["留在你磁盘上", "— 上传 + 要账号", "— 上传", "— 上传", "— SaaS", "✓ .witness/sessions，零账号"],
@@ -190,7 +223,7 @@ Process in this order:
     pnote: "*Replay SaaS = LogRocket / FullStory 一类。来源：各家公开文档，2026-11——如有过时请告诉我们。",
   },
   who: {
-    k: "10 · 谁在用",
+    k: "11 · 谁在用",
     h: "给所有“眼睛就是最后一道 QA”的人。",
     cards: [
       ["cursor", "独立开发 × agent", "你写的你点一遍，边点边说。agent 拿到的是可直接动手的证据包——从发现到修复不出一个 session。"],
@@ -200,12 +233,12 @@ Process in this order:
     ],
   },
   faq: {
-    k: "11 · 常见问题",
+    k: "12 · 常见问题",
     h: "你想问的，先答了。",
     items: [
       ["需要装什么？", "Node 18+ 和系统 Edge/Chrome——优先用你机器上的真浏览器，找不到才装自带 chromium。<code>npm i -g witness-recorder</code>，完事。"],
-      ["有什么数据会离开本机？", "证据包全部落在本地 <code>.witness/sessions/</code>（自动 gitignore）。实时字幕按你选的引擎流式发麦克风音频（默认 doubao-web）；<code>--asr sr</code> 走系统/浏览器识别，<code>--asr off</code> 直接不要实时字幕。终稿转写链：WHISPER_BASE_URL → 本地 ASR（<code>wit setup local-asr</code>，全离线）→ Groq → OpenAI → bcut（仅 zh/auto 会话，免费）——<code>--no-transcribe</code> 可全跳过。LLM 纠错/关联只有显式传 flag 且有 key 才跑。"],
-      ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——14 个查询工具按需挖证据，而不是一次性塞全文。仓库自带的 SKILL.md 在支持 skill 的 agent 上原生加载，其余可当规则文件。"],
+      ["有什么数据会离开本机？", "证据包全部落在本地 <code>.witness/sessions/</code>（自动 gitignore）。实时字幕按你选的引擎运行：<code>auto</code> 在装好本地 sherpa-onnx 后优先全离线，否则回退 doubao-web → doubao-ime → 浏览器 SR；<code>--asr local</code> / <code>--asr sr</code> 全程不出本机，<code>--asr off</code> 直接关闭实时字幕。终稿转写链：<code>WHISPER_BASE_URL</code> → 本地 Whisper（<code>wit setup local-asr</code>，全离线）→ Groq → OpenAI → 免费云端（doubao-web → bcut，仅 zh/auto）——<code>--no-transcribe</code> 可全跳过。LLM 纠错/关联只有显式传 flag 且有 key 才跑。"],
+      ["支持哪些 agent？", "能跑 CLI 的 agent 就能读 SEGMENTS.md + session.md + PROMPT.md。支持 MCP 的（Devin、Claude Code、Cursor、Codex……）直连 <code>wit mcp</code>——15 个查询工具按需挖证据，而不是一次性塞全文。仓库自带的 SKILL.md 在支持 skill 的 agent 上原生加载，其余可当规则文件。"],
       ["密码出现在页面里怎么办？", "密码字段四通道打码；POST 体自动脱敏凭证字段；<code>P</code> 随时全冻结（含麦克风）；敏感应用设 <code>WIT_NO_BODIES=1</code> 直接不存响应体。"],
       ["可以说什么语言？", "识别语言默认跟随浏览器/系统语言——<code>--lang &lt;bcp47&gt;</code>（如 en-US、ja-JP）按次覆盖。原话永远逐字落盘——识别错字保留可审计，LLM 纠错只是可选的展示层。"],
       ["只能录 localhost 吗？", "任何 URL——托管浏览器就是你的真实浏览器，登录照样用。不过在本地开发站上最锋利：agent 修的时候能同时看到源码。"],
@@ -215,7 +248,7 @@ Process in this order:
     contact: `还有问题？→ <a href="mailto:wookat@qq.com">wookat@qq.com</a>，或直接 <a href="https://github.com/wookat/witness/issues" target="_blank" rel="noopener">提 Issue</a>——欢迎来问。`,
   },
   install: {
-    k: "12 · 上手",
+    k: "13 · 上手",
     h: "三句话，跑通整个闭环。",
     p: "你下指令，<b>agent 敲命令</b>。Witness 本体是 CLI（<code>wit</code>）——agent 驱动它开托管浏览器录制，结束后产出本地证据包：人看 <code>review.html</code>，agent 走 <code>session.md</code>/<code>PROMPT.md</code>/<code>wit mcp</code>。Node 18+、系统 Edge/Chrome、不上云、不要 key。",
     cta1: "★ 去 GitHub 点 Star",

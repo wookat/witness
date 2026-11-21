@@ -9,8 +9,8 @@ export default {
     title: "Witness — voice-anchored evidence recorder for AI coding agents",
     desc: "Talk, point, ship the fix. Witness records your voice, clicks, network, errors and DOM replay while you use a product — then hands your AI agent a causal evidence package it can act on.",
   },
-  nav: { how: "How it works", evidence: "Evidence", mcp: "MCP", install: "Install", faq: "FAQ", docs: "Docs" },
-  docsPath: "/docs",
+  nav: { configurator: "Customize", how: "How it works", evidence: "Evidence", mcp: "MCP", install: "Install", faq: "FAQ", docs: "Docs" },
+  docsPath: "/docs/",
   footer: {
     tagline: "Voice-anchored causal evidence recorder for AI coding agents. Local-first, MIT.",
     selfRec: "This site was recorded by Witness itself",
@@ -25,12 +25,45 @@ export default {
     h1a: "You say it.", h1b: "Witness proves",
     rot: ["it.", "the bug.", "the jank.", "the 500.", "the why."],
     sub: "Experience your product and talk naturally — “this button does nothing”. Witness welds every word to the causal evidence of that exact second, then hands the package to your AI coding agent.",
-    cta1: "View on GitHub", cta2: "How it works",
+    cta1: "View on GitHub", cta2: "How it works", ctaCfg: "Customize Setup",
+    modeCli: "CLI", modeAgent: "Prompt for Agent",
+    agentCmd: "Install witness (`npm i -g witness-recorder`), run `wit init`, then record http://localhost:5173",
+    copy: "Copy", copied: "Copied", dlUnit: "npm/mo", starUnit: "stars",
     fsay: "“this button does nothing”",
-    insthint: "↑ hand this to your AI agent — it installs and records for you",
-    instmeta: "installs the wit CLI — recorder · renderer · MCP in one · Node 18+ · system Edge/Chrome · no keys",
+    insthint: "↑ switch CLI / Agent mode or package manager — zero keys required",
+    instmeta: "wit CLI — recorder · renderer · 15-tool MCP · Node 18+ · system Edge/Chrome",
   },
-  video: { tag: "RECORDED WITH PLAYWRIGHT · ONE TAKE", say: "does nothing", vocab: "orders/submit/pay" },
+  video: { tag: "RECORDED WITH PLAYWRIGHT · ONE TAKE", say: "does nothing", vocab: "orders/submit/pay", tryDemo: "Try demo app ↗" },
+  configurator: {
+    k: "03 · Customize your workflow",
+    h: "Pick your agent & privacy level. Copy ready-to-run commands.",
+    p: "Witness adapts to your stack — run 100% offline with local Whisper + Sherpa, or start zero-config in 10 seconds:",
+    lAgent: "Your AI Coding Agent",
+    lPrivacy: "Voice & Privacy Mode",
+    lLang: "Speech Language",
+    lUrl: "Target App URL",
+    lFlags: "Optional Capture Flags",
+    agents: [["claude", "Claude Code"], ["cursor", "Cursor"], ["devin", "Devin"], ["codex", "Codex"], ["windsurf", "Windsurf"], ["generic", "Any Agent"]],
+    privacies: [
+      ["free", "Zero-Config Cloud", "Free streaming + final transcript, zero keys"],
+      ["offline", "100% Offline Local", "Local Whisper + Sherpa-ONNX, zero cloud bytes"],
+      ["byok", "BYO Whisper Key", "Groq or OpenAI API key for fastest word timestamps"],
+      ["silent", "Silent / Ops Only", "No mic audio — clicks, network, errors & rrweb only"],
+    ],
+    langs: [["auto", "Auto"], ["en-US", "English"], ["zh-CN", "中文"], ["ja-JP", "日本語"]],
+    flags: [["--keyframes", "Keyframes"], ["--shot-format webp", "WebP Shots"], ["--dsf 2", "Retina 2×"], ["--associate", "LLM Associate"]],
+    privDesc: {
+      free: "Evidence stays on disk (.witness/sessions/). Live captions & zh/auto final transcript stream audio to free cloud ASR (doubao-web → bcut).",
+      offline: "100% local & air-gapped — mic audio, live captions (sherpa-onnx), and final transcription (faster-whisper) never leave your machine.",
+      byok: "Evidence stays local; post-session audio is transcribed via your own Groq / OpenAI Whisper API key.",
+      silent: "Zero microphone capture or external speech requests — records clicks, network, console errors, DOM snapshots & rrweb replay strictly locally.",
+    },
+    outCli: "CLI command",
+    outAgent: "Agent integration",
+    agentTitles: { mcp: "MCP configuration", prompt: "Agent handoff prompt" },
+    copy: "Copy",
+    copied: "Copied",
+  },
   convo: {
     you: "you",
     msgs: [
@@ -55,7 +88,7 @@ export default {
   },
   stats: ["recording tracks", "MCP tools", "cloud keys needed", "tests green", "open source"],
   how: {
-    k: "03 · How it works",
+    k: "04 · How it works",
     h: "Three recording lines, one timeline.",
     p: "<code>wit start &lt;dev-url&gt;</code> opens a managed browser. From that moment, three streams run in parallel — zero manual work:",
     cards: [
@@ -77,7 +110,7 @@ export default {
     ],
   },
   evidence: {
-    k: "04 · The output",
+    k: "05 · The output",
     h: "Your words become evidence anchors.",
     p: "Each spoken fragment becomes a block on a timeline with the causal facts of that moment attached — the “causal burst”. Click a quote:",
     hint: "click a quote to expand its evidence",
@@ -100,12 +133,12 @@ export default {
     ],
   },
   aud: {
-    k: "05 · Two audiences", h: "Humans get a replay. Agents get a structure.", labels: ["For humans", "For AI agents"],
+    k: "06 · Two audiences", h: "Humans get a replay. Agents get a structure.", labels: ["For humans", "For AI agents"],
     humans: [
-      ["review.html", "voice cards + audio seek + shots", { img: "/sample/review.png", cap: "a real review.html — produced while recording this very site" }],
-      ["▶ DOM replay", "embedded rrweb player, real page state", { img: "/sample/review.png", cap: "the rrweb replay built into review.html" }],
-      ["film strip", "scrub the whole session like video", { img: "/sample/review.png", cap: "the bottom filmstrip scrubber" }],
-      ["audio.webm", "the raw recording", { img: "/sample/review.png", cap: "click any quote to play that second" }],
+      ["review.html", "workbench: DOM replay + shots + filter + AI handoff", { img: "/sample/review.png", cap: "Real review.html — timeline, searchable transcript, selectable issues & customized AI handoff" }],
+      ["▶ DOM replay", "embedded rrweb player, real page state", { img: "/sample/shot.jpg", pre: "rrweb.jsonl → embedded Replayer synced to audio/virtual clock\nSwitch stage anytime between DOM Replay and raw Screenshots (shots/)", cap: "Switch between full DOM replay and red-box mark screenshots inside review.html" }],
+      ["interactive timeline", "3 lanes + zoom + clickable filter chips", { pre: "Lane 1: Speech blocks (SAY — click to seek)\nLane 2: User interactions (click · mark · nav · input · issue #N)\nLane 3: Signals & anomalies (console · errors · failed HTTP)\n\nZoom 1×/2×/4× · Press E to jump to next error · Click legend chips to toggle lanes", cap: "Zoomable 3-lane scrubber with interactive category toggles" }],
+      ["audio.webm", "seekable voice recording + pause compensation", { pre: "Codec: WebM/Opus (MediaRecorder, zero OS deps)\nDuration header patched on stop so every second is seekable\nPause (P) freezes recording & audio clock stays aligned on resume", cap: "Original voice preserved verbatim — verify ASR anytime" }],
     ],
     agents: [
       ["PROMPT.md", "handoff doc + page vocabulary", { pre: `This is a product-feedback session recorded by Witness (voice + clicks + live page evidence).
@@ -129,7 +162,7 @@ Process in this order:
     ],
   },
   mcp: {
-    k: "06 · Pull, don't push",
+    k: "07 · Pull, don't push",
     h: "<code>wit mcp</code> — evidence as an API.",
     p: "Instead of a static dump, the session becomes a stdio MCP server. Point any MCP-capable agent at it and it queries exactly the evidence it needs:",
     cards: [
@@ -141,21 +174,21 @@ Process in this order:
       ["api", "<code>session_md</code>", "The rendered timeline when the agent wants it all."],
       ["mic", "<code>get_asr / set_asr</code>", "The agent checks and flips the live speech engine itself — no human in the config loop."],
     ],
-    mcap: "…of 14 registered tools — the session is a queryable API, not a dump.",
+    mcap: "…of 15 registered tools — the session is a queryable API, not a dump.",
   },
   agents: {
-    k: "07 · Works with your agent",
+    k: "08 · Works with your agent",
     h: "Paste it, or plug it.",
     lede: "The packet is self-describing and lock-in free. Two paths, picked per agent capability:",
     c1t: "PROMPT.md → paste",
     c1d: "Every session ships a handoff file: format spec, page vocabulary, fixing rules. Paste it into any agent that can run commands — it knows how to read the evidence and echo before it fixes.",
     c2t: "wit mcp → plug",
-    c2d: "MCP-capable agents connect to the stdio server: 14 tools to query evidence on demand, no context stuffing. The repo also ships a ready-made SKILL.md — skill-aware agents load it natively; anywhere else it works as a rules file.",
+    c2d: "MCP-capable agents connect to the stdio server: 15 tools to query evidence on demand, no context stuffing. The repo also ships a ready-made SKILL.md — skill-aware agents load it natively; anywhere else it works as a rules file.",
     works: "works with",
     agents: ["Devin", "Claude Code", "Cursor", "Codex", "Windsurf", "any MCP client"],
   },
   principles: {
-    k: "08 · Principles",
+    k: "09 · Principles",
     h: "Evidence never lies.",
     cards: [
       ["terminal", "Local-first, zero config", "System Edge/Chrome + free streaming ASR (doubao-web → doubao-ime → browser SR, switchable via <code>wit config asr</code>). No API key needed; LLM polish is an optional layer, never the pipeline."],
@@ -165,7 +198,7 @@ Process in this order:
     ],
   },
   vs: {
-    k: "09 · Why not just…",
+    k: "10 · Why not just…",
     h: "A screen recording captures pixels. Witness captures causes.",
     lede: "You could type the bug report, or attach a video. Here's where each approach actually lands:",
     cols: ["", "A written report", "A screen recording", "Witness"],
@@ -181,7 +214,7 @@ Process in this order:
     pcols: ["", "Jam", "Replay.io", "Loom", "Replay SaaS*", "Witness"],
     prows: [
       ["Speech → anchored evidence", "◐ voiceover on video", "—", "◐ narration", "—", "verbatim speech, welded to events"],
-      ["Built for AI agents", "◐ AI repro + MCP", "✓ MCP + time-travel", "—", "—", "session.md + PROMPT.md + 14-tool MCP"],
+      ["Built for AI agents", "◐ AI repro + MCP", "✓ MCP + time-travel", "—", "—", "SEGMENTS.md + PROMPT.md + 15-tool MCP"],
       ["Console / network", "✓", "✓ runtime-level", "—", "✓", "✓ + causal bursts, dead clicks"],
       ["Replay depth", "video · 2-min DOM", "runtime time-travel — deepest", "video", "✓ DOM replay", "✓ rrweb full-DOM"],
       ["Stays on your disk", "— uploads + account", "— uploads", "— uploads", "— SaaS", "✓ .witness/sessions, no account"],
@@ -191,7 +224,7 @@ Process in this order:
     pnote: "*Session-replay SaaS = LogRocket / FullStory and friends. From their public docs, Nov 2026 — if a row is stale, tell us.",
   },
   who: {
-    k: "10 · Who it's for",
+    k: "11 · Who it's for",
     h: "For anyone whose eyes are the last QA layer.",
     cards: [
       ["cursor", "Solo dev × agent", "You built it, you click through it, you narrate. The agent gets a fix-ready packet and the whole find→fix loop stays inside one sitting."],
@@ -201,12 +234,12 @@ Process in this order:
     ],
   },
   faq: {
-    k: "11 · FAQ",
+    k: "12 · FAQ",
     h: "Asked before you did.",
     items: [
       ["What do I need installed?", "Node 18+ and a system Edge or Chrome — Witness prefers your real browser and only falls back to bundled chromium. <code>npm i -g witness-recorder</code>, done."],
-      ["Does anything leave my machine?", "The evidence packet stays in <code>.witness/sessions/</code> on your disk, gitignored by default. Live captions stream mic audio to the ASR engine you pick (doubao-web by default); <code>--asr sr</code> uses the OS/browser recognizer, <code>--asr off</code> skips live text entirely. The final transcript chain is WHISPER_BASE_URL → local ASR (<code>wit setup local-asr</code>, fully offline) → Groq → OpenAI → bcut (zh/auto sessions only, free) — <code>--no-transcribe</code> skips that too. Optional LLM layers (correction, association) only run when you pass the flag and set a key."],
-      ["Which agents does it work with?", "Any agent that can run a CLI can read session.md + PROMPT.md. MCP-capable ones (Devin, Claude Code, Cursor, Codex…) connect to <code>wit mcp</code> — 14 tools to query evidence on demand instead of one static dump. A bundled SKILL.md loads natively in skill-aware agents and works as a rules file elsewhere."],
+      ["Does anything leave my machine?", "The evidence packet stays in <code>.witness/sessions/</code> on your disk, gitignored by default. Live captions stream mic audio to your chosen engine (<code>auto</code> prefers offline local sherpa-onnx once installed, then doubao-web → doubao-ime → browser SR); <code>--asr local</code> and <code>--asr sr</code> keep audio on-device, <code>--asr off</code> skips live text entirely. Final transcript chain: <code>WHISPER_BASE_URL</code> → local Whisper (<code>wit setup local-asr</code>, fully offline) → Groq → OpenAI → free cloud (doubao-web → bcut, zh/auto only) — <code>--no-transcribe</code> skips that too. Optional LLM layers only run when you pass the flag and set a key."],
+      ["Which agents does it work with?", "Any agent that can run a CLI can read SEGMENTS.md + session.md + PROMPT.md. MCP-capable ones (Devin, Claude Code, Cursor, Codex…) connect to <code>wit mcp</code> — 15 tools to query evidence on demand instead of one static dump. A bundled SKILL.md loads natively in skill-aware agents and works as a rules file elsewhere."],
       ["What if a password is on screen?", "Password fields are masked across four channels, POST bodies redact credential fields, <code>P</code> freezes everything mid-session including the mic, and <code>WIT_NO_BODIES=1</code> drops response capture entirely for sensitive apps."],
       ["What languages can I speak?", "Speech recognition follows your browser/OS language by default — <code>--lang &lt;bcp47&gt;</code> (en-US, ja-JP…) overrides per session. Your words always land verbatim — ASR mistakes stay auditable; LLM correction is an opt-in display layer."],
       ["Only localhost, or any site?", "Any URL — it's a real managed browser you drive normally, so logins work. It's sharpest on local dev, where the agent can see the source while it fixes."],
@@ -216,7 +249,7 @@ Process in this order:
     contact: `Still curious? → <a href="mailto:wookat@qq.com">wookat@qq.com</a> · or <a href="https://github.com/wookat/witness/issues" target="_blank" rel="noopener">open an issue</a>. Questions welcome.`,
   },
   install: {
-    k: "12 · Get started",
+    k: "13 · Get started",
     h: "Three sentences. That's the whole loop.",
     p: "You give instructions; <b>your agent runs the commands</b>. Witness is a CLI (<code>wit</code>) that agents drive — it opens a managed browser, records, and hands back a local evidence package: <code>review.html</code> for you, <code>session.md</code>/<code>PROMPT.md</code>/<code>wit mcp</code> for the agent. Node 18+, system Edge/Chrome, no cloud, no keys.",
     cta1: "★ Star on GitHub",

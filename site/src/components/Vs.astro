@@ -1,53 +1,143 @@
 ---
 import { ui } from "../i18n.js";
-// The honest comparison — what you could do instead, and where each lands.
+// Honest comparison — desktop table + mobile interactive competitor selector cards so Witness is never scrolled off-screen.
 const { lang = "en" } = Astro.props;
 const t = ui(lang).vs;
+const altCols = t.cols.slice(1, -1); // e.g. Written report, Screen recording
+const prodCols = t.pcols.slice(1, -1); // e.g. Jam, Replay.io, Loom, Replay SaaS*
 ---
-<div class="wrap">
+<div class="wrap" id="vs-root">
   <div class="kicker">{t.k}</div>
   <h2 class="rv">{t.h}</h2>
   <p class="lede rv" data-d="80">{t.lede}</p>
-  <div class="vt rv" data-d="140">
+
+  <!-- Desktop Table 1 -->
+  <div class="vt desk rv" data-d="120">
     <table>
-      <thead><tr>{t.cols.map((c, i) => <th class={i === 3 ? "hl" : ""}>{c}</th>)}</tr></thead>
+      <thead><tr>{t.cols.map((c: string, i: number) => <th class={i === 3 ? "hl" : ""}>{c}</th>)}</tr></thead>
       <tbody>
-        {t.rows.map(r => <tr>
-          {r.map((c, i) => i === 3
+        {t.rows.map((r: string[]) => <tr>
+          {r.map((c: string, i: number) => i === 3
             ? <td class="hl"><b>{c}</b></td>
             : i === 0 ? <td class="rh">{c}</td> : <td>{c}</td>)}
         </tr>)}
       </tbody>
     </table>
   </div>
-  <p class="ph2 rv" data-d="180">{t.ph2}</p>
-  <div class="vt rv" data-d="200">
+
+  <!-- Mobile Interactive Selector 1 -->
+  <div class="mob-vs" data-vs-group="1">
+    <div class="vs-pills">
+      {altCols.map((name: string, idx: number) => (
+        <button type="button" class={"vp" + (idx === 0 ? " on" : "")} data-col={idx + 1}>vs {name}</button>
+      ))}
+    </div>
+    <div class="vs-cards">
+      {t.rows.map((r: string[]) => (
+        <div class="vc">
+          <div class="vc-dim">{r[0]}</div>
+          <div class="vc-pair">
+            <div class="vc-side other">
+              {altCols.map((name: string, idx: number) => (
+                <div class={"vs-slot" + (idx === 0 ? " on" : "")} data-slot={idx + 1}>
+                  <em>{name}</em><span>{r[idx + 1]}</span>
+                </div>
+              ))}
+            </div>
+            <div class="vc-side wit"><em>Witness</em><b>{r[3]}</b></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <p class="ph2 rv" data-d="160">{t.ph2}</p>
+
+  <!-- Desktop Table 2 -->
+  <div class="vt desk rv" data-d="180">
     <table>
-      <thead><tr>{t.pcols.map((c, i) => <th class={i === t.pcols.length - 1 ? "hl" : ""}>{c}</th>)}</tr></thead>
+      <thead><tr>{t.pcols.map((c: string, i: number) => <th class={i === t.pcols.length - 1 ? "hl" : ""}>{c}</th>)}</tr></thead>
       <tbody>
-        {t.prows.map(r => <tr>
-          {r.map((c, i) => i === t.pcols.length - 1
+        {t.prows.map((r: string[]) => <tr>
+          {r.map((c: string, i: number) => i === t.pcols.length - 1
             ? <td class="hl"><b>{c}</b></td>
             : i === 0 ? <td class="rh">{c}</td> : <td>{c}</td>)}
         </tr>)}
       </tbody>
     </table>
-    <p class="vnote">{t.pnote}</p>
   </div>
+
+  <!-- Mobile Interactive Selector 2 -->
+  <div class="mob-vs" data-vs-group="2">
+    <div class="vs-pills">
+      {prodCols.map((name: string, idx: number) => (
+        <button type="button" class={"vp" + (idx === 0 ? " on" : "")} data-col={idx + 1}>vs {name}</button>
+      ))}
+    </div>
+    <div class="vs-cards">
+      {t.prows.map((r: string[]) => (
+        <div class="vc">
+          <div class="vc-dim">{r[0]}</div>
+          <div class="vc-pair">
+            <div class="vc-side other">
+              {prodCols.map((name: string, idx: number) => (
+                <div class={"vs-slot" + (idx === 0 ? " on" : "")} data-slot={idx + 1}>
+                  <em>{name}</em><span>{r[idx + 1]}</span>
+                </div>
+              ))}
+            </div>
+            <div class="vc-side wit"><em>Witness</em><b>{r[t.pcols.length - 1]}</b></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <p class="vnote">{t.pnote}</p>
 </div>
+
 <style>
-  .vt{overflow-x:auto;margin-top:40px}
+  .vt{overflow-x:auto;margin-top:34px}
   table{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;font-size:13.5px;min-width:640px}
   th{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:left;padding:15px 18px;border-bottom:1px solid var(--line);background:var(--bg)}
-  th.hl{color:var(--rec);background:var(--rec-soft)}
+  th.hl{color:var(--rec);background:var(--rec-soft);border-left:1px solid #f2d4d4}
   td{padding:13px 18px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}
   tr:last-child td{border-bottom:0}
   td.rh{color:var(--ink);font-weight:600;font-size:13px;white-space:nowrap}
   td.hl{background:#fdf5f5;color:var(--ink);border-left:1px solid #f2d4d4}
-  th.hl{border-left:1px solid #f2d4d4}
   td.hl b{font-weight:600}
   tr:hover td{background:#fbfaf7}
   tr:hover td.hl{background:#fbeeee}
-  .ph2{margin:34px 0 0;font-size:14px;font-weight:600;color:var(--ink)}
-  .vnote{margin-top:12px;font-size:12px;color:var(--faint)}
+  .ph2{margin:36px 0 0;font-size:14.5px;font-weight:600;color:var(--ink)}
+  .vnote{margin-top:14px;font-size:12px;color:var(--faint)}
+
+  .mob-vs{display:none;margin-top:20px}
+  @media(max-width:760px){
+    .vt.desk{display:none}
+    .mob-vs{display:block}
+  }
+  .vs-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .vp{border:1px solid var(--line);background:var(--panel);color:var(--dim);border-radius:999px;padding:6px 12px;font:600 12px var(--mono);cursor:pointer;transition:all .14s}
+  .vp.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .vs-cards{display:flex;flex-direction:column;gap:8px}
+  .vc{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 14px}
+  .vc-dim{font:700 12.5px var(--sans);color:var(--ink);margin-bottom:8px}
+  .vc-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .vc-side{border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5}
+  .vc-side.other{background:var(--bg);color:var(--dim)}
+  .vc-side.wit{background:var(--rec-soft);color:var(--ink);border:1px solid #f2d4d4}
+  .vc-side em{display:block;font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-style:normal;margin-bottom:3px}
+  .vc-side.wit em{color:var(--rec)}
+  .vs-slot{display:none}
+  .vs-slot.on{display:block}
 </style>
+
+<script>
+  document.querySelectorAll<HTMLElement>(".mob-vs").forEach(group => {
+    group.querySelectorAll<HTMLButtonElement>(".vp").forEach(btn => btn.addEventListener("click", () => {
+      const col = btn.dataset.col;
+      group.querySelectorAll(".vp").forEach(x => x.classList.toggle("on", x === btn));
+      group.querySelectorAll<HTMLElement>(".vs-slot").forEach(s => s.classList.toggle("on", s.dataset.slot === col));
+    }));
+  });
+</script>

@@ -1,14 +1,13 @@
 ---
 import Tape from "./Tape.astro";
-import Icon from "./Icon.astro";
 import { ui } from "../i18n.js";
-const GH = "https://github.com/wookat/witness";
+import { GH } from "../meta.js";
 const { lang = "en" } = Astro.props;
 const t = ui(lang).hero;
 ---
 <header class="hero">
   <div class="grid-bg"></div>
-  <!-- floating evidence cards at the edges (devin-style depth) -->
+  <!-- floating evidence cards at the edges -->
   <div class="float fl-say" aria-hidden="true"><div class="fc">
     <span class="chip rec">SAY</span><p>{t.fsay}</p><span class="fts">00:34</span>
   </div></div>
@@ -20,64 +19,102 @@ const t = ui(lang).hero;
 
   <div class="wrap">
     <span class="pill rv"><i></i>{t.pill}</span>
-    <h1 class="rv" data-d="80">{t.h1a}<br>{t.h1b} <span class="rotw"><span class="rot" id="rot">{t.rot[0]}</span><svg class="mk" viewBox="0 0 120 12" preserveAspectRatio="none"><path d="M3 8.5C30 4 60 3 117 7.5" fill="none" stroke="var(--rec)" stroke-width="4" stroke-linecap="round"/></svg></span></h1>
-    <p class="sub rv" data-d="160">{t.sub}</p>
-    <div class="cta rv" data-d="240">
-      <a class="btn pri" href={GH}>{t.cta1}<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-      <a class="btn" href="#how">{t.cta2} ↓</a>
+    <h1 class="rv" data-d="60">{t.h1a}<br>{t.h1b} <span class="rotw"><span class="rot" id="rot">{t.rot[0]}</span><svg class="mk" viewBox="0 0 120 12" preserveAspectRatio="none"><path d="M3 8.5C30 4 60 3 117 7.5" fill="none" stroke="var(--rec)" stroke-width="4" stroke-linecap="round"/></svg></span></h1>
+    <p class="sub rv" data-d="120">{t.sub}</p>
+    <div class="cta rv" data-d="180">
+      <a class="btn pri" href="#configurator">{t.ctaCfg ?? t.cta2}<svg class="ar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href={GH}>{t.cta1}</a>
     </div>
-    <div class="install rv" data-d="320"><b>$</b><span id="typed"></span><span class="cur"></span><button title="copy" onclick="navigator.clipboard.writeText('npm i -g witness-recorder')">⧉</button></div>
-    <div class="insthint rv" data-d="380">{t.insthint}</div>
-    <div class="instmeta rv" data-d="420">{t.instmeta}<span id="npmdl" hidden></span></div>
+
+    <!-- Parameterized quick-install bar -->
+    <div class="inst-box rv" data-d="240" id="hero-inst">
+      <div class="inst-tabs" role="tablist" aria-label="Install mode">
+        <button type="button" class="it on" data-mode="cli">{t.modeCli ?? "CLI"}</button>
+        <button type="button" class="it" data-mode="agent">{t.modeAgent ?? "For AI Agent"}</button>
+        <span class="it-sep" id="pm-sep">|</span>
+        <div class="pms" id="pm-group">
+          <button type="button" class="pm on" data-pm="npm">npm</button>
+          <button type="button" class="pm" data-pm="pnpm">pnpm</button>
+          <button type="button" class="pm" data-pm="bun">bun</button>
+          <button type="button" class="pm" data-pm="npx">npx</button>
+        </div>
+      </div>
+      <div class="install">
+        <b id="inst-sigil">$</b>
+        <span id="typed">npm i -g witness-recorder</span>
+        <span class="cur"></span>
+        <button type="button" id="hero-copy" aria-label="Copy command">⧉ {t.copy ?? "Copy"}</button>
+      </div>
+    </div>
+
+    <div class="insthint rv" data-d="300" id="inst-hint">{t.insthint}</div>
+    <div class="instmeta rv" data-d="340">{t.instmeta}<span id="npmdl" hidden></span></div>
     <Tape />
   </div>
 </header>
 <style>
-  .hero{position:relative;padding:150px 0 90px;text-align:center;overflow:hidden}
+  .hero{position:relative;padding:144px 0 86px;text-align:center;overflow:hidden}
   .grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:52px 52px;mask-image:radial-gradient(ellipse 75% 60% at 50% 34%,#000 15%,transparent 72%);opacity:.55;pointer-events:none}
 
-  /* floating edge cards */
   .float{position:absolute;z-index:1;filter:drop-shadow(0 14px 30px #17181c14)}
   .fc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left}
   .fc p{font:500 12px var(--sans);margin:7px 0 4px}
   .fc .fts{font:500 10px var(--mono);color:var(--faint)}
-  .fl-say{left:2%;top:24%;transform:rotate(-7deg);width:190px}
-  .fl-ev{right:1.5%;top:20%;transform:rotate(6deg)}
+  .fl-say{left:2%;top:24%;transform:rotate(-7deg);width:190px;animation:bob 7s ease-in-out infinite}
+  .fl-ev{right:1.5%;top:20%;transform:rotate(6deg);animation:bob2 8s ease-in-out infinite}
   .fl-ev .fc{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
   .fl-ev code{font:500 11px var(--mono);color:var(--ink)}
-  .fl-shot{left:4%;bottom:14%;transform:rotate(5deg)}
+  .fl-shot{left:4%;bottom:14%;transform:rotate(5deg);animation:bob3 9s ease-in-out infinite}
   .fl-shot .fc{display:flex;gap:5px}
   .fl-shot i{width:26px;height:32px;border-radius:4px;background:linear-gradient(160deg,#efece5,#ddd8cd);border:1px solid var(--line)}
   .fl-shot i:nth-child(2){transform:translateY(-4px)}
-  @media(max-width:900px){.float{display:none}}
+  @media(max-width:960px){.float{display:none}}
   @keyframes bob{0%,100%{transform:rotate(-7deg) translateY(0)}50%{transform:rotate(-7deg) translateY(-9px)}}
   @keyframes bob2{0%,100%{transform:rotate(6deg) translateY(0)}50%{transform:rotate(6deg) translateY(-11px)}}
   @keyframes bob3{0%,100%{transform:rotate(5deg) translateY(0)}50%{transform:rotate(5deg) translateY(-7px)}}
-  .fl-say{animation:bob 7s ease-in-out infinite}
-  .fl-ev{animation:bob2 8s ease-in-out infinite}
-  .fl-shot{animation:bob3 9s ease-in-out infinite}
 
-  .pill{position:relative;display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);color:var(--rec);background:var(--rec-soft);border:1px solid #f3d3d3;border-radius:999px;padding:6px 15px;letter-spacing:.09em;margin-bottom:30px}
+  .pill{position:relative;display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);color:var(--rec);background:var(--rec-soft);border:1px solid #f3d3d3;border-radius:999px;padding:6px 15px;letter-spacing:.09em;margin-bottom:28px}
   .pill i{width:6px;height:6px;border-radius:50%;background:var(--rec);animation:pulse 2.2s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 #e5484d55}50%{opacity:.5;box-shadow:0 0 0 5px #e5484d00}}
-  h1{position:relative;font-size:clamp(42px,7.2vw,76px);line-height:1.05;font-weight:800;letter-spacing:-.035em;z-index:2}
+  h1{position:relative;font-size:clamp(40px,7vw,74px);line-height:1.05;font-weight:800;letter-spacing:-.035em;z-index:2}
   .rotw{position:relative;display:inline-block;white-space:nowrap}
   h1 .rot{display:inline-block;min-width:3.4ch;text-align:left;vertical-align:bottom;color:var(--rec);transition:transform .3s cubic-bezier(.3,.7,.3,1),opacity .3s}
   h1 .rot.out{transform:translateY(-.45em);opacity:0}
   h1 .rot.in{transition:none;transform:translateY(.45em);opacity:0}
   .mk{position:absolute;left:-2%;bottom:-.12em;width:104%;height:.22em}
-  .sub{position:relative;max-width:600px;margin:24px auto 0;color:var(--dim);font-size:17.5px;z-index:2}
-  .cta{position:relative;display:flex;gap:12px;justify-content:center;margin-top:34px;z-index:2}
-  .install{position:relative;display:inline-flex;align-items:center;gap:12px;margin-top:28px;background:var(--term);border:1px solid var(--term-line);border-radius:10px;padding:13px 18px;font:500 13.5px var(--mono);color:var(--term-text);box-shadow:0 10px 28px #17181c14;z-index:2}
-  .install b{color:var(--rec);font-weight:600}
-  .install .cur{width:8px;height:1.1em;background:var(--rec);animation:blink 1s steps(1) infinite}
+  .sub{position:relative;max-width:610px;margin:22px auto 0;color:var(--dim);font-size:17px;z-index:2}
+  .cta{position:relative;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:30px;z-index:2}
+
+  .inst-box{position:relative;z-index:2;display:inline-flex;flex-direction:column;align-items:stretch;margin-top:26px;max-width:min(620px,94vw);background:var(--term);border:1px solid var(--term-line);border-radius:12px;overflow:hidden;box-shadow:0 14px 36px #17181c1a}
+  .inst-tabs{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--term-line);background:#15151b;flex-wrap:wrap}
+  .it,.pm{background:transparent;border:1px solid transparent;color:#8a8994;font:600 11px var(--mono);padding:3px 9px;border-radius:6px;cursor:pointer;transition:all .14s}
+  .it:hover,.pm:hover{color:#e6e4dc}
+  .it.on{background:#262734;color:#fff;border-color:#3a3b4e}
+  .pm.on{background:#e5484d26;color:#ff8a8e;border-color:#e5484d44}
+  .it-sep{color:#343542;font-size:11px;margin:0 2px}
+  .pms{display:inline-flex;gap:4px;align-items:center}
+  .pms.hide,.it-sep.hide{display:none}
+  .install{display:flex;align-items:center;gap:10px;padding:13px 16px;font:500 13px var(--mono);color:var(--term-text);text-align:left}
+  .install b{color:var(--rec);font-weight:700;flex:none}
+  #typed{overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+  #typed::-webkit-scrollbar{display:none}
+  .install .cur{width:7px;height:1.1em;background:var(--rec);flex:none;animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
-  .install button{background:none;border:0;color:#77767f;cursor:pointer;font:inherit;font-size:15px;padding:0;transition:color .15s}
-  .install button:hover{color:var(--term-text)}
-  .insthint{position:relative;margin-top:12px;font:500 12px var(--mono);color:var(--faint);z-index:2}
-  .instmeta{position:relative;margin-top:7px;font:500 11px var(--mono);color:var(--faint);letter-spacing:.04em;z-index:2;opacity:.85}
+  .install button{margin-left:auto;flex:none;background:#22232d;border:1px solid #353646;color:#d6d4cc;border-radius:7px;cursor:pointer;font:600 11px var(--mono);padding:5px 10px;transition:all .15s}
+  .install button:hover{color:#fff;border-color:#5b5d73}
+  .install button.ok{background:#15281e;border-color:#3d9d63;color:#6fce97}
+
+  .insthint{position:relative;margin-top:11px;font:500 12px var(--mono);color:var(--faint);z-index:2}
+  .instmeta{position:relative;margin-top:6px;font:500 11px var(--mono);color:var(--faint);letter-spacing:.04em;z-index:2;opacity:.88}
 </style>
-<script define:vars={{ words: t.rot }}>
+<script define:vars={{
+  words: t.rot,
+  agentPrompt: t.agentCmd ?? "Install witness (`npm i -g witness-recorder`), run `wit init`, then record http://localhost:5173",
+  copyLabel: t.copy ?? "Copy",
+  copiedLabel: t.copied ?? "Copied",
+  dlUnit: t.dlUnit ?? "npm/mo",
+  starUnit: t.starUnit ?? "stars",
+}}>
   const el = document.getElementById("rot");
   let wi = 0;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -91,28 +128,68 @@ const t = ui(lang).hero;
       requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("in")));
     }, 320);
   }, 2600);
-  const cmd = "npm i -g witness-recorder";
-  const tp = document.getElementById("typed");
-  if (tp && !reduced) {
-    let i = 0;
-    const tick = () => { tp.textContent = cmd.slice(0, ++i); if (i < cmd.length) setTimeout(tick, 34 + Math.random() * 46); };
-    setTimeout(tick, 700);
-  } else if (tp) tp.textContent = cmd;
 
-  // live npm downloads + GitHub stars — public APIs, CORS-open
+  const PM_CMDS = {
+    npm: "npm i -g witness-recorder",
+    pnpm: "pnpm add -g witness-recorder",
+    bun: "bun add -g witness-recorder",
+    npx: "npx witness-recorder start http://localhost:5173",
+  };
+  let mode = "cli", pm = "npm";
+  const tp = document.getElementById("typed");
+  const sigil = document.getElementById("inst-sigil");
+  const pmGroup = document.getElementById("pm-group");
+  const pmSep = document.getElementById("pm-sep");
+  const copyBtn = document.getElementById("hero-copy");
+
+  const currentCmd = () => mode === "agent" ? agentPrompt : PM_CMDS[pm];
+  const syncCmd = () => {
+    if (tp) tp.textContent = currentCmd();
+    if (sigil) sigil.textContent = mode === "agent" ? "→" : "$";
+    pmGroup?.classList.toggle("hide", mode === "agent");
+    pmSep?.classList.toggle("hide", mode === "agent");
+  };
+
+  document.querySelectorAll("#hero-inst .it").forEach(b => b.addEventListener("click", () => {
+    mode = b.dataset.mode;
+    document.querySelectorAll("#hero-inst .it").forEach(x => x.classList.toggle("on", x === b));
+    syncCmd();
+  }));
+  document.querySelectorAll("#hero-inst .pm").forEach(b => b.addEventListener("click", () => {
+    pm = b.dataset.pm;
+    document.querySelectorAll("#hero-inst .pm").forEach(x => x.classList.toggle("on", x === b));
+    syncCmd();
+  }));
+
+  copyBtn?.addEventListener("click", async () => {
+    const txt = currentCmd();
+    const ok = () => {
+      copyBtn.textContent = "✓ " + copiedLabel;
+      copyBtn.classList.add("ok");
+      setTimeout(() => { copyBtn.textContent = "⧉ " + copyLabel; copyBtn.classList.remove("ok"); }, 1600);
+    };
+    try { await navigator.clipboard.writeText(txt); ok(); }
+    catch {
+      const ta = document.createElement("textarea");
+      ta.value = txt; ta.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); ok();
+    }
+  });
+
+  // Live npm downloads + shared GitHub star promise (no duplicate GitHub API request)
   (async () => {
-    const el = document.getElementById("npmdl");
-    if (!el) return;
+    const out = document.getElementById("npmdl");
+    if (!out) return;
     const fmt = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? (n / 1e3).toFixed(1) + "k" : String(n);
     const parts = [];
     try {
       const [dl, gh] = await Promise.all([
-        fetch("https://api.npmjs.org/downloads/point/last-month/witness-recorder", { signal: AbortSignal.timeout(5000) }).then(r => r.json()),
-        fetch("https://api.github.com/repos/wookat/witness", { signal: AbortSignal.timeout(5000) }).then(r => r.json()),
+        fetch("https://api.npmjs.org/downloads/point/last-month/witness-recorder", { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+        window.__witGhPromise || Promise.resolve(null),
       ]);
-      if (typeof dl.downloads === "number") parts.push(fmt(dl.downloads) + " npm downloads/mo");
-      if (typeof gh.stargazers_count === "number") parts.push(fmt(gh.stargazers_count) + " GitHub stars");
+      if (dl && typeof dl.downloads === "number") parts.push(fmt(dl.downloads) + " " + dlUnit);
+      if (gh && typeof gh.stargazers_count === "number") parts.push("★ " + fmt(gh.stargazers_count) + " " + starUnit);
     } catch {}
-    if (parts.length) { el.textContent = " · " + parts.join(" · "); el.hidden = false; }
+    if (parts.length) { out.textContent = " · " + parts.join(" · "); out.hidden = false; }
   })();
 </script>

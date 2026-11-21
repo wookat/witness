@@ -50,10 +50,22 @@ export async function correctSays(events: Ev[], appUrl?: string): Promise<Ev[]> 
   }
 
   const lines = (res.choices[0]?.message?.content || "").trim().split("\n");
-  const groups: { from: number; to: number; text: string }[] = [];
+  const parsed: { from: number; to: number; text: string }[] = [];
   for (const line of lines) {
     const m = line.match(/^\s*(\d+)\s*(?:[-~—]\s*(\d+))?\s*[|｜]\s*(.+?)\s*$/);
-    if (m) groups.push({ from: Number(m[1]), to: Number(m[2] ?? m[1]), text: m[3] });
+    if (!m) continue;
+    const from = Math.max(1, Number(m[1]));
+    const to = Math.min(says.length, Math.max(from, Number(m[2] ?? m[1])));
+    if (from <= says.length) parsed.push({ from, to, text: m[3] });
+  }
+  parsed.sort((a, b) => a.from - b.from || a.to - b.to);
+  // drop overlapping ranges so cursor progression can never stall
+  const groups: typeof parsed = [];
+  let maxEnd = 0;
+  for (const g of parsed) {
+    if (g.from <= maxEnd) continue;
+    groups.push(g);
+    maxEnd = g.to;
   }
   if (!groups.length) return events;
 
@@ -63,12 +75,13 @@ export async function correctSays(events: Ev[], appUrl?: string): Promise<Ev[]> 
   for (const e of events) {
     if (e.kind !== "say") { out.push(e); continue; }
     idx++;
+    while (gi < groups.length && idx > groups[gi].to) gi++;
     const g = groups[gi];
     if (!g || idx < g.from) { out.push(e); continue; }
     if (idx === g.from) {
-      const last = says[Math.min(g.to, says.length) - 1];
-      out.push({ ...e, text: g.text, segEnd: last.segEnd }); // keep first fragment's t/segStart as anchor
-      gi++;
+      const last = says[g.to - 1];
+      out.push({ ...e, text: g.text, segEnd: last.segEnd });
+      if (idx === g.to) gi++;
     }
     // fragments inside (from, to] are consumed by the merge
   }

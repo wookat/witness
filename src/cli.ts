@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { config } from "dotenv";
 import { existsSync, readdirSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { execSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { Command } from "commander";
 import { record } from "./recorder.js";
@@ -39,7 +39,7 @@ program
   .option("--associate", "LLM-pick relevant evidence per speech block (needs ZHIPU_API_KEY)", false)
   .option("--no-rr", "skip rrweb full-DOM replay capture")
   .option("--keyframes", "after stop, render rrweb → per-segment keyframe jpgs (agent-consumable replay)")
-  .option("--asr <engine>", "live speech engine: auto|doubao-web|doubao-ime|sr|off (see `wit config asr` to persist)")
+  .option("--asr <engine>", "live speech engine: auto|local|doubao-web|doubao-ime|sr|off (see `wit config asr` to persist)")
   .option("--shot-interval <ms>", "periodic screenshot interval", "10000")
   .option("--width <px>", "viewport width", "1560")
   .option("--height <px>", "viewport height", "960")
@@ -104,11 +104,13 @@ program
     if (!existsSync(eventsPath)) { console.log("missing events.jsonl in " + dir); return; }
     if (!hasCorrector()) { console.log("no ZHIPU_API_KEY in .env"); return; }
     const s = await loadSession(dir);
-    const corrected = await correctSays(align(s.events, []), s.meta.url);
-    await writeSessionFiles(s.dir, corrected, s.meta);
-    const diffs = corrected.filter((e, i) =>
-      e.kind === "say" && s.events[i]?.kind === "say" && e.text !== (s.events[i] as { text?: string }).text);
-    console.log(`✔ corrected ${diffs.length} say event(s) → ` + join(dir, "session.md"));
+    const aligned = align(s.events, s.transcript?.segments ?? []);
+    const corrected = await correctSays(aligned, s.meta.url);
+    await writeSessionFiles(s.dir, corrected, s.meta, s.transcript);
+    const before = aligned.filter(e => e.kind === "say").map(e => (e as { text: string }).text);
+    const after = corrected.filter(e => e.kind === "say").map(e => (e as { text: string }).text);
+    const changed = after.filter((t, i) => t !== before[i]).length + Math.abs(before.length - after.length);
+    console.log(`✔ corrected (${before.length} → ${after.length} say blocks, ${changed} changed) → ` + join(dir, "session.md"));
   });
 
 program
@@ -160,45 +162,56 @@ program
 
 program
   .command("config [key] [value]")
-  .description("show or set recorder config (.witness/config.json) — keys: asr = auto|doubao-web|doubao-ime|sr|off")
+  .description("show or set recorder config (global ~/.witness + project .witness) — keys: asr | lang | asr-prompt | telemetry")
   .action(async (key, value) => {
-    const { readConfig, setConfig } = await import("./config.js");
+    const { readConfig, setConfig, configPaths } = await import("./config.js");
     const { ASR_ENGINES } = await import("./live-asr.js");
     if (!key) {
       const c = readConfig();
-      console.log("asr =", c.asr ?? "auto", " (default)");
+      console.log("asr =", c.asr ?? "auto", c.asr ? "(persisted)" : "(default)");
       console.log("lang =", c.lang ?? "(browser/OS default)");
+      console.log("telemetry =", c.telemetry === false ? "off" : "on");
       const la = c.localAsr;
       console.log("local-asr =", la ? `${la.model ?? "small"} @ ${la.baseUrl ?? `127.0.0.1:${la.port ?? 8791}`} ${la.enabled === false ? "(disabled)" : "(enabled)"}` : "not configured — `wit setup local-asr`");
       if (c.asrPrompt) console.log(`asr-prompt = "${c.asrPrompt}"`);
       console.log("engines:", ASR_ENGINES.join(" | "));
-      const { configPaths } = await import("./config.js");
       const p = configPaths();
       console.log(`files: global ${p.global} · project ${p.project}`);
-      console.log("set: wit config asr|lang|asr-prompt <value>  ·  one-off: wit start --asr/--lang  ·  env: WIT_ASR / WIT_ASR_PROMPT  ·  wizard: wit init");
+      console.log("set: wit config asr|lang|asr-prompt|telemetry <value>  ·  one-off: wit start --asr/--lang  ·  wizard: wit init");
       return;
     }
     if (key === "asr") {
       if (!ASR_ENGINES.includes(value)) { console.log(`asr must be one of: ${ASR_ENGINES.join(" | ")}`); return; }
-      setConfig("asr", value);
-      console.log(`✔ asr = ${value} (persisted to .witness/config.json)`);
+      const file = setConfig("asr", value);
+      console.log(`✔ asr = ${value} (persisted to ${file})`);
       return;
     }
     if (key === "lang" || key === "language") {
       const v = (value ?? "").trim();
-      setConfig("lang", v); // "" clears — falls back to browser/OS default
-      if (v) console.log(`✔ lang = "${v}" (persisted — BCP-47 like zh-CN / en-US / ko-KR)`);
-      else console.log("✔ lang cleared (browser/OS default)");
+      const file = setConfig("lang", v || undefined);
+      if (v) console.log(`✔ lang = "${v}" (persisted to ${file} — BCP-47 like zh-CN / en-US / ja-JP)`);
+      else console.log(`✔ lang cleared (browser/OS default — ${file})`);
       return;
     }
     if (key === "asr-prompt" || key === "prompt") {
       const v = (value ?? "").trim();
-      setConfig("asrPrompt", v); // "" clears — falsy downstream
-      if (v) console.log(`✔ asr-prompt = "${v}" (persisted — biases local whisper; env WIT_ASR_PROMPT overrides)`);
-      else console.log("✔ asr-prompt cleared");
+      const file = setConfig("asrPrompt", v || undefined);
+      if (v) console.log(`✔ asr-prompt = "${v}" (persisted to ${file} — biases local whisper; env WIT_ASR_PROMPT overrides)`);
+      else console.log(`✔ asr-prompt cleared (${file})`);
       return;
     }
-    console.log(`unknown key "${key}" — supported: asr, asr-prompt`);
+    if (key === "telemetry") {
+      const v = (value ?? "").toLowerCase();
+      if (!["on", "off", "true", "false", "1", "0"].includes(v)) {
+        console.log("telemetry must be: on | off");
+        return;
+      }
+      const on = ["on", "true", "1"].includes(v);
+      const file = setConfig("telemetry", on);
+      console.log(`✔ telemetry = ${on ? "on" : "off"} (persisted to ${file})`);
+      return;
+    }
+    console.log(`unknown key "${key}" — supported: asr, lang, asr-prompt, telemetry`);
   });
 
 program
@@ -206,8 +219,7 @@ program
   .description("interactive first-run wizard: language, live ASR engine, local transcription, hotwords")
   .action(async () => {
     const { createInterface } = await import("node:readline");
-    const { readConfig, setConfig } = await import("./config.js");
-    const { ASR_ENGINES } = await import("./live-asr.js");
+    const { readConfig, setConfig, configPaths } = await import("./config.js");
     const rl = createInterface({ input: process.stdin });
     // buffer lines so piped/scripted input isn't dropped while no question is pending
     const lines: string[] = [];
@@ -219,8 +231,10 @@ program
       if (lines.length) res(lines.shift()!); else waiter = res;
     }).then(s => s.trim());
     const c = readConfig();
+    const paths = configPaths();
 
-    console.log(`\n\x1b[36m◉ wit init\x1b[0m — configure once, record forever  (.witness/config.json)\n`);
+    console.log(`\n\x1b[36m◉ wit init\x1b[0m — configure once, record forever`);
+    console.log(`  global: ${paths.global} · project: ${paths.project}\n`);
 
     // 1) default language
     const lang = await ask(`1/4 默认语音语言 BCP-47 [当前:${c.lang ?? "跟随系统"}] 如 zh-CN / en-US / ko-KR / ja-JP (回车保持): `);
@@ -244,13 +258,11 @@ program
 
     // 3) local whisper for final transcript
     const la = c.localAsr;
-    console.log(`\n3/4 终稿转写后端 [当前:${la?.enabled !== false && la ? `本地 ${la.model ?? "small"}` : "云端 key / bcut"}]`);
+    console.log(`\n3/4 终稿转写后端 [当前:${la?.enabled !== false && la ? `本地 ${la.model ?? "small"}` : "免费云端 (doubao-web → bcut) / 自带 key"}]`);
     if (!la || la.enabled === false) {
       const yn = await ask("   安装本地 whisper 吗? 离线/隐私/多语言,一次性 ~500MB 模型 [y/N]: ");
       if (/^y/i.test(yn)) {
-        rl.close();
         await program.parseAsync(["setup", "local-asr"], { from: "user" });
-        return;
       }
     } else {
       console.log(`   ✔ 已配置 ${la.model ?? "small"} @ 127.0.0.1:${la.port ?? 8791} — wit local-asr models 可换模型`);
@@ -258,15 +270,14 @@ program
 
     // 4) hotwords
     const hw = await ask(`\n4/4 ASR 热词偏置 [当前:"${c.asrPrompt ?? "无"}"] 如 "witness, MCP, getUserMedia" (回车跳过, "-"清除): `);
-    if (hw === "-") { setConfig("asrPrompt", ""); console.log("    ✔ 已清除"); }
+    if (hw === "-") { setConfig("asrPrompt", undefined); console.log("    ✔ 已清除"); }
     else if (hw) { setConfig("asrPrompt", hw); console.log(`    ✔ asr-prompt = "${hw}"`); }
 
     rl.close();
     const done = readConfig();
-    console.log(`\n\x1b[32m✔ 配置完成\x1b[0m → .witness/config.json`);
+    console.log(`\n\x1b[32m✔ 配置完成\x1b[0m`);
     console.log(`   asr=${done.asr ?? "auto"} · lang=${done.lang ?? "系统"} · prompt="${done.asrPrompt ?? ""}"`);
     console.log(`   改: wit config <key> · 体检: wit doctor · 开录: wit start <url>\n`);
-    void ASR_ENGINES;
   });
 
 program
@@ -307,12 +318,12 @@ program
         }
       }
     }
-    setConfig("localAsr", cfg);
-    console.log(`\n✔ configured → .witness/config.json`);
+    const file = setConfig("localAsr", cfg);
+    console.log(`\n✔ configured → ${file}`);
     console.log(`  start server : wit local-asr start`);
     console.log(`  check status : wit local-asr status`);
-    console.log(`  once running, every \`wit start\` / \`wit transcribe\` uses it automatically (falls back to keys/bcut if down)`);
-    console.log(`  hotwords     : set WIT_ASR_PROMPT="product names, error codes" to bias recognition\n`);
+    console.log(`  once running, every \`wit start\` / \`wit transcribe\` uses it automatically (falls back to keys/free-cloud if down)`);
+    console.log(`  hotwords     : set WIT_ASR_PROMPT="product names, error codes" or \`wit config asr-prompt\` to bias recognition\n`);
   });
 
 program
@@ -326,7 +337,7 @@ program
       console.log("starting local ASR… (first run downloads python deps + model — be patient)\n");
       const r = await la.startLocalAsr({ port: o.port ? Number(o.port) : undefined, model: o.model });
       console.log(`\n✔ local ASR ready → ${r.baseURL} (pid ${r.pid})`);
-      console.log(`  logs: ${join(process.cwd(), ".witness", "local-asr.log")}`);
+      console.log(`  logs: ${la.localAsrLogFile()}`);
       console.log(`  transcription picks it up automatically — no restart of wit needed`);
       return;
     }
@@ -467,7 +478,14 @@ program
     if (!target) { console.log("no matching session"); return; }
     const p = join(base, target, "review.html");
     console.log(p);
-    try { execSync(`cmd /c start "" "${p}"`, { stdio: "ignore" }); } catch {}
+    try {
+      const cmd = process.platform === "win32"
+        ? { bin: "cmd", args: ["/c", "start", "", p] }
+        : process.platform === "darwin"
+          ? { bin: "open", args: [p] }
+          : { bin: "xdg-open", args: [p] };
+      spawn(cmd.bin, cmd.args, { detached: true, stdio: "ignore" }).unref();
+    } catch {}
   });
 
 program.parse();

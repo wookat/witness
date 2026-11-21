@@ -93,10 +93,13 @@ wit associate <dir>               # LLM picks relevant evidence per SAY (ZHIPU_A
 wit recover <dir>                 # rebuild artifacts after a crash
 wit segments <dir>                # regenerate speech-anchor index + bundles
 wit keyframes <dir>               # render rrweb → per-segment keyframe jpgs
+wit init                          # 4-step interactive setup wizard (lang / ASR / whisper / hotwords)
 wit doctor                        # preflight: browser / live-ASR / keys / dirs
 wit mcp [dir]                     # stdio MCP server over the evidence
 wit config asr <engine>           # live ASR: auto|local|doubao-web|doubao-ime|sr|off
-wit config asr-prompt <words>     # persist ASR hotwords (product names, error codes)
+wit config lang <bcp47>           # default speech language (persisted globally in ~/.witness)
+wit config asr-prompt <words>     # persist ASR hotwords (per-project in .witness/config.json)
+wit config telemetry on|off       # toggle anonymous CLI usage ping
 wit setup local-asr               # install local whisper backend (offline, private)
 wit local-asr start|stop|status   # manage the local ASR server (127.0.0.1:8791)
 wit local-asr models …            # list | use | pull | rm faster-whisper models
@@ -160,14 +163,14 @@ audio.webm / transcript.json
   engine once `wit local-asr live setup` has run, then `auto` = local → doubao-web → doubao-ime → browser SR
   (pick via `wit config asr`, `--asr`, `WIT_ASR`, or the `get_asr`/`set_asr` MCP tools). Final transcript chain:
   `WHISPER_BASE_URL` → **local whisper** (`wit setup local-asr` — offline, multilingual,
-  audio never leaves the machine) → Groq → OpenAI → bcut (zh-tuned free endpoint, zh/auto sessions only).
+  audio never leaves the machine) → Groq → OpenAI → free cloud (`doubao-web → bcut`, zh/auto sessions only).
   `WIT_ASR_PROMPT` / `wit config asr-prompt` biases the local engine toward your product names and error codes.
   LLM layers are optional.
-- **Privacy engineered in** — password/OTP/credit-card fields masked across four channels, credential fields redacted in POST bodies,
-  `WIT_NO_BODIES=1` disables body capture, `P` freezes everything, `.witness/` is auto-gitignored.
+- **Privacy engineered in** — password/OTP/credit-card fields masked across four channels, credential fields redacted in POST bodies & query params,
+  `WIT_NO_BODIES=1` disables body capture, `P` freezes everything (events, network, console & mic), `.witness/` is auto-gitignored.
   `--lang` now reaches every ASR stage (browser SR, doubao live, whisper post-session).
 - **Anonymous usage stats** — the CLI sends one ping per command (command name, version, OS/arch, Node major; never URLs,
-  paths or session data) to our own Cloudflare Worker — no third-party analytics, no cookies. Disable with `WIT_TELEMETRY=0`.
+  paths or session data) to our own Cloudflare Worker — no third-party analytics, no cookies. Disable with `WIT_TELEMETRY=0` or `wit config telemetry off`.
 
 ## Development
 

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, createWriteStream } from "node:fs";
 import { join } from "node:path";
-import { execSync } from "node:child_process";
-import { chromium, type BrowserContext, type Page } from "playwright";
+import type { BrowserContext, Page } from "playwright";
+import { launchBrowser } from "./browser.js";
 import { EventStore } from "./events.js";
 import { PAGE_SCRIPT } from "./page-script.js";
 import { AudioSink } from "./audio.js";
@@ -10,17 +10,17 @@ import { wireNetwork } from "./network.js";
 import { transcribe, hasTranscriber, shouldUseFreeCloud, withTranscribeProgress, type Transcript } from "./transcribe.js";
 import { transcribeFreeCloud } from "./free-cloud.js";
 import { openLiveAsr, type LiveAsrSession, type AsrChoice } from "./live-asr.js";
-
-/** Replace any `microphone=…` directive in a Permissions-Policy value with `microphone=(self)`. */
-export function relaxMicPolicy(value: string): string {
-  return value.replace(/microphone\s*=\s*[^,;]*/gi, "microphone=(self)");
-}
 import { resolveAsr } from "./config.js";
 import { align } from "./align.js";
 import { correctSays, hasCorrector } from "./correct.js";
 import { associateSays } from "./associate.js";
 import { writeSessionFiles, copyToClipboard } from "./session.js";
 import { rrwebUmd } from "./rr.js";
+
+/** Replace any `microphone=…` directive in a Permissions-Policy value with `microphone=(self)`. */
+export function relaxMicPolicy(value: string): string {
+  return value.replace(/microphone\s*=\s*[^,;]*/gi, "microphone=(self)");
+}
 
 export interface RecOptions {
   url: string;
@@ -44,28 +44,7 @@ export interface RecOptions {
 const slug = (s: string) => s.replace(/^https?:\/\//, "").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 const stamp = () => new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").slice(0, 19);
 
-async function ensureChromium() {
-  // Prefer system Edge/Chrome — zero download, user's real browser.
-  // Fall back to playwright's bundled chromium only if none found.
-  for (const ch of ["msedge", "chrome"] as const) {
-    try {
-      const b = await chromium.launch({ channel: ch, headless: true });
-      await b.close();
-      return ch;
-    } catch { /* not installed */ }
-  }
-  try {
-    const p = chromium.executablePath();
-    if (existsSync(p)) return undefined;
-  } catch { /* fallthrough */ }
-  console.log("no system Edge/Chrome found — installing bundled chromium …");
-  execSync("npx playwright install chromium", { stdio: "inherit" });
-  return undefined;
-}
-
 export async function record(opts: RecOptions) {
-  const channel = await ensureChromium();
-
   const outBase = opts.outBase ?? join(process.cwd(), ".witness", "sessions");
   const dir = join(outBase, `${stamp()}_${slug(opts.url) || "page"}`);
   mkdirSync(dir, { recursive: true });
@@ -102,8 +81,7 @@ export async function record(opts: RecOptions) {
   console.log(`  session → ${dir}`);
   console.log(`  controls: toolbar ■ / Alt+Shift+R / Ctrl+C here — M or Ctrl+Click to mark\n`);
 
-  const browser = await chromium.launch({
-    channel,
+  const { browser } = await launchBrowser({
     headless: false,
     args: [
       "--use-fake-ui-for-media-stream",
@@ -149,7 +127,8 @@ export async function record(opts: RecOptions) {
   const asrMode = resolveAsr(opts.asr);
   let liveAsr: LiveAsrSession | null = null;
   let srFallback = false; // cloud asr failed → lazily start browser SR on each nav
-  const engineSays = new Set<string>(); // emitted sentence texts, for dedupe at end()
+  const engineSays = new Set<string>(); // emitted sentence keys (time|text), for dedupe at end()
+  const sayKey = (seg: { start: number; text: string }) => `${Math.round(seg.start * 10)}|${seg.text}`;
   // audio t=0 anchor: the page emits a tagged "mic-start" note when MediaRecorder arms;
   // fall back to the legacy text match for sessions recorded before the tag existed
   const micBiasMs = () => (store.events.find(e => e.kind === "note" && ((e as { tag?: string }).tag === "mic-start" || /mic recording/i.test(e.text ?? "")))?.t ?? 0);
@@ -190,7 +169,7 @@ export async function record(opts: RecOptions) {
     store.push(e);
     if (e?.kind === "_ui" && e.action === "stop") void stop("ui");
   });
-  await ctx.exposeBinding("__witAudio", (_src, b64: string) => audio.chunk(b64));
+  await ctx.exposeBinding("__witAudio", (_src, b64: string) => { if (!paused) audio.chunk(b64); });
   await ctx.exposeBinding("__witPcm", (src, b64: string) => {
     if (liveAsr && !paused && src.page === lastPage) liveAsr.push(Buffer.from(b64, "base64"));
   });
@@ -213,18 +192,22 @@ export async function record(opts: RecOptions) {
       slimDOMOptions: { script: true, comment: true },
     });`);
   }
-  await ctx.addInitScript(PAGE_SCRIPT(opts.lang, { sr: asrMode === "sr", pcm: asrMode !== "sr" && asrMode !== "off" }));
+  await ctx.addInitScript(PAGE_SCRIPT(opts.lang, { sr: asrMode === "sr", pcm: asrMode !== "sr" && asrMode !== "off", asrLabel: asrMode }));
 
   function wirePage(page: Page) {
     if (pages.has(page)) return;
     pages.add(page);
     lastPage = page;
-    wireNetwork(page, store);
+    wireNetwork(page, store, () => paused);
     page.on("console", m => {
+      if (paused) return;
       const loc = m.location();
       store.push({ kind: "console", level: m.type(), text: m.text().slice(0, 1500), stack: loc ? `${loc.url}:${loc.lineNumber}:${loc.columnNumber}` : undefined });
     });
-    page.on("pageerror", e => store.push({ kind: "error", message: String(e.message || e).slice(0, 1500), stack: e.stack?.slice(0, 1500) }));
+    page.on("pageerror", e => {
+      if (paused) return;
+      store.push({ kind: "error", message: String(e.message || e).slice(0, 1500), stack: e.stack?.slice(0, 1500) });
+    });
     // websocket frames — realtime apps (collab editors, chat, live dashboards) otherwise leave no evidence
     let wsCount = 0;
     page.on("websocket", ws => {
@@ -241,13 +224,14 @@ export async function record(opts: RecOptions) {
     let lastNav = "";
     page.on("framenavigated", f => {
       if (f === page.mainFrame()) {
+        if (paused) return;
         const url = page.url();
         store.push({ kind: "nav", url, title: undefined });
         if (srFallback) setTimeout(() => void page.evaluate(() => (window as any).__witCmd?.("sr-on")).catch(() => {}), 1200);
         if (url === lastNav) return;
         lastNav = url;
-        setTimeout(() => shots.at(page, "nav").catch(() => {}), 800);
-        setTimeout(() => void snapDom(page, "nav"), 1500);
+        setTimeout(() => { if (!paused) void shots.at(page, "nav").catch(() => {}); }, 800);
+        setTimeout(() => { if (!paused) void snapDom(page, "nav"); }, 1500);
       }
     });
     page.on("close", () => {
@@ -290,8 +274,9 @@ export async function record(opts: RecOptions) {
         ]);
         const b = micBiasMs();
         for (const s of engineSegs) {
-          if (!s.text || engineSays.has(s.text)) continue;
-          engineSays.add(s.text);
+          const k = sayKey(s);
+          if (!s.text || engineSays.has(k)) continue;
+          engineSays.add(k);
           store.push({ kind: "say", text: s.text, segStart: b + s.start * 1000, segEnd: b + s.end * 1000 });
         }
       } catch (e) { console.log(`  live asr end failed: ${(e as Error).message}`); }
@@ -389,15 +374,20 @@ export async function record(opts: RecOptions) {
     }
     writeFileSync(join(dir, "session.json"), JSON.stringify({ ...meta, events: events.length, audio: audio.hasAudio }, null, 1));
 
-    const clip = `witness session: ${dir}\nRead ${join(dir, "session.md")} and fix the reported issues`;
+    const clip = `witness session: ${dir}\nRead ${join(dir, "SEGMENTS.md")} (and ${join(dir, "PROMPT.md")}) first, confirm the issue checklist, then fix.`;
     copyToClipboard(clip);
     console.log(`\n\x1b[32m✔\x1b[0m session → ${dir}`);
-    console.log(`  main file: ${join(dir, "session.md")}`);
+    console.log(`  index:     ${join(dir, "SEGMENTS.md")}`);
+    console.log(`  timeline:  ${join(dir, "session.md")}`);
     console.log(`  review:    ${join(dir, "review.html")}`);
-    console.log(`  (paths copied to clipboard)`);
+    console.log(`  (handoff copied to clipboard)`);
   }
 
-  if (opts.duration) setTimeout(() => void stop("duration"), opts.duration * 1000);
+  if (opts.duration) {
+    const durTimer = setTimeout(() => void stop("duration"), opts.duration * 1000);
+    durTimer.unref?.();
+    stopFns.push(() => clearTimeout(durTimer));
+  }
 
   // live cloud ASR — streams mic PCM to a real engine, replaces browser SR
   if (asrMode !== "sr" && asrMode !== "off") {
@@ -408,6 +398,7 @@ export async function record(opts: RecOptions) {
         liveAsr = s;
         store.push({ kind: "note", text: `live asr: ${s.name}` });
         console.log(`  live asr: ${s.name}`);
+        for (const p of pages) void p.evaluate(name => (window as any).__wit?.setAsrLabel?.(name), s.name).catch(() => {});
         let capT = 0;
         s.onPartial(t => {
           const now = Date.now();
@@ -416,7 +407,7 @@ export async function record(opts: RecOptions) {
         });
         s.onSentence(seg => {
           if (!seg.text || paused) return;
-          engineSays.add(seg.text);
+          engineSays.add(sayKey(seg));
           const b = micBiasMs();
           store.push({ kind: "say", text: seg.text, segStart: b + seg.start * 1000, segEnd: b + seg.end * 1000 });
           if (lastPage && Date.now() - lastSayShot >= 2500) { lastSayShot = Date.now(); void shots.at(lastPage, "say").catch(() => {}); }
@@ -425,7 +416,7 @@ export async function record(opts: RecOptions) {
         console.log(`  live asr failed: ${(e as Error).message} — browser SR fallback`);
         store.push({ kind: "note", text: `live asr failed (${(e as Error).message}) — sr fallback` });
         srFallback = true;
-        for (const p of pages) await p.evaluate(() => (window as any).__witCmd?.("sr-on")).catch(() => {});
+        for (const p of pages) await p.evaluate(() => { (window as any).__wit?.setAsrLabel?.("sr"); (window as any).__witCmd?.("sr-on"); }).catch(() => {});
       }
     })();
   }

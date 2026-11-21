@@ -63,13 +63,22 @@ export class Shots {
   /** periodic screenshots every intervalMs; skip()=true freezes captures (pause). returns stop fn */
   every(page: Page, intervalMs = 2000, skip?: () => boolean) {
     let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const tick = async () => {
+      timer = null;
       if (stopped) return;
       if (!skip?.()) await this.snap(page, "");
-      if (!stopped) setTimeout(tick, intervalMs);
+      if (!stopped) {
+        timer = setTimeout(tick, intervalMs);
+        timer.unref?.();
+      }
     };
-    const timer = setTimeout(tick, intervalMs);
-    return () => { stopped = true; clearTimeout(timer); };
+    timer = setTimeout(tick, intervalMs);
+    timer.unref?.();
+    return () => {
+      stopped = true;
+      if (timer) { clearTimeout(timer); timer = null; }
+    };
   }
 
   at(page: Page, tag = "", clip?: { x: number; y: number; width: number; height: number }) { return this.snap(page, tag, clip); }

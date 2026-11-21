@@ -1,10 +1,17 @@
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fmt, type Ev } from "./events.js";
+import {
+  BURST_KINDS,
+  BURST_MS,
+  isErrorEvent,
+  sayRuns,
+  type Click,
+  type Mark,
+  type Say,
+} from "./timeline.js";
 
-type Say = Extract<Ev, { kind: "say" }>;
-type Click = Extract<Ev, { kind: "click" }>;
-type Mark = Extract<Ev, { kind: "mark" }>;
+export { sayRuns };
 
 export interface Suspect { via: "click" | "mark" | "vocab"; sel?: string; comp?: string[]; text?: string }
 export interface Segment {
@@ -15,30 +22,12 @@ export interface Segment {
   explicit: boolean;                               // bounded by N-key issue markers
   suspects: Suspect[];                             // deduped element hints, best first
   deadClicks: Click[];                             // clicks with no aftermath — evidence of dead UI
-  errors: Ev[];                                    // console/error/failed-response events
+  errors: Ev[];                                    // console error/warning, page error, failed/4xx+ response
   shots: string[];                                 // nearest screenshot files (≤3)
   doms: string[];                                  // nearest dom snapshots (≤2)
   counts: Record<string, number>;                  // ambient event counts in window
   gaps: string[];                                  // evidence-completeness hints, e.g. speech claims an error but none was captured
   keyframes?: string[];                            // rrweb-rendered frames for this segment (wit keyframes)
-}
-
-const RUN_BREAK = new Set(["click", "mark", "nav", "input", "key", "error", "issue"]);
-const RUN_GAP = 4000;
-const BURST_MS = 1800;
-const BURST_KINDS = new Set(["req", "res", "console", "error", "nav", "mut"]);
-
-/** group consecutive says into runs — same rule as session.md rendering */
-export function sayRuns(events: Ev[]): Say[][] {
-  const says = events.filter((e): e is Say => e.kind === "say");
-  const runs: Say[][] = [];
-  for (const s of says) {
-    const prev = runs.at(-1)?.at(-1);
-    const broken = prev && (s.segStart - prev.segEnd >= RUN_GAP ||
-      events.some(e => RUN_BREAK.has(e.kind) && e.t > prev.segEnd && e.t < s.segStart));
-    if (!prev || broken) runs.push([s]); else runs.at(-1)!.push(s);
-  }
-  return runs;
 }
 
 /** does a click have any page aftermath within ~1.8s? none → dead UI, itself evidence */
@@ -79,23 +68,22 @@ const tokensOf = (s: string) =>
 export function extractSegments(events: Ev[]): Segment[] {
   const runs = sayRuns(events);
   const issueMarks = events.filter((e): e is Extract<Ev, { kind: "issue" }> => e.kind === "issue");
-  const spoken = tokensOf(runs.flat().map(s => s.text).join(" "));
 
   return runs.map((r, i) => {
     const from = r[0].segStart, to = r.at(-1)!.segEnd;
+    const prev = runs[i - 1];
     const next = runs[i + 1];
+    const segText = r.map(s => s.text).join(" ");
+    const segLower = segText.toLowerCase();
     const inWin = events.filter(e => e.kind !== "say" && e.t >= from - 1500 && (next ? e.t < next[0].segStart - 1500 : true));
     const counts: Record<string, number> = {};
     for (const e of inWin) counts[e.kind] = (counts[e.kind] ?? 0) + 1;
 
     const clicks = inWin.filter((e): e is Click => e.kind === "click");
     const marks = inWin.filter((e): e is Mark => e.kind === "mark");
-    const errors = inWin.filter(e =>
-      e.kind === "error" ||
-      (e.kind === "console" && e.level !== "log" && e.level !== "info") ||
-      (e.kind === "res" && e.status >= 400));
+    const errors = inWin.filter(isErrorEvent);
 
-    // suspects: elements actually touched, then vocab-matched ones
+    // suspects: elements actually touched, then vocab-matched against THIS segment's speech
     const suspects: Suspect[] = [];
     const seen = new Set<string>();
     const push = (s: Suspect) => {
@@ -104,24 +92,26 @@ export function extractSegments(events: Ev[]): Segment[] {
     };
     for (const m of marks) push({ via: "mark", sel: m.sel, comp: m.react, text: m.text });
     for (const c of clicks) push({ via: "click", sel: c.sel, text: c.text });
-    // vocab match: element text shares a spoken token → probably "the thing they meant"
     for (const c of [...clicks, ...marks] as (Click | Mark)[]) {
       const txt = c.text;
-      if (txt && tokensOf(txt).some(t => spoken.includes(t)))
+      if (txt && tokensOf(txt).some(t => segLower.includes(t)))
         push({ via: "vocab", text: txt });
     }
 
+    const explicitWinStart = prev ? prev.at(-1)!.segEnd : 0;
+    const explicit = issueMarks.some(m => (m.t >= explicitWinStart && m.t <= to + 1500));
+
     return {
       n: i + 1, from, to, frags: r,
-      text: r.map(s => s.text).join(" "),
-      explicit: issueMarks.some(m => m.t >= from - 1500 && m.t <= to + 1500),
+      text: segText,
+      explicit,
       suspects: suspects.slice(0, 5),
       deadClicks: clicks.filter(c => isDead(c, events)),
       errors,
       shots: near(events, "shot", from, to, 3),
       doms: near(events, "dom", from, to, 2),
       counts,
-      gaps: gapHints(r.map(s => s.text).join(" "), clicks.length, errors.length),
+      gaps: gapHints(segText, clicks.length, errors.length),
     };
   });
 }

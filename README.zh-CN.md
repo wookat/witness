@@ -78,10 +78,13 @@ wit associate <dir>               # LLM 给每段语音挑相关证据（需 ZHI
 wit recover <dir>                 # 崩溃后从 events.jsonl 重建产物
 wit segments <dir>                # 重建语音段索引 + 每段证据包
 wit keyframes <dir>               # rrweb → 每段关键帧 jpg（agent 可读的回放）
+wit init                          # 4 步交互式配置向导（语言 / 实时 ASR / 本地 whisper / 热词）
 wit doctor                        # 体检：浏览器/实时ASR/密钥/目录可写性
 wit mcp [dir]                     # stdio MCP server
 wit config asr <engine>           # 实时 ASR：auto|local|doubao-web|doubao-ime|sr|off
-wit config asr-prompt <词>         # 持久化 ASR 热词（产品名、报错码）
+wit config lang <bcp47>           # 默认语音语言（存全局 ~/.witness/config.json）
+wit config asr-prompt <词>         # 持久化 ASR 热词（存项目 .witness/config.json）
+wit config telemetry on|off       # 开关匿名 CLI 统计
 wit setup local-asr               # 安装本地 whisper 转写（离线、隐私、多语言）
 wit local-asr start|stop|status   # 管理本地 ASR 服务（127.0.0.1:8791）
 wit local-asr models …            # list | use | pull | rm 管理 whisper 模型
@@ -101,7 +104,7 @@ speaches / whisper.cpp server / vLLM？直接在 `.witness/config.json` 里配
 `localAsr.baseUrl` 即可。
 
 **离线实时字幕**：`wit local-asr live setup` 安装 sherpa-onnx 流式 zipformer
-（中英双语 int8，约 1190MB），通过本机回环 WebSocket（127.0.0.1:8792）服务。
+（中英双语 int8，约 190MB），通过本机回环 WebSocket（127.0.0.1:8792）服务。
 之后 `--asr local`（或 `auto`）直接离线出实时字幕——PCM16/16k/mono 麦克风
 音频不出本机。平均词概率偏低的段落会在 session.md 里标 `⚠ low-confidence ASR`，
 提醒 agent 先核实再引用。
@@ -141,9 +144,9 @@ audio.webm / transcript.json
 
 - **证据不改写**——原话原样落盘；合并/纠错/关联只是展示层建议。
 - **证据 ≠ 意图**——没有语音锚点的行为不会被当成 bug 汇报。
-- **本地优先**——默认确定性记录；装了 `wit local-asr live setup` 后实时字幕优先走**本地 sherpa-onnx**，`auto` = local → doubao-web → doubao-ime → 浏览器 SR 兜底（`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）。最终转写链：`WHISPER_BASE_URL` → **本地 whisper**（`wit setup local-asr`，离线、多语言、音频不出本机）→ Groq → OpenAI → bcut（仅 zh/auto 会话）。`WIT_ASR_PROMPT` / `wit config asr-prompt` 给本地引擎加热词偏置。LLM 全是可选层。
-- **隐私内置**——密码/OTP/信用卡字段四通道打码；POST 体凭证字段脱敏；`WIT_NO_BODIES=1` 关响应体；`P` 全冻结；`.witness/` 自动 gitignore。`--lang` 现已贯通全部 ASR 环节（浏览器 SR、豆包实时、whisper 后转写）。
-- **匿名使用统计**——CLI 每条命令发一次匿名 ping（命令名、版本、系统架构、Node 主版本；绝不含 URL、路径或录制内容），走自己的 Cloudflare Worker，不经过任何第三方分析服务。`WIT_TELEMETRY=0` 可关。
+- **本地优先**——默认确定性记录；装了 `wit local-asr live setup` 后实时字幕优先走**本地 sherpa-onnx**，`auto` = local → doubao-web → doubao-ime → 浏览器 SR 兜底（`wit config asr` / `--asr` / `WIT_ASR` / MCP `set_asr` 可切）。最终转写链：`WHISPER_BASE_URL` → **本地 whisper**（`wit setup local-asr`，离线、多语言、音频不出本机）→ Groq → OpenAI → 免费云端（`doubao-web → bcut`，仅 zh/auto 会话）。`WIT_ASR_PROMPT` / `wit config asr-prompt` 给本地引擎加热词偏置。LLM 全是可选层。
+- **隐私内置**——密码/OTP/信用卡字段四通道打码；POST 体与 URL 敏感参数脱敏；`WIT_NO_BODIES=1` 关响应体；`P` 彻底冻结所有事件、网络、日志与麦克风；`.witness/` 自动 gitignore。`--lang` 现已贯通全部 ASR 环节（浏览器 SR、豆包实时、whisper 后转写）。
+- **匿名使用统计**——CLI 每条命令发一次匿名 ping（命令名、版本、系统架构、Node 主版本；绝不含 URL、路径或录制内容），走自己的 Cloudflare Worker，不经过任何第三方分析服务。`WIT_TELEMETRY=0` 或 `wit config telemetry off` 可关。
 
 ## 开发
 
