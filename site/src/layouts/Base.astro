@@ -287,10 +287,12 @@ const fcols: [string, [string, string][]][] = [
 <script>
   // Anonymous pageview ping — no cookies, no fingerprint, no PII.
   try {
+    const qp = new URLSearchParams(location.search);
+    const utm = [qp.get("utm_source"), qp.get("utm_campaign")].filter(Boolean).join(":").replace(/[^a-zA-Z0-9_\-:]/g, "").slice(0, 60);
     fetch("https://witness-stats.mxd79b86.workers.dev/e", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ e: "pv", b: [location.pathname, document.documentElement.lang || "", document.referrer ? new URL(document.referrer).hostname : "", ""], d: 1 }),
+      body: JSON.stringify({ e: "pv", b: [location.pathname, document.documentElement.lang || "", document.referrer ? new URL(document.referrer).hostname : "", utm], d: 1 }),
       keepalive: true,
     }).catch(() => {});
   } catch {}

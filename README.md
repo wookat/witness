@@ -45,6 +45,12 @@ npm i -g witness-recorder        # needs Node 18+ and system Edge/Chrome
 wit start http://localhost:5173       # managed browser opens — talk & click
 ```
 
+Want to try it in 10 seconds without spinning up your own app? Run it against our live buggy checkout demo:
+
+```bash
+npx witness-recorder start https://witness.zalize.com/demo-app.html
+```
+
 `rec` is an alias for `wit` — same binary, shorter to type.
 
 No downloads, no API keys. System Edge/Chrome is preferred; bundled Chromium is the fallback.

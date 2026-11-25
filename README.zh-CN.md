@@ -38,6 +38,12 @@ npm i -g witness-recorder        # 需要 Node 18+ 和系统 Edge/Chrome
 wit start http://localhost:5173       # 托管浏览器打开——正常体验+说话
 ```
 
+不想先起自己项目、想 10 秒直接体验？可以直接对线上自带两个真实 Bug 的演示页开录：
+
+```bash
+npx witness-recorder start https://witness.zalize.com/demo-app.html
+```
+
 `rec` 是 `wit` 的别名——同一个二进制，少敲三个字母。
 
 零下载、零 key。优先系统 Edge/Chrome，没有再装自带 chromium。
